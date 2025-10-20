@@ -53,10 +53,10 @@ export default function CandidateRegisterPage() {
           {/* 🔹 ILLUSTRATION */}
           <div className="mt-8 flex justify-center">
             <Image
-              src="/illustrations/" // 
-              alt="Career Growth Illustration"
-              width={420}
-              height={220}
+             src="/illustrations/business.png"
+            alt="Handshake Illustration"
+            width={250}
+            height={150}
               className="object-contain transition-transform hover:scale-[1.03] duration-300 drop-shadow-lg"
             />
           </div>

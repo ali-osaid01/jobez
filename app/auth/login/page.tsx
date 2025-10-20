@@ -46,10 +46,10 @@ export default function LoginPage() {
           {/* 🎨 Illustration (Career Growth Image) */}
           <div className="mt-8 flex justify-center">
             <Image
-              src="/illustrations/career-growth.png"
+              src="/illustrations/membership.png"
               alt="Career Growth Illustration"
-              width={420}
-              height={220}
+              width={220}
+              height={150}
               className="object-contain transition-transform hover:scale-[1.03] duration-300 drop-shadow-lg"
             />
           </div>

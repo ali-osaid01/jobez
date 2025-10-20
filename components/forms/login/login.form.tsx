@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FcGoogle } from "react-icons/fc";
+import { FaLinkedinIn } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "./login.validation";
@@ -108,31 +110,24 @@ export default function LoginForm(): React.ReactNode {
           <span className="mx-2 text-gray-400 text-sm">Or log in with</span>
           <span className="h-px w-1/3 bg-gray-200"></span>
         </div>
+  {/* Social Buttons */}
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 border border-gray-300 rounded-full py-2.5 text-sm hover:bg-gray-50 transition"
+        >
+          <FcGoogle className="text-xl" />
+          Continue with Google
+        </button>
 
-        {/* Social Buttons */}
-        <div className="grid grid-cols-1 gap-3">
-          <button className="flex items-center justify-center gap-2 border border-gray-300 rounded-full py-2 hover:bg-gray-50 transition">
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="h-5 w-5"
-            />
-            <span className="text-gray-700 font-medium text-sm">
-              Continue with Google
-            </span>
-          </button>
-
-          <button className="flex items-center justify-center gap-2 border border-gray-300 rounded-full py-2 hover:bg-gray-50 transition">
-          <img
-              src="https://www.svgrepo.com/show/448234/linkedin.svg"
-              alt="LinkedIn"
-              className="h-5 w-5"
-            />
-            <span className="text-gray-700 font-medium text-sm">
-              Continue with LinkedIn
-            </span>
-          </button>
-        </div>
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 border border-gray-300 rounded-full py-2.5 text-sm hover:bg-gray-50 transition"
+        >
+          <FaLinkedinIn className="text-[#0077B5] text-lg" />
+          Continue with LinkedIn
+        </button>
+      </div>
       </form>
     </Form>
   );

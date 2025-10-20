@@ -1,0 +1,67 @@
+"use client";
+
+import Image from "next/image";
+import CompanyForgotForm from "@/components/forms/company/forgot-password/forgot.form";
+
+export default function CompanyForgotPasswordPage() {
+  return (
+    <main className="min-h-screen flex flex-col md:flex-row bg-white overflow-hidden">
+      {/* ================= LEFT SIDE ================= */}
+      <section className="hidden md:flex md:w-1/2 relative bg-gradient-to-br from-[#F8FBFF] via-[#EAF3FF] to-[#DDE7FF] overflow-hidden isolate">
+        <div className="fixed top-0 left-0 w-1/2 h-screen flex flex-col justify-center items-start px-12 lg:px-16">
+          {/* Background Blurs */}
+          <div className="absolute top-[-80px] left-[-100px] w-[320px] h-[320px] bg-[#C8DAFF] opacity-40 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-100px] right-[-60px] w-[280px] h-[280px] bg-[#B6CAFF] opacity-40 rounded-full blur-[90px]" />
+
+          {/* Logo */}
+          <div className="absolute top-10 left-12 flex items-center gap-3">
+            <Image
+              src="/logo/jobez.png"
+              alt="JobEZ Logo"
+              width={55}
+              height={55}
+              className="object-contain drop-shadow-md"
+            />
+            <h1 className="text-[30px] font-extrabold bg-gradient-to-r from-[#2D7DBF] to-[#5279E1] bg-clip-text text-transparent">
+              JobEZ Business
+            </h1>
+          </div>
+
+          {/* Left Content */}
+          <div className="relative z-10 mt-24 max-w-lg space-y-6 animate-fadeIn">
+            <h2 className="text-[32px] md:text-[38px] font-extrabold text-[#1E1E1E] leading-snug">
+              Forgot your password?
+            </h2>
+            <p className="text-[17px] text-gray-600 leading-relaxed">
+              No worries! Enter your registered company email and we’ll send you
+              an OTP to securely reset your account access.
+            </p>
+
+            {/* Illustration - Centered and Scaled */}
+            <div className="flex justify-center mt-8">
+              <div className="relative flex justify-center items-center w-full">
+                <Image
+                  src="/illustrations/lock.png"
+                  alt="Forgot Password Illustration"
+                  width={190} // smaller than before (was 230)
+                  height={160}
+                  className="object-contain drop-shadow-md"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= RIGHT SIDE ================= */}
+      <section className="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12 py-12 bg-gradient-to-tr from-white to-[#F6F9FF]">
+        <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-8 md:p-10 animate-fadeIn">
+          <h1 className="text-[28px] font-bold text-center text-[#1E1E1E] mb-6">
+            Company Password Reset
+          </h1>
+          <CompanyForgotForm />
+        </div>
+      </section>
+    </main>
+  );
+}

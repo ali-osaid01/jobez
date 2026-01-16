@@ -9,49 +9,100 @@ export default function LoginPage() {
       {/* ================================
           LEFT SECTION – Brand & Illustration
       ================================== */}
-      <section className="hidden md:flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-[#F8FBFF] via-[#EAF3FF] to-[#DDE7FF] px-16">
-        {/* 🔵 Decorative Gradient Circles */}
-        <div className="absolute top-[-70px] left-[-90px] w-[320px] h-[320px] bg-[#C8DAFF] opacity-40 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-100px] right-[-60px] w-[280px] h-[280px] bg-[#B6CAFF] opacity-40 rounded-full blur-[90px]" />
-        <div className="absolute top-[40%] left-[45%] w-[180px] h-[180px] bg-[#E3EDFF] opacity-30 rounded-full blur-[80px]" />
+      <section className="hidden md:flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-[#0F2557] via-[#1A3A6B] to-[#2E4C7F] px-16">
+        {/* 🔵 Decorative Gradient Circles with enhanced glow */}
+        <div className="absolute top-[-120px] left-[-120px] w-[400px] h-[400px] bg-[#34A1CD] opacity-20 rounded-full blur-[140px]" />
+        <div className="absolute bottom-[-120px] right-[-80px] w-[350px] h-[350px] bg-[#5279E1] opacity-15 rounded-full blur-[100px]" />
+        <div className="absolute top-[35%] right-[10%] w-[200px] h-[200px] bg-[#4FB3E8] opacity-10 rounded-full blur-[90px]" />
+
+        {/* Grid pattern overlay for depth */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)',
+          backgroundSize: '50px 50px'
+        }} />
 
         {/* 📘 Main Content */}
-        <div className="relative z-10 max-w-lg mx-auto text-left">
+        <div className="relative z-10 max-w-lg mx-auto">
           {/* 🔹 Logo + Brand Name */}
-          <div className="flex items-center mb-10">
+          <div className="flex items-center mb-12 animate-fade-in">
             <Image
               src="/logo/jobez.png"
               alt="JobEZ Logo"
-              width={55}
-              height={55}
-              className="object-contain mr-3 drop-shadow-md"
+              width={60}
+              height={60}
+              className="object-contain mr-4 drop-shadow-2xl"
               priority
             />
-            <h1 className="text-[32px] font-extrabold tracking-tight bg-gradient-to-r from-[#2D7DBF] to-[#5279E1] bg-clip-text text-transparent">
+            <h1 className="text-[36px] font-extrabold tracking-tight text-white">
               JobEZ
             </h1>
           </div>
 
           {/* 🏆 Headline */}
-          <h2 className="text-[34px] font-extrabold text-[#1E1E1E] leading-snug mb-3">
-            The Smarter Way <br /> to Organize Your Career
+          <h2 className="text-[42px] font-extrabold text-white leading-tight mb-6">
+            Your Career Journey,<br />
+            <span className="bg-gradient-to-r from-[#34A1CD] to-[#5FB3E8] bg-clip-text text-transparent">
+              Simplified & Supercharged
+            </span>
           </h2>
 
           {/* 💬 Sub-Tagline */}
-          <p className="text-[18px] text-gray-600 leading-relaxed mb-10">
-            Manage, apply, and track your dream jobs — all in one intelligent
-            dashboard powered by AI job matching.
+          <p className="text-[17px] text-gray-300 leading-relaxed mb-12">
+            Streamline your job search with AI-powered matching, smart tracking,
+            and an intuitive dashboard designed for modern professionals.
           </p>
+
+          {/* ✨ Feature Highlights */}
+          <div className="space-y-4 mb-12">
+            <div className="flex items-start gap-3 text-white/90">
+              <div className="mt-1 w-6 h-6 rounded-full bg-[#34A1CD]/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[#34A1CD]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-[16px]">AI-Powered Job Matching</h3>
+                <p className="text-sm text-gray-400">Find positions that align with your skills and goals</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 text-white/90">
+              <div className="mt-1 w-6 h-6 rounded-full bg-[#34A1CD]/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[#34A1CD]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-[16px]">Smart Application Tracking</h3>
+                <p className="text-sm text-gray-400">Never lose track of your applications again</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 text-white/90">
+              <div className="mt-1 w-6 h-6 rounded-full bg-[#34A1CD]/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[#34A1CD]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-[16px]">Centralized Dashboard</h3>
+                <p className="text-sm text-gray-400">Everything you need in one beautiful interface</p>
+              </div>
+            </div>
+          </div>
 
           {/* 🎨 Illustration (Career Growth Image) */}
           <div className="mt-8 flex justify-center">
-            <Image
-              src="/illustrations/career-growth.png"
-              alt="Career Growth Illustration"
-              width={420}
-              height={220}
-              className="object-contain transition-transform hover:scale-[1.03] duration-300 drop-shadow-lg"
-            />
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#34A1CD]/20 rounded-2xl blur-3xl" />
+              <Image
+                src="/illustrations/membership.png"
+                alt="Career Growth Illustration"
+                width={280}
+                height={190}
+                className="relative object-contain transition-transform hover:scale-105 duration-500 drop-shadow-2xl"
+              />
+            </div>
           </div>
         </div>
       </section>

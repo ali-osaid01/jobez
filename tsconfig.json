@@ -18,8 +18,9 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",  // Ensuring that baseUrl is set properly
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"]  // Map @ to the app directory
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

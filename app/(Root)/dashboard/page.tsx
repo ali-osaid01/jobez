@@ -62,7 +62,7 @@ export default function DashboardPage() {
   return (
     <main className="max-w-7xl mx-auto px-4 py-8">
       
-      {/* ================= HEADER ================= */}
+      {/*  HEADER */}
       <header className="mb-8 space-y-2">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">
           Welcome back, <span className="text-[#009DFF]">Syed!👋</span>
@@ -72,18 +72,18 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      {/* ================= PROFILE PROGRESS ================= */}
+      {/*  PROFILE PROGRESS */}
       <ProfileProgress />
 
-      {/* ================= STATS ================= */}
+      {/*  STATS  */}
       <section className="mt-8">
         <DashboardStats />
       </section>
 
-      {/* ================= MAIN GRID ================= */}
+      {/*  MAIN GRID  */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
 
-        {/* ===== LEFT COLUMN ===== */}
+        {/*  LEFT COLUMN  */}
         <div className="lg:col-span-2 space-y-6">
 
           {/* Recent Applications */}
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* AI Interview Prep */}
+          {/* AI Interview Prep Section*/}
           <div className="bg-[#009DFF]/20 border border-primary/20 rounded-lg p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
         </div>
         
 
-        {/* ===== RIGHT COLUMN ===== */}
+        {/*  RIGHT COLUMN  */}
         <aside className="space-y-6">
 
           {/* Suggested Jobs */}

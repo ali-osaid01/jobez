@@ -1,86 +1,202 @@
-"use client";
+"use client"
 
-import React from "react";
-import { FeaturedCompanies } from "@/components/FeaturedCompanies";
+import Link from "next/link"
+import { Bookmark, Zap, TrendingUp, ArrowRight } from "lucide-react"
+import { FeaturedCompanies } from "@/components/FeaturedCompanies"
+
+import { DashboardStats } from "@/app/(Root)/dashboard/components/dashboard-stats"
+import { ProfileProgress } from "@/app/(Root)/dashboard/components/ProfileProgress"
+
+const recentApplications = [
+  {
+    id: 1,
+    company: "TechCorp",
+    role: "Senior Frontend Engineer",
+    status: "Interview Scheduled",
+    date: "2 days ago",
+  },
+  {
+    id: 2,
+    company: "StartupXYZ",
+    role: "Full Stack Engineer",
+    status: "Under Review",
+    date: "1 week ago",
+  },
+  {
+    id: 3,
+    company: "Innovation Labs",
+    role: "AI Interview Coach",
+    status: "Application Sent",
+    date: "2 weeks ago",
+  },
+]
+
+const suggestedJobs = [
+  {
+    id: 1,
+    company: "TechCorp",
+    logo: "TC",
+    title: "Senior Frontend Engineer",
+    location: "San Francisco, CA",
+    match: 95,
+  },
+  {
+    id: 2,
+    company: "CloudSystems",
+    logo: "CS",
+    title: "DevOps Engineer",
+    location: "Remote",
+    match: 92,
+  },
+  {
+    id: 3,
+    company: "DataViz Inc",
+    logo: "DV",
+    title: "Data Scientist",
+    location: "Seattle, WA",
+    match: 88,
+  },
+]
 
 export default function DashboardPage() {
-  const profileCompletion = 70;
-
-  const widgets = [
-    { title: "Recommended Jobs", content: "3 new jobs match your skills" },
-    { title: "Deadlines", content: "1 application due tomorrow" },
-    { title: "Interview Tasks", content: "2 pending technical tasks" },
-    { title: "Recent Activity", content: "Last login: 2 days ago" },
-  ];
-
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Greeting */}
-      <h1 className="text-2xl font-bold mb-4">
-        Welcome back, <span className="text-blue-600">Syed!</span>
-      </h1>
-{/* Profile Completeness Section */}
-<div className="bg-white shadow-md rounded-2xl p-6 max-w-md mb-8">
-  <h2 className="text-lg font-medium mb-2">Profile Completeness</h2>
-  <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-    <div
-      className="bg-blue-500 h-3 rounded-full"
-      style={{ width: `${profileCompletion}%` }}
-    ></div>
-  </div>
-  <p className="text-sm text-gray-600 mb-4">{profileCompletion}% complete</p>
+    <main className="max-w-7xl mx-auto px-4 py-8">
+      
+      {/* ================= HEADER ================= */}
+      <header className="mb-8 space-y-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+          Welcome back, <span className="text-[#009DFF]">Syed!👋</span>
+        </h1>
+        <p className="text-muted-foreground">
+          Here's your job search dashboard and personalized recommendations.
+        </p>
+      </header>
 
-  {/* Edit Profile Button */}
-  <button
-    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mb-4"
-    onClick={() => {
-      window.location.href = "/profile/edit";
-    }}
-  >
-    Edit Your Profile
-  </button>
+      {/* ================= PROFILE PROGRESS ================= */}
+      <ProfileProgress />
 
-  {/* Upload Resume */}
-  <div className="mt-2">
-    <label className="block mb-1 text-sm font-medium text-gray-700">
-      Upload Resume
-    </label>
-    <input
-      type="file"
-      accept=".pdf,.doc,.docx"
-      className="w-full text-sm text-gray-600
-                 file:mr-4 file:py-2 file:px-4
-                 file:rounded-full file:border-0
-                 file:text-sm file:font-semibold
-                 file:bg-blue-50 file:text-blue-700
-                 hover:file:bg-blue-100
-                 cursor-pointer"
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          console.log("Selected file:", file);
-          // Add your upload handling logic here
-        }
-      }}
-    />
-  </div>
-</div>
+      {/* ================= STATS ================= */}
+      <section className="mt-8">
+        <DashboardStats />
+      </section>
 
-      {/* Dashboard Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {widgets.map((widget, index) => (
-          <div
-            key={index}
-            className="bg-white shadow-sm rounded-2xl p-5 hover:shadow-md transition-shadow"
-          >
-            <h3 className="text-lg font-semibold mb-2">{widget.title}</h3>
-            <p className="text-gray-600 text-sm">{widget.content}</p>
+      {/* ================= MAIN GRID ================= */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+
+        {/* ===== LEFT COLUMN ===== */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Recent Applications */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-foreground">
+                Recent Applications
+              </h2>
+              <Link href="/applications" className="text-sm text-primary hover:underline">
+                View all
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {recentApplications.map((app) => (
+                <div
+                  key={app.id}
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">{app.role}</p>
+                    <p className="text-sm text-muted-foreground">{app.company}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium text-primary mb-1">
+                      {app.status}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {app.date}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Featured Companies Section */}
-      <FeaturedCompanies />
-    </div>
-  );
+          {/* AI Interview Prep */}
+          <div className="bg-[#009DFF]/20 border border-primary/20 rounded-lg p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap size={30} className="text-[#009DFF]" />
+                  <h3 className="font-semibold text-foreground">
+                    AI Interview Prep 
+                  </h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Prepare for your upcoming interviews with AI-powered coaching and feedback.
+                </p>
+                <button className="px-4 py-2 bg-[#009DFF] text-primary-foreground rounded-lg text-sm font-medium hover:bg-[#0086DB]/90 transition">
+                  Start Prep Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+
+        {/* ===== RIGHT COLUMN ===== */}
+        <aside className="space-y-6">
+
+          {/* Suggested Jobs */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-foreground">For You</h2>
+              <TrendingUp size={18} className="text-primary" />
+            </div>
+
+            <div className="space-y-3">
+              {suggestedJobs.map((job) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}`}
+                  className="block p-3 border border-border rounded-lg hover:border-primary/50 hover:bg-muted/50 transition group"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center text-xs font-bold text-primary">
+                        {job.logo}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground group-hover:text-primary transition">
+                          {job.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {job.company}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-primary">
+                      {job.match}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {job.location}
+                  </p>
+                </Link>
+              ))}
+            </div>
+
+            <Link
+              href="/jobs"
+              className="w-full mt-4 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-border transition flex items-center justify-center gap-2"
+            >
+              Explore all jobs <ArrowRight size={16} />
+            </Link>
+          </div>
+        </aside>
+      </section>
+       {/* ================= FEATURED COMPANIES (NEW) ================= */}
+      <section className="mt-12">
+        <FeaturedCompanies />
+      </section>
+    </main>
+  )
 }

@@ -12,12 +12,13 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
       <nav className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-4">
           <span className="font-black text-xl">JOBEZ</span>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop  */}
         <div className="hidden ml-3 md:flex items-center gap-3">
           <NavIcon href="/jobs" title="Jobs"><Briefcase size={20} /></NavIcon>
           <NavIcon href="/companies" title="Companies"><Building2 size={20} /></NavIcon>
@@ -65,7 +66,7 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Hamburger */}
+          {/* Hamburger menu */}
           <button
             aria-label="Toggle mobile menu"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
@@ -76,7 +77,6 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu (Animated) */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-out
         ${isMobileMenuOpen ? "max-h-[500px] opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2"}`}
@@ -86,7 +86,7 @@ export function Navbar() {
           <MobileLink href="/companies" icon={<Building2 size={18} />}>Companies</MobileLink>
           <MobileLink href="/ai-interviews" icon={<Zap size={18} />}>AI Interviews</MobileLink>
 
-          {/* Profile Section (Mobile) */}
+          {/* Profile Section */}
           <div className="pt-3 border-t space-y-2">
             <MobileLink
               href="/profile"
@@ -114,7 +114,7 @@ export function Navbar() {
   )
 }
 
-/* ---------- Helpers ---------- */
+
 
 function NavIcon({ href, title, children }: any) {
   return (

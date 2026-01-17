@@ -46,7 +46,7 @@ const featuredCompanies: Company[] = [
     logo: "/companies/techhive.png",
   },
    {
-    id: "techhive",
+    id: "techhive 2",
     name: "TechHive Solutions",
     industry: "Software & IT",
     logo: "/companies/techhive2.png",

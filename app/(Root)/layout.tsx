@@ -1,5 +1,4 @@
 // app/(Root)/layout.tsx
-
 import "../globals.css";
 import { ReactNode } from "react";
 

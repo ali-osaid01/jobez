@@ -115,7 +115,6 @@ export function Navbar() {
 }
 
 
-
 function NavIcon({ href, title, children }: any) {
   return (
     <Link href={href} title={title} className="p-2 rounded-lg hover:bg-muted hover:text-primary transition">

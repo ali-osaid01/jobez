@@ -58,6 +58,7 @@ const featuredCompanies: Company[] = [
 export function FeaturedCompanies() {
   return (
     <section className="py-12">
+
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold">Featured Companies</h2>
@@ -93,8 +94,7 @@ export function FeaturedCompanies() {
                 <p className="text-sm text-muted-foreground mb-4">
                   {company.industry}
                 </p>
-
-                {/* CTA */}
+                  {/* cta button */}
                 <Button variant="outline" className="w-full" asChild>
                   <Link href={`/companies/${company.id}`}>
                     View Details
@@ -106,7 +106,6 @@ export function FeaturedCompanies() {
         ))}
       </div>
 
-      {/* Footer CTA */}
       <div className="flex justify-center">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Link

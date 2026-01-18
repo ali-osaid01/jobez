@@ -35,7 +35,7 @@ export function ProfileProgress({ progress = 65 }: ProfileProgressProps) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Link
             href="/profile"
-            className="inline-flex items-center justify-center rounded-full bg-[#009DFF] px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition"
+            className="inline-flex items-center justify-center rounded-full bg-[#009DFF] px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-[#0086DB]/90 transition"
           >
             Edit your profile
           </Link>

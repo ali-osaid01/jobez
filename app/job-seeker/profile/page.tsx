@@ -15,18 +15,18 @@ export default function ProfilePage() {
   const user = auth.getUser();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: 'Ahmed Hassan',
+    email: 'ahmed.hassan@gmail.com',
     phone: user?.phone || '',
     title: 'Senior Frontend Developer',
-    location: 'San Francisco, CA',
+    location: 'Lahore, Pakistan',
     experience: '5+ years',
     bio: 'Passionate software developer with expertise in React, TypeScript, and modern web technologies.',
     skills: ['React', 'TypeScript', 'Next.js', 'Node.js', 'Tailwind CSS'],
     education: [
       {
         degree: 'Bachelor of Science in Computer Science',
-        institution: 'Stanford University',
+        institution: 'LUMS',
         year: '2018'
       }
     ]

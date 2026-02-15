@@ -14,11 +14,11 @@ export default function EmployerProfilePage() {
   const user = auth.getUser();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    company: 'TechCorp Inc.',
-    email: 'hiring@techcorp.com',
+    company: 'Systems Limited',
+    email: 'hiring@systemsltd.com',
     phone: user?.phone || '',
-    website: 'www.techcorp.com',
-    location: 'San Francisco, CA',
+    website: 'www.systemsltd.com',
+    location: 'Lahore, Pakistan',
     companySize: '500-1000',
     industry: 'Technology',
     description: 'We are a leading technology company focused on innovation and creating amazing products that change lives.',

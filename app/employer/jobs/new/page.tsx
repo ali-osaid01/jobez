@@ -141,7 +141,7 @@ export default function PostJobPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="salary">Salary Range *</Label>
-                <Input id="salary" placeholder="e.g. $120k - $160k" required />
+                <Input id="salary" placeholder="e.g. 200,000 - 400,000 PKR" required />
               </div>
             </div>
           </CardContent>

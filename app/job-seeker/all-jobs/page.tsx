@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockJobs } from '@/lib/mock-data';
-import { Search, MapPin, DollarSign, Briefcase, Building2, Clock, BookmarkPlus, ExternalLink, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, MapPin, Banknote, Briefcase, Building2, Clock, BookmarkPlus, ExternalLink, Filter, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 import { toast } from 'sonner';
@@ -254,7 +254,7 @@ export default function AllJobsPage() {
                       {job.location}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <DollarSign className="h-4 w-4" />
+                      <Banknote className="h-4 w-4" />
                       {job.salary}
                     </span>
                     <span className="flex items-center gap-1.5">

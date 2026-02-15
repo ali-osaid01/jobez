@@ -68,22 +68,22 @@ export default function LandingPage() {
 
   const testimonials = [
     {
-      name: 'Sarah Chen',
-      role: 'Software Engineer at Google',
-      content: 'JobEZ helped me land my dream role at Google in just 3 weeks. The auto-fill feature alone saved me hundreds of hours.',
-      avatar: 'SC'
+      name: 'Fatima Rizwan',
+      role: 'Software Engineer at Systems Limited',
+      content: 'JobEZ helped me land my dream role at Systems Limited in just 3 weeks. The auto-fill feature alone saved me hundreds of hours.',
+      avatar: 'FR'
     },
     {
-      name: 'Marcus Williams',
-      role: 'Product Manager at Stripe',
+      name: 'Bilal Ahmed',
+      role: 'Product Manager at Careem',
       content: 'The interview prep AI was incredibly accurate - I felt prepared for every single interview question.',
-      avatar: 'MW'
+      avatar: 'BA'
     },
     {
-      name: 'Priya Sharma',
-      role: 'UX Designer at Airbnb',
+      name: 'Ayesha Malik',
+      role: 'UX Designer at Netsol Technologies',
       content: 'The AI recommendations helped me discover roles I never would have found. The application tracker kept me organized.',
-      avatar: 'PS'
+      avatar: 'AM'
     }
   ];
 

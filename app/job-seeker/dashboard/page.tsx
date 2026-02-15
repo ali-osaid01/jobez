@@ -11,7 +11,7 @@ import {
   TrendingUp, 
   Clock, 
   MapPin, 
-  DollarSign,
+  Banknote,
   ArrowRight,
   Sparkles
 } from 'lucide-react';
@@ -223,7 +223,7 @@ export default function JobSeekerDashboard() {
                     {job.location}
                   </span>
                   <span className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
+                    <Banknote className="h-3 w-3" />
                     {job.salary}
                   </span>
                   <Badge variant="outline" className="text-xs">{job.type}</Badge>

@@ -81,15 +81,15 @@ export default function LoginPage() {
           <Card className="bg-white/10 backdrop-blur border-white/20 text-white hover-lift">
             <CardContent className="p-6">
               <p className="text-sm italic mb-4">
-                "JobEZ helped me land my dream role at Google in just 3 weeks. The auto-fill feature alone saved me hundreds of hours."
+                "JobEZ helped me land my dream role at Systems Limited in just 3 weeks. The auto-fill feature alone saved me hundreds of hours."
               </p>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">
-                  SC
+                  FR
                 </div>
                 <div>
-                  <div className="font-semibold text-sm">Sarah Chen</div>
-                  <div className="text-xs text-white/80">Software Engineer at Google</div>
+                  <div className="font-semibold text-sm">Fatima Rizwan</div>
+                  <div className="text-xs text-white/80">Software Engineer at Systems Limited</div>
                 </div>
               </div>
             </CardContent>

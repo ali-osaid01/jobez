@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { mockJobs } from '@/lib/mock-data';
-import { Search, MapPin, DollarSign, Briefcase, Sparkles, Filter } from 'lucide-react';
+import { Search, MapPin, Banknote, Briefcase, Sparkles, Filter } from 'lucide-react';
 import Link from 'next/link';
 
 export default function JobsPage() {
@@ -83,7 +83,7 @@ export default function JobsPage() {
                       {job.location}
                     </span>
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
+                      <Banknote className="h-4 w-4" />
                       {job.salary}
                     </span>
                   </div>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Briefcase, Sparkles, Users, Building2, Chrome, Github } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { toast } from 'sonner';
 
 type UserRole = 'job-seeker' | 'employer' | null;
 
@@ -37,7 +38,8 @@ export default function LoginPage() {
       if (existingUser) {
         const user = JSON.parse(existingUser);
         localStorage.setItem('jobez_auth', 'true');
-        
+        toast.success('Welcome back!');
+
         // Redirect based on role and onboarding status
         if (user.onboardingComplete) {
           if (user.role === 'job-seeker') {

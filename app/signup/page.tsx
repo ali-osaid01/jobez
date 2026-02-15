@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Briefcase, Sparkles, ArrowRight, ArrowLeft, Users, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { toast } from 'sonner';
 
 type UserRole = 'job-seeker' | 'employer' | null;
 
@@ -73,7 +74,7 @@ export default function SignupPage() {
     // Simulate sending OTP
     setTimeout(() => {
       setStep('otp');
-      setError('OTP sent to your phone! Use 123456 to verify.');
+      toast.success('OTP sent to your phone! Use 123456 to verify.');
       setLoading(false);
     }, 1000);
   };
@@ -100,6 +101,8 @@ export default function SignupPage() {
 
       localStorage.setItem('jobez_auth', 'true');
       localStorage.setItem('jobez_user', JSON.stringify(userData));
+
+      toast.success('Account created successfully!');
 
       // Redirect to onboarding
       setTimeout(() => {

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Briefcase, Sparkles, ArrowRight, ArrowLeft, CheckCircle, Building2, MapPin, Wrench, Briefcase as BriefcaseIcon, GraduationCap } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from '@/components/logo';
+import { toast } from 'sonner';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -164,6 +165,8 @@ export default function OnboardingPage() {
 
       localStorage.setItem('jobez_user', JSON.stringify(updatedUser));
       localStorage.setItem('jobez_auth', 'true');
+
+      toast.success('Profile setup complete!');
 
       setTimeout(() => {
         if (user.role === 'job-seeker') {

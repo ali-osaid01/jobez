@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockJobs } from '@/lib/mock-data';
-import { Briefcase, Users, Eye, PlusCircle, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { Briefcase, Users, Eye, PlusCircle, MoreVertical, Edit, Trash2, Sparkles } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,16 +41,18 @@ export default function EmployerJobsPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Active Jobs</p>
+            <Briefcase className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-blue-600">{jobs.length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Total Applicants</p>
+            <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-purple-600">
@@ -59,16 +61,18 @@ export default function EmployerJobsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Total Views</p>
+            <Eye className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">1,247</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Avg. Match Score</p>
+            <Sparkles className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-orange-600">88%</p>

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockApplications } from '@/lib/mock-data';
 import { Textarea } from '@/components/ui/textarea';
-import { Users, Search, UserCheck, UserX, Download, Phone, Sparkles, MessageSquare } from 'lucide-react';
+import { Users, Search, UserCheck, UserX, Download, Phone, Sparkles, MessageSquare, Clock, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ApplicantsPage() {
@@ -163,16 +163,18 @@ export default function ApplicantsPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Total</p>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{applications.length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Pending</p>
+            <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-yellow-600">
@@ -181,8 +183,9 @@ export default function ApplicantsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Shortlisted</p>
+            <UserCheck className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-blue-600">
@@ -191,8 +194,9 @@ export default function ApplicantsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Hired</p>
+            <Trophy className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">

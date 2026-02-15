@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Sparkles, ArrowRight, ArrowLeft, Users, Building2 } from 'lucide-react';
+import { Briefcase, Sparkles, ArrowRight, ArrowLeft, Users, Building2, User, Mail, Phone, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
@@ -218,7 +218,7 @@ export default function SignupPage() {
             <CardContent>
               <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
+                  <Label htmlFor="name" className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-muted-foreground" />Full Name *</Label>
                   <Input
                     id="name"
                     placeholder="Muhammad Ali"
@@ -234,7 +234,7 @@ export default function SignupPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="email" className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-muted-foreground" />Email Address *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -251,7 +251,7 @@ export default function SignupPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone" className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-muted-foreground" />Phone Number *</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -305,7 +305,7 @@ export default function SignupPage() {
             <CardContent>
               <form onSubmit={handleOTPVerify} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="otp">OTP Code</Label>
+                  <Label htmlFor="otp" className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />OTP Code</Label>
                   <Input
                     id="otp"
                     type="text"

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { mockJobs } from '@/lib/mock-data';
-import { Search, MapPin, Banknote, Briefcase, Sparkles, Filter } from 'lucide-react';
+import { Search, MapPin, Banknote, Briefcase, Sparkles, Filter, Bookmark } from 'lucide-react';
 import Link from 'next/link';
 
 export default function JobsPage() {
@@ -105,7 +105,7 @@ export default function JobsPage() {
                     <Button className="w-full md:w-auto">View Details</Button>
                   </Link>
                   <Button variant="outline" className="w-full md:w-auto">
-                    Save for Later
+                    <Bookmark className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

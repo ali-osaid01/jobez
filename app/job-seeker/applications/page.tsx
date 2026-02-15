@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockApplications } from '@/lib/mock-data';
-import { FileText, Calendar, Building2, MapPin, TrendingUp } from 'lucide-react';
+import { FileText, Calendar, Building2, MapPin, TrendingUp, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ApplicationsPage() {
@@ -99,16 +99,18 @@ export default function ApplicationsPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Total</p>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{applications.length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Pending</p>
+            <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-yellow-600">
@@ -117,8 +119,9 @@ export default function ApplicationsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Shortlisted</p>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-blue-600">
@@ -127,8 +130,9 @@ export default function ApplicationsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Interviews</p>
+            <Calendar className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-purple-600">

@@ -32,15 +32,20 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      // Check if user exists in localStorage (mock login)
       const existingUser = localStorage.getItem('jobez_user');
-      
+
       if (existingUser) {
         const user = JSON.parse(existingUser);
+
+        if (user.email !== email || user.password !== password) {
+          setError('Invalid email or password.');
+          setLoading(false);
+          return;
+        }
+
         localStorage.setItem('jobez_auth', 'true');
         toast.success('Welcome back!');
 
-        // Redirect based on role and onboarding status
         if (user.onboardingComplete) {
           if (user.role === 'job-seeker') {
             router.push('/job-seeker/dashboard');

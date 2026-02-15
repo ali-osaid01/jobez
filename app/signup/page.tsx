@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Sparkles, ArrowRight, ArrowLeft, Users, Building2, User, Mail, Phone, ShieldCheck } from 'lucide-react';
+import { Briefcase, Sparkles, ArrowRight, ArrowLeft, Users, Building2, User, Mail, Phone, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
@@ -15,20 +15,21 @@ type UserRole = 'job-seeker' | 'employer' | null;
 
 export default function SignupPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'role' | 'details' | 'otp'>('role');
+  const [step, setStep] = useState<'role' | 'details'>('role');
   const [role, setRole] = useState<UserRole>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    password: ''
   });
-  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [touched, setTouched] = useState({
     name: false,
     email: false,
-    phone: false
+    phone: false,
+    password: false
   });
 
   const handleRoleSelect = (selectedRole: UserRole) => {
@@ -46,52 +47,37 @@ export default function SignupPage() {
     return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
   };
 
+  const validatePassword = (password: string) => {
+    return password.length >= 6;
+  };
+
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.email || !formData.phone) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    if (!validateEmail(formData.email)) {
       setError('Please enter a valid email address');
       return;
     }
 
-    // Validate phone format
-    const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
-    if (!phoneRegex.test(formData.phone) || formData.phone.replace(/\D/g, '').length < 10) {
+    if (!validatePhone(formData.phone)) {
       setError('Please enter a valid phone number (at least 10 digits)');
       return;
     }
 
-    setLoading(true);
-    
-    // Simulate sending OTP
-    setTimeout(() => {
-      setStep('otp');
-      toast.success('OTP sent to your phone! Use 123456 to verify.');
-      setLoading(false);
-    }, 1000);
-  };
-
-  const handleOTPVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (otp !== '123456') {
-      setError('Invalid OTP. Please use 123456');
+    if (!validatePassword(formData.password)) {
+      setError('Password must be at least 6 characters');
       return;
     }
 
     setLoading(true);
 
     try {
-      // Save user data to localStorage
       const userData = {
         ...formData,
         role,
@@ -104,7 +90,6 @@ export default function SignupPage() {
 
       toast.success('Account created successfully!');
 
-      // Redirect to onboarding
       setTimeout(() => {
         router.push('/onboarding');
       }, 500);
@@ -135,9 +120,8 @@ export default function SignupPage() {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
-            <div className={`h-2 w-20 rounded-full ${step === 'role' || step === 'details' || step === 'otp' ? 'bg-primary' : 'bg-muted'}`} />
-            <div className={`h-2 w-20 rounded-full ${step === 'details' || step === 'otp' ? 'bg-primary' : 'bg-muted'}`} />
-            <div className={`h-2 w-20 rounded-full ${step === 'otp' ? 'bg-primary' : 'bg-muted'}`} />
+            <div className={`h-2 w-20 rounded-full ${step === 'role' || step === 'details' ? 'bg-primary' : 'bg-muted'}`} />
+            <div className={`h-2 w-20 rounded-full ${step === 'details' ? 'bg-primary' : 'bg-muted'}`} />
           </div>
         </div>
 
@@ -152,7 +136,7 @@ export default function SignupPage() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-              <Card 
+              <Card
                 className="p-8 cursor-pointer hover:shadow-lg transition-all hover:border-primary group"
                 onClick={() => handleRoleSelect('job-seeker')}
               >
@@ -173,7 +157,7 @@ export default function SignupPage() {
                 </div>
               </Card>
 
-              <Card 
+              <Card
                 className="p-8 cursor-pointer hover:shadow-lg transition-all hover:border-primary group"
                 onClick={() => handleRoleSelect('employer')}
               >
@@ -267,92 +251,43 @@ export default function SignupPage() {
                   )}
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-muted-foreground" />Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="At least 6 characters"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onBlur={() => setTouched({ ...touched, password: true })}
+                    disabled={loading}
+                    className={touched.password && formData.password && !validatePassword(formData.password) ? 'border-destructive' : ''}
+                  />
+                  {touched.password && formData.password && !validatePassword(formData.password) && (
+                    <p className="text-xs text-destructive">Password must be at least 6 characters</p>
+                  )}
+                </div>
+
                 {error && (
-                  <p className={`text-sm ${error.includes('sent') ? 'text-primary' : 'text-destructive'}`}>
+                  <p className="text-sm text-destructive">
                     {error}
                   </p>
                 )}
 
-                <Button 
-                  type="submit" 
-                  className="w-full btn-press bg-primary hover:bg-primary/90" 
+                <Button
+                  type="submit"
+                  className="w-full btn-press bg-primary hover:bg-primary/90"
                   size="lg"
-                  disabled={loading || !formData.name || !formData.email || !formData.phone}
+                  disabled={loading || !formData.name || !formData.email || !formData.phone || !formData.password}
                 >
                   {loading ? (
-                    <span className="shimmer">Sending OTP...</span>
+                    <span className="shimmer">Creating account...</span>
                   ) : (
                     <>
-                      Continue
+                      Create Account
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 3: OTP Verification */}
-        {step === 'otp' && (
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="text-2xl font-heading">Verify your phone</CardTitle>
-              <CardDescription>
-                Enter the 6-digit code sent to {formData.phone}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleOTPVerify} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />OTP Code</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    placeholder="000000"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    disabled={loading}
-                    className="text-lg text-center tracking-widest"
-                    maxLength={6}
-                  />
-                </div>
-
-                {error && (
-                  <p className={`text-sm ${error.includes('sent') ? 'text-primary' : 'text-destructive'}`}>
-                    {error}
-                  </p>
-                )}
-
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setStep('details');
-                      setOtp('');
-                      setError('');
-                    }}
-                    disabled={loading}
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <Button type="submit" className="flex-1" disabled={loading}>
-                    {loading ? 'Verifying...' : 'Verify & Continue'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="link"
-                  className="w-full"
-                  onClick={handleDetailsSubmit}
-                  disabled={loading}
-                >
-                  Resend OTP
                 </Button>
               </form>
             </CardContent>

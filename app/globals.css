@@ -1,0 +1,361 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* Professional muted blue theme for JobEZ */
+    --background: 0 0% 100%;
+    --foreground: 220 25% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 14%;
+    --primary: 213 72% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 50% 52%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 213 25% 95%;
+    --accent-foreground: 213 72% 42%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 12% 46%;
+    --destructive: 0 68% 49%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 213 72% 42%;
+    --success: 152 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 85% 50%;
+    --warning-foreground: 0 0% 100%;
+    --chart-1: 213 72% 42%;
+    --chart-2: 213 50% 52%;
+    --chart-3: 213 35% 62%;
+    --chart-4: 152 55% 38%;
+    --chart-5: 213 60% 35%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 25% 14%;
+    --sidebar-primary: 213 72% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 213 25% 95%;
+    --sidebar-accent-foreground: 220 25% 14%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 213 72% 42%;
+  }
+  .dark {
+    --background: 220 25% 7%;
+    --foreground: 220 10% 95%;
+    --card: 220 22% 10%;
+    --card-foreground: 220 10% 95%;
+    --popover: 220 22% 10%;
+    --popover-foreground: 220 10% 95%;
+    --primary: 213 72% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 50% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 213 20% 18%;
+    --accent-foreground: 213 72% 48%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 220 12% 62%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 213 72% 48%;
+    --success: 152 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 85% 50%;
+    --warning-foreground: 0 0% 100%;
+    --chart-1: 213 72% 48%;
+    --chart-2: 213 50% 55%;
+    --chart-3: 213 35% 65%;
+    --chart-4: 152 55% 38%;
+    --chart-5: 213 60% 38%;
+    --sidebar-background: 220 25% 7%;
+    --sidebar-foreground: 220 10% 95%;
+    --sidebar-primary: 213 72% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 16%;
+    --sidebar-accent-foreground: 220 10% 95%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 213 72% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Fade and slide up animation */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Staggered animation delays */
+  .animate-delay-100 {
+    animation-delay: 0.1s;
+  }
+  .animate-delay-200 {
+    animation-delay: 0.2s;
+  }
+  .animate-delay-300 {
+    animation-delay: 0.3s;
+  }
+  .animate-delay-400 {
+    animation-delay: 0.4s;
+  }
+  .animate-delay-500 {
+    animation-delay: 0.5s;
+  }
+
+  /* Smooth hover scale */
+  .hover-scale {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .hover-scale:hover {
+    transform: scale(1.01);
+    filter: brightness(1.05);
+  }
+
+  /* Smooth lift on hover */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -8px hsl(var(--primary) / 0.15);
+  }
+
+  /* Primary button hover */
+  .btn-primary-hover {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .btn-primary-hover:hover {
+    background-color: hsl(213, 72%, 48%);
+  }
+
+  /* Smooth button press */
+  .btn-press:active {
+    transform: scale(0.98);
+  }
+
+  /* Smooth focus ring */
+  .focus-ring-smooth {
+    transition: box-shadow 0.2s ease;
+  }
+  .focus-ring-smooth:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+  }
+
+  /* Gradient animation */
+  .gradient-animate {
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Smooth slide in from left */
+  .slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Smooth slide in from right */
+  .slide-in-right {
+    animation: slideInRight 0.5s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Pulse animation for attention */
+  .pulse-subtle {
+    animation: pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulseSubtle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  /* Smooth page transitions */
+  .page-transition {
+    animation: pageTransition 0.4s ease-out;
+  }
+
+  @keyframes pageTransition {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Professional shimmer effect for loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Floating animation for hero background elements */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 8s ease-in-out 2s infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 10s ease-in-out 1s infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-15px) rotate(2deg);
+    }
+    66% {
+      transform: translateY(8px) rotate(-1deg);
+    }
+  }
+
+  /* Staggered fade-in for children */
+  .stagger-children > * {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: staggerIn 0.6s ease-out forwards;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+
+  @keyframes staggerIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Animated gradient text */
+  .animate-gradient-text {
+    background-size: 200% auto;
+    animation: gradientText 4s linear infinite;
+  }
+
+  @keyframes gradientText {
+    0% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+    100% { background-position: 0% center; }
+  }
+
+  /* Scale in animation */
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Dot grid background */
+  .bg-dot-grid {
+    background-image: radial-gradient(circle, hsl(var(--primary) / 0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}

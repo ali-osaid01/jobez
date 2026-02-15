@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockApplications } from '@/lib/mock-data';
 import { Textarea } from '@/components/ui/textarea';
 import { Users, Search, UserCheck, UserX, Download, Phone, Sparkles, MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ApplicantsPage() {
   const [applications] = useState(mockApplications);
@@ -77,7 +78,7 @@ export default function ApplicantsPage() {
                     size="sm"
                     variant="destructive"
                     disabled={!rejectComment.trim()}
-                    onClick={() => { setRejectingId(null); setRejectComment(''); }}
+                    onClick={() => { toast.success(`${application.applicantName} has been rejected`); setRejectingId(null); setRejectComment(''); }}
                   >
                     Confirm Rejection
                   </Button>
@@ -97,13 +98,13 @@ export default function ApplicantsPage() {
             <Badge className={`${getStatusColor(application.status)} justify-center py-1`}>
               {application.status.replace('-', ' ').toUpperCase()}
             </Badge>
-            <Button size="sm" variant="outline" className="gap-2">
+            <Button size="sm" variant="outline" className="gap-2" onClick={() => toast.success('Resume downloaded successfully')}>
               <Download className="h-4 w-4" />
               Download Resume
             </Button>
             {application.status === 'pending' && (
               <>
-                <Button size="sm" className="gap-2 bg-secondary hover:bg-secondary/90">
+                <Button size="sm" className="gap-2 bg-secondary hover:bg-secondary/90" onClick={() => toast.success(`${application.applicantName} has been shortlisted`)}>
                   <UserCheck className="h-4 w-4" />
                   Shortlist
                 </Button>
@@ -115,7 +116,7 @@ export default function ApplicantsPage() {
             )}
             {application.status === 'shortlisted' && (
               <>
-                <Button size="sm" className="gap-2 bg-secondary hover:bg-secondary/90">
+                <Button size="sm" className="gap-2 bg-secondary hover:bg-secondary/90" onClick={() => toast.success(`Contact request sent to ${application.applicantName}`)}>
                   <Phone className="h-4 w-4" />
                   Contact Candidate
                 </Button>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Sparkles, Plus, X } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function PostJobPage() {
     // Simulate API call
     setTimeout(() => {
       setSaving(false);
+      toast.success('Job posted successfully!');
       router.push('/employer/jobs');
     }, 1500);
   };

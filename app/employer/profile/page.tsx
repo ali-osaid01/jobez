@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { auth } from '@/lib/auth';
 import { Building2, Mail, Phone, Globe, Users, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function EmployerProfilePage() {
   const user = auth.getUser();
@@ -31,9 +32,8 @@ export default function EmployerProfilePage() {
       company: profile.company,
       email: profile.email,
     });
-    setSaved(true);
     setIsEditing(false);
-    setTimeout(() => setSaved(false), 3000);
+    toast.success('Profile updated successfully');
   };
 
   return (

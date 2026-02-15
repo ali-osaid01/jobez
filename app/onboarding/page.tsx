@@ -428,7 +428,7 @@ export default function OnboardingPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="skills">Add Skills</Label>
+                    <Label htmlFor="skills" className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-muted-foreground" />Add Skills</Label>
                     <div className="flex gap-2">
                       <Input
                         id="skills"
@@ -457,7 +457,7 @@ export default function OnboardingPage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="bio">Professional Bio</Label>
+                    <Label htmlFor="bio" className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-muted-foreground" />Professional Bio</Label>
                     <Textarea
                       id="bio"
                       placeholder="Tell employers about yourself, your experience, and what you're looking for..."
@@ -495,7 +495,7 @@ export default function OnboardingPage() {
                 <CardContent className="space-y-6">
                   {/* Education Section */}
                   <div className="space-y-4">
-                    <Label className="text-base font-semibold">Education</Label>
+                    <Label className="text-base font-semibold flex items-center gap-1.5"><GraduationCap className="h-4 w-4 text-muted-foreground" />Education</Label>
                     <div className="grid gap-4">
                       <Input
                         placeholder="Degree (e.g. Bachelor of Science in Computer Science)"
@@ -531,7 +531,7 @@ export default function OnboardingPage() {
 
                   {/* Work Experience Section */}
                   <div className="space-y-4">
-                    <Label className="text-base font-semibold">Previous Work Experience</Label>
+                    <Label className="text-base font-semibold flex items-center gap-1.5"><BriefcaseIcon className="h-4 w-4 text-muted-foreground" />Previous Work Experience</Label>
                     <div className="grid gap-4">
                       <Input
                         placeholder="Job Title (e.g. Senior Software Engineer)"
@@ -567,7 +567,7 @@ export default function OnboardingPage() {
 
                   {/* Certifications Section */}
                   <div className="space-y-4">
-                    <Label className="text-base font-semibold">Certifications (Optional)</Label>
+                    <Label className="text-base font-semibold flex items-center gap-1.5"><Award className="h-4 w-4 text-muted-foreground" />Certifications (Optional)</Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="e.g. AWS Certified Solutions Architect"
@@ -723,7 +723,7 @@ export default function OnboardingPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name</Label>
+                    <Label htmlFor="companyName" className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-muted-foreground" />Company Name</Label>
                     <Input
                       id="companyName"
                       placeholder="e.g. Systems Limited, Netsol Technologies"
@@ -733,7 +733,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="industry">Industry</Label>
+                    <Label htmlFor="industry" className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-muted-foreground" />Industry</Label>
                     <Select
                       value={employerData.industry}
                       onValueChange={(value) => setEmployerData({ ...employerData, industry: value })}
@@ -754,7 +754,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="companySize">Company Size</Label>
+                    <Label htmlFor="companySize" className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-muted-foreground" />Company Size</Label>
                     <Select
                       value={employerData.companySize}
                       onValueChange={(value) => setEmployerData({ ...employerData, companySize: value })}
@@ -774,7 +774,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="empLocation">Company Location</Label>
+                    <Label htmlFor="empLocation" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Company Location</Label>
                     <Input
                       id="empLocation"
                       placeholder="e.g. Karachi, Pakistan"
@@ -784,7 +784,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="website">Company Website</Label>
+                    <Label htmlFor="website" className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-muted-foreground" />Company Website</Label>
                     <Input
                       id="website"
                       type="url"
@@ -817,7 +817,7 @@ export default function OnboardingPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="description">Company Description</Label>
+                    <Label htmlFor="description" className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-muted-foreground" />Company Description</Label>
                     <Textarea
                       id="description"
                       placeholder="Tell candidates about your company, culture, and what makes it a great place to work..."

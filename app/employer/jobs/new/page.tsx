@@ -14,7 +14,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { ArrowLeft, Sparkles, Plus, X } from 'lucide-react';
+import { ArrowLeft, Sparkles, Plus, X, Briefcase, Building2, MapPin, Clock, TrendingUp, Banknote, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -81,22 +81,22 @@ export default function PostJobPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="title">Job Title *</Label>
+                <Label htmlFor="title" className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />Job Title *</Label>
                 <Input id="title" placeholder="e.g. Senior Frontend Developer" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="company">Company Name *</Label>
+                <Label htmlFor="company" className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-muted-foreground" />Company Name *</Label>
                 <Input id="company" placeholder="Your company name" required />
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="location">Location *</Label>
-                <Input id="location" placeholder="e.g. San Francisco, CA" required />
+                <Label htmlFor="location" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location *</Label>
+                <Input id="location" placeholder="e.g. Lahore, Karachi, Islamabad" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="locationType">Location Type *</Label>
+                <Label htmlFor="locationType" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location Type *</Label>
                 <Select required>
                   <SelectTrigger id="locationType">
                     <SelectValue placeholder="Select type" />
@@ -112,7 +112,7 @@ export default function PostJobPage() {
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="type">Job Type *</Label>
+                <Label htmlFor="type" className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-muted-foreground" />Job Type *</Label>
                 <Select required>
                   <SelectTrigger id="type">
                     <SelectValue placeholder="Select type" />
@@ -126,7 +126,7 @@ export default function PostJobPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="experience">Experience Level *</Label>
+                <Label htmlFor="experience" className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />Experience Level *</Label>
                 <Select required>
                   <SelectTrigger id="experience">
                     <SelectValue placeholder="Select level" />
@@ -140,7 +140,7 @@ export default function PostJobPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="salary">Salary Range *</Label>
+                <Label htmlFor="salary" className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5 text-muted-foreground" />Salary Range *</Label>
                 <Input id="salary" placeholder="e.g. 200,000 - 400,000 PKR" required />
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function PostJobPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description" className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-muted-foreground" />Description *</Label>
               <Textarea
                 id="description"
                 placeholder="Describe the role, team, and what makes this opportunity unique..."

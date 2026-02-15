@@ -293,10 +293,11 @@ export default function AllJobsPage() {
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="icon"
                     className="hover-lift"
+                    onClick={() => toast.success('Job saved to bookmarks')}
                   >
                     <BookmarkPlus className="h-4 w-4" />
                   </Button>

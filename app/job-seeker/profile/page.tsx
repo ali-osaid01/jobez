@@ -9,12 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { auth } from '@/lib/auth';
 import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Plus, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const user = auth.getUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [saved, setSaved] = useState(false);
-  
   const [profile, setProfile] = useState({
     name: 'John Doe',
     email: 'john.doe@example.com',
@@ -36,14 +35,12 @@ export default function ProfilePage() {
   const [newSkill, setNewSkill] = useState('');
 
   const handleSave = () => {
-    // In a real app, this would save to backend
     auth.updateUser({
       name: profile.name,
       email: profile.email,
     });
-    setSaved(true);
     setIsEditing(false);
-    setTimeout(() => setSaved(false), 3000);
+    toast.success('Profile updated successfully');
   };
 
   const addSkill = () => {
@@ -81,14 +78,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
-      {saved && (
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="py-3">
-            <p className="text-green-800 text-center">Profile updated successfully!</p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Personal Information */}
       <Card>

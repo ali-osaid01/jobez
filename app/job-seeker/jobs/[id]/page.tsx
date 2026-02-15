@@ -18,6 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -38,7 +39,7 @@ export default function JobDetailPage() {
 
   const handleApply = () => {
     setApplied(true);
-    // In a real app, this would submit the application
+    toast.success('Application submitted successfully!');
     setTimeout(() => {
       router.push('/job-seeker/applications');
     }, 2000);
@@ -106,7 +107,7 @@ export default function JobDetailPage() {
                   <Button size="lg" onClick={handleApply} className="w-full">
                     Apply Now
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full">
+                  <Button variant="outline" size="lg" className="w-full" onClick={() => toast.success('Job saved to bookmarks')}>
                     Save Job
                   </Button>
                 </>

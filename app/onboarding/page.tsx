@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Sparkles, ArrowRight, ArrowLeft, CheckCircle, Building2, MapPin, Wrench, Briefcase as BriefcaseIcon, GraduationCap } from 'lucide-react';
+import { Briefcase, Sparkles, ArrowRight, ArrowLeft, CheckCircle, Building2, MapPin, Wrench, Briefcase as BriefcaseIcon, GraduationCap, Target, TrendingUp, Banknote, FileText, Globe, Users, Award, Factory } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
@@ -319,7 +319,7 @@ export default function OnboardingPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Current/Desired Job Title *</Label>
+                    <Label htmlFor="title" className="flex items-center gap-1.5"><BriefcaseIcon className="h-3.5 w-3.5 text-muted-foreground" />Current/Desired Job Title *</Label>
                     <Input
                       id="title"
                       placeholder="e.g. Software Engineer, Product Manager"
@@ -330,7 +330,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="preferredRole">Preferred Role/Domain *</Label>
+                    <Label htmlFor="preferredRole" className="flex items-center gap-1.5"><Target className="h-3.5 w-3.5 text-muted-foreground" />Preferred Role/Domain *</Label>
                     <Select
                       value={seekerData.preferredRole}
                       onValueChange={(value) => setSeekerData({ ...seekerData, preferredRole: value })}
@@ -354,7 +354,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="experience">Years of Experience *</Label>
+                    <Label htmlFor="experience" className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />Years of Experience *</Label>
                     <Select
                       value={seekerData.experience}
                       onValueChange={(value) => setSeekerData({ ...seekerData, experience: value })}
@@ -373,7 +373,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location">Preferred Location *</Label>
+                    <Label htmlFor="location" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Preferred Location *</Label>
                     <Input
                       id="location"
                       placeholder="e.g. Karachi, Lahore, Remote"
@@ -384,7 +384,7 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="salary">Expected Salary Range (Monthly - PKR)</Label>
+                    <Label htmlFor="salary" className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5 text-muted-foreground" />Expected Salary Range (Monthly - PKR)</Label>
                     <Input
                       id="salary"
                       placeholder="e.g. 80,000 - 150,000 PKR"

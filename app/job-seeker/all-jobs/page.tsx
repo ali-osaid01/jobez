@@ -10,6 +10,7 @@ import { mockJobs } from '@/lib/mock-data';
 import { Search, MapPin, DollarSign, Briefcase, Building2, Clock, BookmarkPlus, ExternalLink, Filter, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
+import { toast } from 'sonner';
 
 export default function AllJobsPage() {
   const [searchQuery, setSearchQuery] = useState('');

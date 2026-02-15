@@ -13,8 +13,6 @@ import { toast } from 'sonner';
 export default function EmployerProfilePage() {
   const user = auth.getUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [saved, setSaved] = useState(false);
-  
   const [profile, setProfile] = useState({
     company: 'TechCorp Inc.',
     email: 'hiring@techcorp.com',
@@ -64,14 +62,6 @@ export default function EmployerProfilePage() {
           </div>
         )}
       </div>
-
-      {saved && (
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="py-3">
-            <p className="text-green-800 text-center">Profile updated successfully!</p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Company Information */}
       <Card>

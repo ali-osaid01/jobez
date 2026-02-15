@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { mockInterviews } from '@/lib/mock-data';
 import { Sparkles, UserCheck, UserX, Phone, Clock, MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function EmployerInterviewsPage() {
   const [interviews] = useState(mockInterviews);
@@ -84,7 +85,7 @@ export default function EmployerInterviewsPage() {
                     size="sm"
                     variant="destructive"
                     disabled={!rejectComment.trim()}
-                    onClick={() => { setRejectingId(null); setRejectComment(''); }}
+                    onClick={() => { toast.success('Candidate has been rejected'); setRejectingId(null); setRejectComment(''); }}
                   >
                     Confirm Rejection
                   </Button>
@@ -107,11 +108,11 @@ export default function EmployerInterviewsPage() {
                   <Sparkles className="h-4 w-4" />
                   View AI Results
                 </Button>
-                <Button size="sm" className="gap-2" variant="outline">
+                <Button size="sm" className="gap-2" variant="outline" onClick={() => toast.success('Candidate has been shortlisted')}>
                   <UserCheck className="h-4 w-4" />
                   Shortlist
                 </Button>
-                <Button size="sm" className="gap-2" variant="outline">
+                <Button size="sm" className="gap-2" variant="outline" onClick={() => toast.success('Contact request sent to candidate')}>
                   <Phone className="h-4 w-4" />
                   Contact Candidate
                 </Button>

@@ -2,7 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { useAppSelector } from '@/lib/store/hooks';
+import {
+  selectIsAuthenticated,
+  selectUserRole,
+} from '@/lib/store/features/authSlice';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -12,36 +16,31 @@ interface AuthWrapperProps {
 export function AuthWrapper({ children, requiredRole }: AuthWrapperProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const userRole = useAppSelector(selectUserRole);
 
   useEffect(() => {
-    // Public routes that don't require authentication
-    const publicRoutes = ['/login', '/role-selection'];
-    
+    const publicRoutes = ['/login', '/signup', '/role-selection'];
+
     if (publicRoutes.includes(pathname)) {
       return;
     }
 
-    // Check if user is authenticated
-    if (!auth.isAuthenticated()) {
+    if (!isAuthenticated) {
       router.push('/login');
       return;
     }
 
-    // Check role if required
-    if (requiredRole) {
-      const user = auth.getUser();
-      if (!user || user.role !== requiredRole) {
-        // Redirect to correct dashboard based on user role
-        if (user?.role === 'job-seeker') {
-          router.push('/job-seeker/dashboard');
-        } else if (user?.role === 'employer') {
-          router.push('/employer/dashboard');
-        } else {
-          router.push('/login');
-        }
+    if (requiredRole && userRole !== requiredRole) {
+      if (userRole === 'job-seeker') {
+        router.push('/job-seeker/dashboard');
+      } else if (userRole === 'employer') {
+        router.push('/employer/dashboard');
+      } else {
+        router.push('/login');
       }
     }
-  }, [pathname, router, requiredRole]);
+  }, [pathname, router, requiredRole, isAuthenticated, userRole]);
 
   return <>{children}</>;
 }

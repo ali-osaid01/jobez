@@ -2,7 +2,7 @@
 
 import { AuthWrapper } from '@/components/auth-wrapper';
 import { useRouter, usePathname } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { useLogoutMutation } from '@/lib/store/api/authApi';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
@@ -32,9 +32,14 @@ export default function JobSeekerLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [logoutApi] = useLogoutMutation();
 
-  const handleLogout = () => {
-    auth.logout();
+  const handleLogout = async () => {
+    try {
+      await logoutApi().unwrap();
+    } catch {
+      // Still navigate to login even if API call fails
+    }
     router.push('/login');
   };
 

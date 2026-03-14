@@ -6,62 +6,44 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Sparkles, Users, Building2, Chrome, Github, Mail, Lock } from 'lucide-react';
+import { Chrome, Github, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
-
-type UserRole = 'job-seeker' | 'employer' | null;
+import { useLoginMutation } from '@/lib/store/api/authApi';
+import type { ApiError } from '@/lib/store/types';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [login, { isLoading: loading }] = useLoginMutation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
+
     if (!email || !password) {
-      setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
-    setLoading(true);
-    
     try {
-      const existingUser = localStorage.getItem('jobez_user');
+      const { user } = await login({ email, password }).unwrap();
 
-      if (existingUser) {
-        const user = JSON.parse(existingUser);
+      toast.success('Welcome back!');
 
-        if (user.email !== email || user.password !== password) {
-          setError('Invalid email or password.');
-          setLoading(false);
-          return;
-        }
-
-        localStorage.setItem('jobez_auth', 'true');
-        toast.success('Welcome back!');
-
-        if (user.onboardingComplete) {
-          if (user.role === 'job-seeker') {
-            router.push('/job-seeker/dashboard');
-          } else {
-            router.push('/employer/dashboard');
-          }
-        } else {
-          router.push('/onboarding');
-        }
+      if (!user.onboardingComplete) {
+        router.push('/onboarding');
+      } else if (user.role === 'job-seeker') {
+        router.push('/job-seeker/dashboard');
       } else {
-        setError('Account not found. Please sign up first.');
+        router.push('/employer/dashboard');
       }
     } catch (err) {
-      setError('Failed to log in. Please try again.');
-    } finally {
-      setLoading(false);
+      const apiError = err as { data?: ApiError };
+      const message =
+        apiError.data?.error?.message ?? 'Failed to log in. Please try again.';
+      toast.error(message);
     }
   };
 
@@ -153,11 +135,7 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
-
-              <Button 
+              <Button
                 type="submit" 
                 className="w-full btn-press bg-primary hover:bg-primary/90" 
                 size="lg"

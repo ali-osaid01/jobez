@@ -6,31 +6,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Briefcase, Sparkles, ArrowRight, ArrowLeft, Users, Building2, User, Mail, Phone, Lock } from 'lucide-react';
+import { ArrowRight, Users, Building2, User, Mail, Phone, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
-
-type UserRole = 'job-seeker' | 'employer' | null;
+import { useSignupMutation } from '@/lib/store/api/authApi';
+import type { ApiError } from '@/lib/store/types';
+import type { UserRole } from '@/lib/auth';
 
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState<'role' | 'details'>('role');
-  const [role, setRole] = useState<UserRole>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [touched, setTouched] = useState({
     name: false,
     email: false,
     phone: false,
     password: false
   });
+  const [signup, { isLoading: loading }] = useSignupMutation();
 
   const handleRoleSelect = (selectedRole: UserRole) => {
     setRole(selectedRole);
@@ -53,49 +53,49 @@ export default function SignupPage() {
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!formData.name || !formData.email || !formData.phone || !formData.password) {
-      setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     if (!validateEmail(formData.email)) {
-      setError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       return;
     }
 
     if (!validatePhone(formData.phone)) {
-      setError('Please enter a valid phone number (at least 10 digits)');
+      toast.error('Please enter a valid phone number (at least 10 digits)');
       return;
     }
 
     if (!validatePassword(formData.password)) {
-      setError('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
-    setLoading(true);
+    if (!role) {
+      toast.error('Please select a role');
+      return;
+    }
 
     try {
-      const userData = {
-        ...formData,
+      await signup({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
         role,
-        id: Date.now().toString(),
-        onboardingComplete: false
-      };
-
-      localStorage.setItem('jobez_auth', 'true');
-      localStorage.setItem('jobez_user', JSON.stringify(userData));
+      }).unwrap();
 
       toast.success('Account created successfully!');
-
-      setTimeout(() => {
-        router.push('/onboarding');
-      }, 500);
+      router.push('/onboarding');
     } catch (err) {
-      setError('Failed to create account. Please try again.');
-      setLoading(false);
+      const apiError = err as { data?: ApiError };
+      const message =
+        apiError.data?.error?.message ??
+        'Failed to create account. Please try again.';
+      toast.error(message);
     }
   };
 
@@ -267,12 +267,6 @@ export default function SignupPage() {
                     <p className="text-xs text-destructive">Password must be at least 6 characters</p>
                   )}
                 </div>
-
-                {error && (
-                  <p className="text-sm text-destructive">
-                    {error}
-                  </p>
-                )}
 
                 <Button
                   type="submit"

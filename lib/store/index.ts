@@ -46,6 +46,12 @@ export {
   useLogoutMutation,
   useRefreshTokenMutation,
 } from './api/authApi';
+export {
+  profileApi,
+  useGetProfileQuery,
+  useUpdateProfileMutation,
+  useExtractResumeMutation,
+} from './api/profileApi';
 
 // ─── Types ────────────────────────────────────────────────────
 export type {
@@ -58,6 +64,13 @@ export type {
   AuthResponseData,
   RefreshTokenRequest,
   RefreshTokenResponseData,
+  Education,
+  WorkExperience,
+  JobSeekerProfile,
+  EmployerProfile,
+  UpdateProfileRequest,
+  ProfileResponseData,
+  ResumeExtractResponseData,
   ModalState,
   ThemeMode,
   UiState,

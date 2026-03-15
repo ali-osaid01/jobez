@@ -29,6 +29,11 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+// ─── Refresh Token Mutex ─────────────────────────────────────
+// Prevents multiple parallel 401s from triggering concurrent refresh calls.
+
+let refreshPromise: Promise<boolean> | null = null;
+
 // ─── Base Query With Reauth ───────────────────────────────────
 
 const baseQueryWithReauth: BaseQueryFn<
@@ -39,6 +44,15 @@ const baseQueryWithReauth: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
+    // If a refresh is already in progress, wait for it instead of firing another
+    if (refreshPromise) {
+      const refreshed = await refreshPromise;
+      if (refreshed) {
+        result = await baseQuery(args, api, extraOptions);
+      }
+      return result;
+    }
+
     const refreshToken = (api.getState() as { auth: AuthState }).auth
       .refreshToken;
 
@@ -47,28 +61,39 @@ const baseQueryWithReauth: BaseQueryFn<
       return result;
     }
 
-    // Attempt token refresh
-    const refreshResult = await baseQuery(
-      {
-        url: '/auth/refresh',
-        method: 'POST',
-        body: { refreshToken },
-      },
-      api,
-      extraOptions,
-    );
+    // Start refresh and store the promise so parallel requests can wait
+    refreshPromise = (async () => {
+      try {
+        const refreshResult = await baseQuery(
+          {
+            url: '/auth/refresh',
+            method: 'POST',
+            body: { refreshToken },
+          },
+          api,
+          extraOptions,
+        );
 
-    if (refreshResult.data) {
-      // Backend wraps response in { data: { token, user }, message }
-      const response = refreshResult.data as ApiResponse<RefreshTokenResponseData>;
-      const { token, user } = response.data;
+        if (refreshResult.data) {
+          const response = refreshResult.data as ApiResponse<RefreshTokenResponseData>;
+          const { token, user } = response.data;
+          api.dispatch(setCredentials({ user, token }));
+          return true;
+        }
 
-      api.dispatch(setCredentials({ user, token }));
+        api.dispatch(logout());
+        return false;
+      } catch {
+        api.dispatch(logout());
+        return false;
+      }
+    })();
 
-      // Retry the original request with new token
+    const refreshed = await refreshPromise;
+    refreshPromise = null;
+
+    if (refreshed) {
       result = await baseQuery(args, api, extraOptions);
-    } else {
-      api.dispatch(logout());
     }
   }
 

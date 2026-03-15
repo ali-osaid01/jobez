@@ -8,17 +8,23 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Sparkles, ArrowRight, ArrowLeft, CheckCircle, Building2, MapPin, Wrench, Briefcase as BriefcaseIcon, GraduationCap, Target, TrendingUp, Banknote, FileText, Globe, Users, Award, Factory } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, CheckCircle, Building2, MapPin, Wrench, Briefcase as BriefcaseIcon, GraduationCap, Target, TrendingUp, Banknote, FileText, Globe, Users, Award, Factory } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
+import { useAppSelector } from '@/lib/store/hooks';
+import { selectCurrentUser, selectIsAuthenticated } from '@/lib/store/features/authSlice';
+import { useUpdateProfileMutation, useExtractResumeMutation } from '@/lib/store/api/profileApi';
+import type { ApiError } from '@/lib/store/types';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const user = useAppSelector(selectCurrentUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+
+  const [updateProfile, { isLoading: saving }] = useUpdateProfileMutation();
+  const [extractResume, { isLoading: extracting }] = useExtractResumeMutation();
 
   // Job Seeker Form Data
   const [seekerData, setSeekerData] = useState({
@@ -52,36 +58,21 @@ export default function OnboardingPage() {
 
   const [skillInput, setSkillInput] = useState('');
 
+  // Redirect if not authenticated or already onboarded
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    try {
-      const userStr = localStorage.getItem('jobez_user');
-      if (!userStr) {
-        router.push('/signup');
-        return;
-      }
-
-      const userData = JSON.parse(userStr);
-      if (userData.onboardingComplete) {
-        if (userData.role === 'job-seeker') {
-          router.push('/job-seeker/dashboard');
-        } else {
-          router.push('/employer/dashboard');
-        }
-        return;
-      }
-
-      setUser(userData);
-    } catch (error) {
-      console.error('[v0] Error loading user:', error);
+    if (!isAuthenticated) {
       router.push('/signup');
+      return;
     }
-  }, [router, mounted]);
+
+    if (user?.onboardingComplete) {
+      if (user.role === 'job-seeker') {
+        router.push('/job-seeker/dashboard');
+      } else {
+        router.push('/employer/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleAddSkill = () => {
     if (skillInput && !seekerData.skills.includes(skillInput)) {
@@ -100,11 +91,48 @@ export default function OnboardingPage() {
     });
   };
 
-  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && (file.type === 'application/pdf' || file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
-      setSeekerData({ ...seekerData, resumeFile: file, resumeUploaded: true });
-      // In a real app, you'd upload to cloud storage here
+    if (!file) return;
+
+    const validTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a PDF, DOC, or DOCX file');
+      return;
+    }
+
+    setSeekerData({ ...seekerData, resumeFile: file, resumeUploaded: true });
+
+    // Extract resume data via API
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    try {
+      const extracted = await extractResume(formData).unwrap();
+      setSeekerData((prev) => ({
+        ...prev,
+        resumeFile: file,
+        resumeUploaded: true,
+        title: extracted.title || prev.title,
+        experience: extracted.experience || prev.experience,
+        skills: extracted.skills.length > 0 ? extracted.skills : prev.skills,
+        location: extracted.location || prev.location,
+        education: extracted.education.length > 0 ? extracted.education : prev.education,
+        certifications: extracted.certifications.length > 0 ? extracted.certifications : prev.certifications,
+        workExperience: extracted.workExperience.length > 0 ? extracted.workExperience : prev.workExperience,
+        bio: extracted.bio || prev.bio,
+      }));
+      toast.success('Resume parsed successfully! Fields have been auto-filled.');
+    } catch (err) {
+      const apiError = err as { data?: ApiError };
+      const message =
+        apiError.data?.error?.message ?? 'Failed to parse resume. You can fill in details manually.';
+      toast.error(message);
     }
   };
 
@@ -153,35 +181,48 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    setLoading(true);
-
     try {
-      // Update user data with onboarding info
-      const updatedUser = {
-        ...user,
-        onboardingComplete: true,
-        ...(user.role === 'job-seeker' ? seekerData : employerData)
-      };
+      const body = user?.role === 'job-seeker'
+        ? {
+            onboardingComplete: true,
+            title: seekerData.title,
+            experience: seekerData.experience,
+            skills: seekerData.skills,
+            location: seekerData.location,
+            expectedSalary: seekerData.expectedSalary,
+            education: seekerData.education,
+            certifications: seekerData.certifications,
+            workExperience: seekerData.workExperience,
+            preferredRole: seekerData.preferredRole,
+            bio: seekerData.bio,
+          }
+        : {
+            onboardingComplete: true,
+            company: employerData.companyName,
+            industry: employerData.industry,
+            companySize: employerData.companySize,
+            location: employerData.location,
+            website: employerData.website,
+            description: employerData.description,
+          };
 
-      localStorage.setItem('jobez_user', JSON.stringify(updatedUser));
-      localStorage.setItem('jobez_auth', 'true');
-
+      await updateProfile(body).unwrap();
       toast.success('Profile setup complete!');
 
-      setTimeout(() => {
-        if (user.role === 'job-seeker') {
-          router.push('/job-seeker/dashboard');
-        } else {
-          router.push('/employer/dashboard');
-        }
-      }, 1000);
-    } catch (error) {
-      console.error('[v0] Error completing onboarding:', error);
-      setLoading(false);
+      if (user?.role === 'job-seeker') {
+        router.push('/job-seeker/dashboard');
+      } else {
+        router.push('/employer/dashboard');
+      }
+    } catch (err) {
+      const apiError = err as { data?: ApiError };
+      const message =
+        apiError.data?.error?.message ?? 'Failed to save profile. Please try again.';
+      toast.error(message);
     }
   };
 
-  if (!mounted || !user) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -254,8 +295,14 @@ export default function OnboardingPage() {
                             accept=".pdf,.doc,.docx"
                             onChange={handleResumeUpload}
                             className="cursor-pointer"
+                            disabled={extracting}
                           />
-                          {seekerData.resumeUploaded && (
+                          {extracting && (
+                            <div className="mt-3 text-sm text-muted-foreground animate-pulse">
+                              Parsing resume...
+                            </div>
+                          )}
+                          {seekerData.resumeUploaded && !extracting && (
                             <div className="mt-3 flex items-center gap-2 text-sm text-primary">
                               <CheckCircle className="h-4 w-4" />
                               <span>{seekerData.resumeFile?.name}</span>
@@ -277,8 +324,8 @@ export default function OnboardingPage() {
                           <p className="text-sm text-muted-foreground mb-4">
                             Complete the form step by step
                           </p>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="w-full group-hover:bg-secondary group-hover:text-white group-hover:border-secondary"
                             onClick={handleNext}
                           >
@@ -290,7 +337,7 @@ export default function OnboardingPage() {
                     </Card>
                   </div>
 
-                  {seekerData.resumeUploaded && (
+                  {seekerData.resumeUploaded && !extracting && (
                     <div className="flex justify-end">
                 <Button onClick={handleNext} size="lg" className="bg-primary hover:bg-primary/90">
                   Continue with Resume
@@ -402,8 +449,8 @@ export default function OnboardingPage() {
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button 
-                      onClick={handleNext} 
+                    <Button
+                      onClick={handleNext}
                       className="flex-1"
                       disabled={!seekerData.title || !seekerData.experience || !seekerData.location || !seekerData.preferredRole}
                     >
@@ -696,8 +743,12 @@ export default function OnboardingPage() {
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button onClick={handleComplete} className="flex-1" disabled={loading}>
-                      {loading ? 'Setting up...' : 'Complete & Go to Dashboard'}
+                    <Button onClick={handleComplete} className="flex-1" disabled={saving}>
+                      {saving ? (
+                        <span className="animate-pulse">Setting up...</span>
+                      ) : (
+                        'Complete & Go to Dashboard'
+                      )}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
@@ -850,8 +901,12 @@ export default function OnboardingPage() {
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button onClick={handleComplete} className="flex-1" disabled={loading}>
-                      {loading ? 'Setting up...' : 'Complete & Go to Dashboard'}
+                    <Button onClick={handleComplete} className="flex-1" disabled={saving}>
+                      {saving ? (
+                        <span className="animate-pulse">Setting up...</span>
+                      ) : (
+                        'Complete & Go to Dashboard'
+                      )}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>

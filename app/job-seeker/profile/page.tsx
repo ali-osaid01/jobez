@@ -1,46 +1,86 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { auth } from '@/lib/auth';
-import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Plus, X } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Plus, X, Award } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAppSelector } from '@/lib/store/hooks';
+import { selectCurrentUser } from '@/lib/store/features/authSlice';
+import { useGetProfileQuery, useUpdateProfileMutation } from '@/lib/store/api/profileApi';
+import type { ApiError } from '@/lib/store/types';
 
 export default function ProfilePage() {
-  const user = auth.getUser();
+  const user = useAppSelector(selectCurrentUser);
+  const { data: profileData, isLoading } = useGetProfileQuery();
+  const [updateProfile, { isLoading: saving }] = useUpdateProfileMutation();
+
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    name: 'Ahmed Hassan',
-    email: 'ahmed.hassan@gmail.com',
-    phone: user?.phone || '',
-    title: 'Senior Frontend Developer',
-    location: 'Lahore, Pakistan',
-    experience: '5+ years',
-    bio: 'Passionate software developer with expertise in React, TypeScript, and modern web technologies.',
-    skills: ['React', 'TypeScript', 'Next.js', 'Node.js', 'Tailwind CSS'],
-    education: [
-      {
-        degree: 'Bachelor of Science in Computer Science',
-        institution: 'LUMS',
-        year: '2018'
-      }
-    ]
+    name: '',
+    email: '',
+    phone: '',
+    title: '',
+    location: '',
+    experience: '',
+    bio: '',
+    skills: [] as string[],
+    education: [] as { degree: string; institution: string; year: string }[],
+    certifications: [] as string[],
+    workExperience: [] as { title: string; company: string; duration: string }[],
+    preferredRole: '',
+    expectedSalary: '',
   });
 
   const [newSkill, setNewSkill] = useState('');
 
-  const handleSave = () => {
-    auth.updateUser({
-      name: profile.name,
-      email: profile.email,
+  // Populate form when profile data loads (backend returns flat fields)
+  useEffect(() => {
+    if (!user || !profileData) return;
+
+    setProfile({
+      name: profileData.name || user.name || '',
+      email: profileData.email || user.email || '',
+      phone: profileData.phone || user.phone || '',
+      title: profileData.title || '',
+      location: profileData.location || '',
+      experience: profileData.experience || '',
+      bio: profileData.bio || '',
+      skills: profileData.skills || [],
+      education: profileData.education || [],
+      certifications: profileData.certifications || [],
+      workExperience: profileData.workExperience || [],
+      preferredRole: profileData.preferredRole || '',
+      expectedSalary: profileData.expectedSalary || '',
     });
-    setIsEditing(false);
-    toast.success('Profile updated successfully');
+  }, [user, profileData]);
+
+  const handleSave = async () => {
+    try {
+      await updateProfile({
+        title: profile.title,
+        experience: profile.experience,
+        skills: profile.skills,
+        location: profile.location,
+        expectedSalary: profile.expectedSalary,
+        education: profile.education,
+        certifications: profile.certifications,
+        workExperience: profile.workExperience,
+        preferredRole: profile.preferredRole,
+        bio: profile.bio,
+      }).unwrap();
+      setIsEditing(false);
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      const apiError = err as { data?: ApiError };
+      const message =
+        apiError.data?.error?.message ?? 'Failed to update profile. Please try again.';
+      toast.error(message);
+    }
   };
 
   const addSkill = () => {
@@ -53,6 +93,24 @@ export default function ProfilePage() {
   const removeSkill = (skill: string) => {
     setProfile({ ...profile, skills: profile.skills.filter(s => s !== skill) });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-48 bg-muted animate-pulse rounded" />
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+            <div className="grid gap-4 md:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -74,7 +132,9 @@ export default function ProfilePage() {
             <Button variant="outline" onClick={() => setIsEditing(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
         )}
       </div>
@@ -108,8 +168,7 @@ export default function ProfilePage() {
                   id="email"
                   type="email"
                   value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                  disabled={!isEditing}
+                  disabled
                   className="pl-10"
                 />
               </div>
@@ -175,7 +234,7 @@ export default function ProfilePage() {
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="bio">Professional Bio</Label>
             <Textarea
@@ -198,21 +257,25 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {profile.skills.map((skill) => (
-              <Badge key={skill} variant="secondary" className="text-sm py-1 px-3">
-                {skill}
-                {isEditing && (
-                  <button
-                    onClick={() => removeSkill(skill)}
-                    className="ml-2 hover:text-destructive"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </Badge>
-            ))}
+            {profile.skills.length > 0 ? (
+              profile.skills.map((skill) => (
+                <Badge key={skill} variant="secondary" className="text-sm py-1 px-3">
+                  {skill}
+                  {isEditing && (
+                    <button
+                      onClick={() => removeSkill(skill)}
+                      className="ml-2 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </Badge>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills added yet</p>
+            )}
           </div>
-          
+
           {isEditing && (
             <div className="flex gap-2">
               <Input
@@ -239,15 +302,63 @@ export default function ProfilePage() {
           <CardDescription>Your academic background</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {profile.education.map((edu, index) => (
-            <div key={index} className="p-4 border rounded-lg space-y-2">
-              <h4 className="font-semibold">{edu.degree}</h4>
-              <p className="text-sm text-muted-foreground">{edu.institution}</p>
-              <p className="text-xs text-muted-foreground">Graduated: {edu.year}</p>
-            </div>
-          ))}
+          {profile.education.length > 0 ? (
+            profile.education.map((edu, index) => (
+              <div key={index} className="p-4 border rounded-lg space-y-2">
+                <h4 className="font-semibold">{edu.degree}</h4>
+                <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                <p className="text-xs text-muted-foreground">Graduated: {edu.year}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No education added yet</p>
+          )}
         </CardContent>
       </Card>
+
+      {/* Work Experience */}
+      {profile.workExperience.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-primary" />
+              Work Experience
+            </CardTitle>
+            <CardDescription>Your professional history</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.workExperience.map((work, index) => (
+              <div key={index} className="p-4 border rounded-lg space-y-2">
+                <h4 className="font-semibold">{work.title}</h4>
+                <p className="text-sm text-muted-foreground">{work.company}</p>
+                <p className="text-xs text-muted-foreground">{work.duration}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Certifications */}
+      {profile.certifications.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              Certifications
+            </CardTitle>
+            <CardDescription>Your professional certifications</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {profile.certifications.map((cert) => (
+                <Badge key={cert} variant="outline" className="text-sm py-1 px-3">
+                  {cert}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

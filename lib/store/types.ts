@@ -66,6 +66,106 @@ export interface RefreshTokenResponseData {
   user: AuthUser;
 }
 
+// ─── Profile Types ───────────────────────────────────────────
+
+export interface Education {
+  degree: string;
+  institution: string;
+  year: string;
+}
+
+export interface WorkExperience {
+  title: string;
+  company: string;
+  duration: string;
+}
+
+export interface JobSeekerProfile {
+  title: string;
+  experience: string;
+  skills: string[];
+  location: string;
+  expectedSalary: string;
+  education: Education[];
+  certifications: string[];
+  workExperience: WorkExperience[];
+  preferredRole: string;
+  bio: string;
+}
+
+export interface EmployerProfile {
+  companyName: string;
+  industry: string;
+  companySize: string;
+  location: string;
+  website: string;
+  description: string;
+}
+
+// Backend returns/accepts flat profile fields (not nested)
+export interface UpdateProfileRequest {
+  onboardingComplete?: boolean;
+  // Job Seeker fields
+  title?: string | null;
+  experience?: string | null;
+  skills?: string[] | null;
+  location?: string | null;
+  expectedSalary?: string | null;
+  education?: Education[] | null;
+  certifications?: string[] | null;
+  workExperience?: WorkExperience[] | null;
+  preferredRole?: string | null;
+  bio?: string | null;
+  // Employer fields
+  company?: string | null;
+  companySize?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  description?: string | null;
+}
+
+export interface ProfileResponseData {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  onboardingComplete: boolean;
+  // Job Seeker fields
+  title: string | null;
+  location: string | null;
+  experience: string | null;
+  preferredRole: string | null;
+  expectedSalary: string | null;
+  skills: string[] | null;
+  education: Education[] | null;
+  workExperience: WorkExperience[] | null;
+  certifications: string[] | null;
+  resumeUrl: string | null;
+  bio: string | null;
+  // Employer fields
+  company: string | null;
+  companySize: string | null;
+  industry: string | null;
+  website: string | null;
+  description: string | null;
+  founded: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResumeExtractResponseData {
+  title: string;
+  experience: string;
+  skills: string[];
+  location: string;
+  education: Education[];
+  certifications: string[];
+  workExperience: WorkExperience[];
+  bio: string;
+}
+
 // ─── UI Types ─────────────────────────────────────────────────
 
 export interface ModalState {

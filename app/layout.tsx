@@ -20,7 +20,6 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'JobEZ - AI-Powered Job Platform',
   description: 'Find your dream job or hire top talent with AI-powered interviews and smart matching',
-  generator: 'v0.app',
 }
 
 export default function RootLayout({
@@ -34,7 +33,7 @@ export default function RootLayout({
         <StoreProvider>
           {children}
         </StoreProvider>
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   )

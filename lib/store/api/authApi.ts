@@ -47,6 +47,7 @@ export const authApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<AuthResponseData>) =>
         response.data,
+      invalidatesTags: ['User'],
       async onQueryStarted(_args, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;

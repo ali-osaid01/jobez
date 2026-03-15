@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 
 import { makeStore, type AppStore } from './store';
 import { hydrateAuth } from './features/authSlice';
-import { useAppDispatch, useAppStore } from './hooks';
+import { useAppStore } from './hooks';
 import type { AuthState } from './types';
 
 // ─── LocalStorage Keys ───────────────────────────────────────
@@ -15,51 +15,62 @@ const USER_KEY = 'jobez_user';
 const TOKEN_KEY = 'jobez_token';
 const REFRESH_TOKEN_KEY = 'jobez_refresh_token';
 
-// ─── Auth Initializer ─────────────────────────────────────────
-// On mount: hydrates Redux from localStorage.
-// On state change: persists Redux auth state back to localStorage.
+// ─── Synchronous Hydration ──────────────────────────────────
+// Reads localStorage and returns an AuthState to preload into the store,
+// so auth is available on the very first render (no flash/redirect).
 
-function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const dispatch = useAppDispatch();
-  const store = useAppStore();
-  const initialized = useRef(false);
+function getPersistedAuth(): AuthState | null {
+  if (typeof window === 'undefined') return null;
 
-  // Hydrate Redux from localStorage on first mount
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+  try {
+    const authFlag = localStorage.getItem(AUTH_KEY);
+    const userStr = localStorage.getItem(USER_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
 
-    try {
-      const authFlag = localStorage.getItem(AUTH_KEY);
-      const userStr = localStorage.getItem(USER_KEY);
+    if (authFlag !== 'true' || !userStr || !token) return null;
 
-      if (authFlag !== 'true' || !userStr) return;
+    const storedUser = JSON.parse(userStr) as Record<string, unknown>;
 
-      const storedUser = JSON.parse(userStr) as Record<string, unknown>;
-
-      const authState: AuthState = {
-        user: {
-          id: storedUser.id as string,
-          email: storedUser.email as string,
-          phone: (storedUser.phone as string) ?? '',
-          role: storedUser.role as 'job-seeker' | 'employer',
-          name: storedUser.name as string | undefined,
-          company: storedUser.company as string | undefined,
-          onboardingComplete:
-            (storedUser.onboardingComplete as boolean) ?? false,
-        },
-        token: localStorage.getItem(TOKEN_KEY),
-        refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
-        isAuthenticated: true,
-      };
-
-      dispatch(hydrateAuth(authState));
-    } catch {
-      // Invalid stored data — stay logged out
+    // Validate required fields exist
+    if (
+      typeof storedUser.id !== 'string' ||
+      typeof storedUser.email !== 'string' ||
+      typeof storedUser.role !== 'string'
+    ) {
+      return null;
     }
-  }, [dispatch]);
 
-  // Sync Redux auth state → localStorage on every change
+    const role = storedUser.role as string;
+    if (role !== 'job-seeker' && role !== 'employer') return null;
+
+    return {
+      user: {
+        id: storedUser.id,
+        email: storedUser.email,
+        phone: typeof storedUser.phone === 'string' ? storedUser.phone : '',
+        role,
+        name: typeof storedUser.name === 'string' ? storedUser.name : undefined,
+        company: typeof storedUser.company === 'string' ? storedUser.company : undefined,
+        onboardingComplete: storedUser.onboardingComplete === true,
+      },
+      token,
+      refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
+      isAuthenticated: true,
+    };
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[StoreProvider] Failed to hydrate auth from localStorage:', err);
+    }
+    return null;
+  }
+}
+
+// ─── Auth Persister ──────────────────────────────────────────
+// Syncs Redux auth state → localStorage on every change.
+
+function AuthPersister({ children }: { children: React.ReactNode }) {
+  const store = useAppStore();
+
   useEffect(() => {
     const unsubscribe = store.subscribe(() => {
       const { auth } = store.getState();
@@ -98,12 +109,20 @@ export default function StoreProvider({
   const storeRef = useRef<AppStore | null>(null);
 
   if (!storeRef.current) {
-    storeRef.current = makeStore();
+    const store = makeStore();
+
+    // Hydrate auth synchronously before first render
+    const persisted = getPersistedAuth();
+    if (persisted) {
+      store.dispatch(hydrateAuth(persisted));
+    }
+
+    storeRef.current = store;
   }
 
   return (
     <Provider store={storeRef.current}>
-      <AuthInitializer>{children}</AuthInitializer>
+      <AuthPersister>{children}</AuthPersister>
     </Provider>
   );
 }

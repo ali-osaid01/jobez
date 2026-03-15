@@ -1,38 +1,87 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { auth } from '@/lib/auth';
 import { Building2, Mail, Phone, Globe, Users, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { useGetProfileQuery, useUpdateProfileMutation } from '@/lib/store/api/profileApi';
+import type { ApiError } from '@/lib/store/types';
 
 export default function EmployerProfilePage() {
-  const user = auth.getUser();
+  const { data: profileData, isLoading } = useGetProfileQuery();
+  const [updateProfile, { isLoading: saving }] = useUpdateProfileMutation();
+
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    company: 'Systems Limited',
-    email: 'hiring@systemsltd.com',
-    phone: user?.phone || '',
-    website: 'www.systemsltd.com',
-    location: 'Lahore, Pakistan',
-    companySize: '500-1000',
-    industry: 'Technology',
-    description: 'We are a leading technology company focused on innovation and creating amazing products that change lives.',
-    founded: '2015',
+    company: '',
+    email: '',
+    phone: '',
+    website: '',
+    location: '',
+    companySize: '',
+    industry: '',
+    description: '',
+    founded: '',
   });
 
-  const handleSave = () => {
-    auth.updateUser({
-      company: profile.company,
-      email: profile.email,
+  // Populate form when profile data loads (backend returns flat fields)
+  useEffect(() => {
+    if (!profileData) return;
+
+    setProfile({
+      company: profileData.company || '',
+      email: profileData.email || '',
+      phone: profileData.phone || '',
+      website: profileData.website || '',
+      location: profileData.location || '',
+      companySize: profileData.companySize || '',
+      industry: profileData.industry || '',
+      description: profileData.description || '',
+      founded: profileData.founded || '',
     });
-    setIsEditing(false);
-    toast.success('Profile updated successfully');
+  }, [profileData]);
+
+  const handleSave = async () => {
+    try {
+      await updateProfile({
+        company: profile.company,
+        location: profile.location,
+        companySize: profile.companySize,
+        industry: profile.industry,
+        website: profile.website,
+        description: profile.description,
+      }).unwrap();
+      setIsEditing(false);
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      const apiError = err as { data?: ApiError };
+      const message =
+        apiError.data?.error?.message ?? 'Failed to update profile. Please try again.';
+      toast.error(message);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-48 bg-muted animate-pulse rounded" />
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+            <div className="grid gap-4 md:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -56,8 +105,8 @@ export default function EmployerProfilePage() {
             <Button variant="outline" onClick={() => setIsEditing(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-secondary hover:bg-secondary/90">
-              Save Changes
+            <Button onClick={handleSave} disabled={saving} className="bg-secondary hover:bg-secondary/90">
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         )}
@@ -92,8 +141,7 @@ export default function EmployerProfilePage() {
                   id="email"
                   type="email"
                   value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                  disabled={!isEditing}
+                  disabled
                   className="pl-10"
                 />
               </div>

@@ -52,6 +52,16 @@ export {
   useUpdateProfileMutation,
   useExtractResumeMutation,
 } from './api/profileApi';
+export {
+  jobsApi,
+  useGetJobsQuery,
+  useGetRecommendedJobsQuery,
+  useGetJobByIdQuery,
+  useCreateJobMutation,
+  useUpdateJobMutation,
+  useDeleteJobMutation,
+  useToggleBookmarkMutation,
+} from './api/jobsApi';
 
 // ─── Types ────────────────────────────────────────────────────
 export type {
@@ -71,6 +81,16 @@ export type {
   UpdateProfileRequest,
   ProfileResponseData,
   ResumeExtractResponseData,
+  JobLocationType,
+  JobType,
+  JobExperienceLevel,
+  JobStatus,
+  JobResponseData,
+  CreateJobRequest,
+  UpdateJobRequest,
+  JobsListResponse,
+  JobsQueryParams,
+  BookmarkResponse,
   ModalState,
   ThemeMode,
   UiState,

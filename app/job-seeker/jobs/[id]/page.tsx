@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { getJobById } from '@/lib/mock-data';
-import { 
-  MapPin, 
-  Banknote, 
-  Briefcase, 
-  Calendar, 
+import { Skeleton } from '@/components/ui/skeleton';
+import { useGetJobByIdQuery, useToggleBookmarkMutation } from '@/lib/store';
+import {
+  MapPin,
+  Banknote,
+  Briefcase,
+  Calendar,
   Building2,
   CheckCircle2,
   ArrowLeft,
@@ -23,10 +24,46 @@ import { toast } from 'sonner';
 export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const job = getJobById(params.id as string);
+  const jobId = params.id as string;
+
+  const { data: job, isLoading, isError } = useGetJobByIdQuery(jobId);
+  const [toggleBookmark] = useToggleBookmarkMutation();
   const [applied, setApplied] = useState(false);
 
-  if (!job) {
+  const handleApply = () => {
+    setApplied(true);
+    toast.success('Application submitted successfully!');
+    setTimeout(() => {
+      router.push('/job-seeker/applications');
+    }, 2000);
+  };
+
+  const handleSaveJob = async () => {
+    try {
+      const result = await toggleBookmark(jobId).unwrap();
+      toast.success(result.bookmarked ? 'Job saved to bookmarks' : 'Bookmark removed');
+    } catch {
+      toast.error('Failed to update bookmark');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-64" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-48" />
+            <Skeleton className="h-48" />
+          </div>
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !job) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold mb-2">Job not found</h2>
@@ -36,14 +73,6 @@ export default function JobDetailPage() {
       </div>
     );
   }
-
-  const handleApply = () => {
-    setApplied(true);
-    toast.success('Application submitted successfully!');
-    setTimeout(() => {
-      router.push('/job-seeker/applications');
-    }, 2000);
-  };
 
   return (
     <div className="space-y-6">
@@ -107,7 +136,7 @@ export default function JobDetailPage() {
                   <Button size="lg" onClick={handleApply} className="w-full">
                     Apply Now
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full" onClick={() => toast.success('Job saved to bookmarks')}>
+                  <Button variant="outline" size="lg" className="w-full" onClick={handleSaveJob}>
                     Save Job
                   </Button>
                 </>
@@ -137,55 +166,61 @@ export default function JobDetailPage() {
           </Card>
 
           {/* Requirements */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Requirements</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {job.requirements.map((req, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-muted-foreground">{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          {job.requirements && job.requirements.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Requirements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {job.requirements.map((req, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Responsibilities */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Responsibilities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {job.responsibilities.map((resp, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span className="text-muted-foreground">{resp}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          {job.responsibilities && job.responsibilities.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Responsibilities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {job.responsibilities.map((resp, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{resp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Benefits */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Benefits</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {job.benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-sm">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {job.benefits && job.benefits.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Benefits</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {job.benefits.map((benefit, index) => (
+                    <div key={index} className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-sm">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -196,25 +231,26 @@ export default function JobDetailPage() {
               <CardTitle>About {job.company}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Leading technology company focused on innovation and growth.
-                </p>
-              </div>
               <Separator />
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Industry</span>
-                  <span className="font-medium">Technology</span>
+                  <span className="text-muted-foreground">Location</span>
+                  <span className="font-medium">{job.location}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Company Size</span>
-                  <span className="font-medium">500-1000</span>
+                  <span className="text-muted-foreground">Job Type</span>
+                  <span className="font-medium">{job.locationType}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Applicants</span>
                   <span className="font-medium">{job.applicantsCount || 0}</span>
                 </div>
+                {job.applicationDeadline && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Deadline</span>
+                    <span className="font-medium">{job.applicationDeadline}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

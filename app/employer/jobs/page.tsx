@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockJobs } from '@/lib/mock-data';
-import { Briefcase, Users, Eye, PlusCircle, MoreVertical, Edit, Trash2, Sparkles } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useGetJobsQuery, useDeleteJobMutation, useAppSelector, selectCurrentUser } from '@/lib/store';
+import { Briefcase, Users, Eye, PlusCircle, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +13,53 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function EmployerJobsPage() {
-  const [jobs] = useState(mockJobs);
+  const user = useAppSelector(selectCurrentUser);
+  const { data: jobsData, isLoading, isError } = useGetJobsQuery(
+    user ? { employerId: user.id } : undefined,
+    { skip: !user },
+  );
+  const [deleteJob] = useDeleteJobMutation();
+
+  const jobs = jobsData?.data ?? [];
+
+  const handleCloseJob = async (jobId: string) => {
+    try {
+      await deleteJob(jobId).unwrap();
+      toast.success('Job closed successfully');
+    } catch {
+      toast.error('Failed to close job');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-40" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-2">Failed to load jobs</h2>
+        <p className="text-muted-foreground">Please try again later.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -39,14 +83,16 @@ export default function EmployerJobsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Active Jobs</p>
             <Briefcase className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{jobs.length}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {jobs.filter((j) => j.status === 'active').length}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -60,97 +106,100 @@ export default function EmployerJobsPage() {
             </p>
           </CardContent>
         </Card>
-        {/* <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <p className="text-sm text-muted-foreground">Total Views</p>
-            <Eye className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">1,247</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <p className="text-sm text-muted-foreground">Avg. Match Score</p>
-            <Sparkles className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-orange-600">88%</p>
-          </CardContent>
-        </Card> */}
       </div>
 
       {/* Job Listings */}
       <div className="space-y-4">
-        {jobs.map((job) => (
-          <Card key={job.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-secondary/10 rounded-lg">
-                      <Briefcase className="h-5 w-5 text-secondary" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{job.title}</CardTitle>
-                      <p className="text-muted-foreground mt-1">Posted on {job.postedDate}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {job.applicantsCount || 0} applicants
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      124 views
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{job.type}</Badge>
-                    <Badge variant="secondary">{job.locationType}</Badge>
-                    <Badge variant="secondary">{job.experienceLevel}</Badge>
-                    <Badge className="bg-green-100 text-green-800 border-green-300">
-                      Active
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 md:w-48">
-                  <Link href={`/employer/jobs/${job.id}`}>
-                    <Button className="w-full" variant="outline">
-                      View Details
-                    </Button>
-                  </Link>
-                  <Link href={`/employer/applicants?jobId=${job.id}`}>
-                    <Button className="w-full bg-secondary hover:bg-secondary/90">
-                      View Applicants ({job.applicantsCount || 0})
-                    </Button>
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="w-full">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Job
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Close Job
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </CardHeader>
+        {jobs.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+              <h3 className="font-semibold mb-2">No job postings yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create your first job posting to start attracting talent
+              </p>
+              <Link href="/employer/jobs/new">
+                <Button className="bg-secondary hover:bg-secondary/90">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Post New Job
+                </Button>
+              </Link>
+            </CardContent>
           </Card>
-        ))}
+        ) : (
+          jobs.map((job) => (
+            <Card key={job.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-secondary/10 rounded-lg">
+                        <Briefcase className="h-5 w-5 text-secondary" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-xl">{job.title}</CardTitle>
+                        <p className="text-muted-foreground mt-1">Posted on {job.postedDate}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {job.applicantsCount || 0} applicants
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">{job.type}</Badge>
+                      <Badge variant="secondary">{job.locationType}</Badge>
+                      <Badge variant="secondary">{job.experienceLevel}</Badge>
+                      <Badge className={
+                        job.status === 'active'
+                          ? 'bg-green-100 text-green-800 border-green-300'
+                          : 'bg-gray-100 text-gray-800 border-gray-300'
+                      }>
+                        {job.status === 'active' ? 'Active' : 'Closed'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 md:w-48">
+                    <Link href={`/employer/jobs/${job.id}`}>
+                      <Button className="w-full" variant="outline">
+                        View Details
+                      </Button>
+                    </Link>
+                    <Link href={`/employer/applicants?jobId=${job.id}`}>
+                      <Button className="w-full bg-secondary hover:bg-secondary/90">
+                        View Applicants ({job.applicantsCount || 0})
+                      </Button>
+                    </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="w-full">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Job
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleCloseJob(job.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Close Job
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

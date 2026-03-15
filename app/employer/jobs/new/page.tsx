@@ -7,34 +7,66 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { ArrowLeft, Sparkles, Plus, X, Briefcase, Building2, MapPin, Clock, TrendingUp, Banknote, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useCreateJobMutation, useAppSelector, selectCurrentUser } from '@/lib/store';
+import type { JobLocationType, JobType, JobExperienceLevel } from '@/lib/store';
 
 export default function PostJobPage() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const user = useAppSelector(selectCurrentUser);
+  const [createJob, { isLoading: saving }] = useCreateJobMutation();
+
+  const [title, setTitle] = useState('');
+  const [company, setCompany] = useState(user?.company ?? '');
+  const [location, setLocation] = useState('');
+  const [locationType, setLocationType] = useState<JobLocationType | ''>('');
+  const [type, setType] = useState<JobType | ''>('');
+  const [experienceLevel, setExperienceLevel] = useState<JobExperienceLevel | ''>('');
+  const [salary, setSalary] = useState('');
+  const [description, setDescription] = useState('');
+  const [applicationDeadline, setApplicationDeadline] = useState('');
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
   const [benefits, setBenefits] = useState<string[]>(['']);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false);
+
+    if (!locationType || !type || !experienceLevel) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await createJob({
+        title,
+        company,
+        location,
+        locationType,
+        type,
+        experienceLevel,
+        salary,
+        description,
+        requirements: requirements.filter(Boolean),
+        responsibilities: responsibilities.filter(Boolean),
+        benefits: benefits.filter(Boolean),
+        ...(applicationDeadline ? { applicationDeadline } : {}),
+      }).unwrap();
+
       toast.success('Job posted successfully!');
       router.push('/employer/jobs');
-    }, 1500);
+    } catch {
+      toast.error('Failed to post job. Please try again.');
+    }
   };
 
   const addItem = (list: string[], setList: (items: string[]) => void) => {
@@ -82,29 +114,29 @@ export default function PostJobPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title" className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />Job Title *</Label>
-                <Input id="title" placeholder="e.g. Senior Frontend Developer" required />
+                <Input id="title" placeholder="e.g. Senior Frontend Developer" required value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="company" className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-muted-foreground" />Company Name *</Label>
-                <Input id="company" placeholder="Your company name" required />
+                <Input id="company" placeholder="Your company name" required value={company} onChange={(e) => setCompany(e.target.value)} />
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="location" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location *</Label>
-                <Input id="location" placeholder="e.g. Lahore, Karachi, Islamabad" required />
+                <Input id="location" placeholder="e.g. Lahore, Karachi, Islamabad" required value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="locationType" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location Type *</Label>
-                <Select required>
+                <Select value={locationType} onValueChange={(v) => setLocationType(v as JobLocationType)}>
                   <SelectTrigger id="locationType">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="remote">Remote</SelectItem>
-                    <SelectItem value="on-site">On-site</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                    <SelectItem value="Remote">Remote</SelectItem>
+                    <SelectItem value="On-site">On-site</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -113,35 +145,35 @@ export default function PostJobPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="type" className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-muted-foreground" />Job Type *</Label>
-                <Select required>
+                <Select value={type} onValueChange={(v) => setType(v as JobType)}>
                   <SelectTrigger id="type">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="full-time">Full-time</SelectItem>
-                    <SelectItem value="part-time">Part-time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="internship">Internship</SelectItem>
+                    <SelectItem value="Full-time">Full-time</SelectItem>
+                    <SelectItem value="Part-time">Part-time</SelectItem>
+                    <SelectItem value="Contract">Contract</SelectItem>
+                    <SelectItem value="Internship">Internship</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="experience" className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />Experience Level *</Label>
-                <Select required>
+                <Select value={experienceLevel} onValueChange={(v) => setExperienceLevel(v as JobExperienceLevel)}>
                   <SelectTrigger id="experience">
                     <SelectValue placeholder="Select level" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="entry">Entry</SelectItem>
-                    <SelectItem value="mid">Mid</SelectItem>
-                    <SelectItem value="senior">Senior</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="Entry">Entry</SelectItem>
+                    <SelectItem value="Mid">Mid</SelectItem>
+                    <SelectItem value="Senior">Senior</SelectItem>
+                    <SelectItem value="Lead">Lead</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="salary" className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5 text-muted-foreground" />Salary Range *</Label>
-                <Input id="salary" placeholder="e.g. 200,000 - 400,000 PKR" required />
+                <Input id="salary" placeholder="e.g. 200,000 - 400,000 PKR" required value={salary} onChange={(e) => setSalary(e.target.value)} />
               </div>
             </div>
           </CardContent>
@@ -161,6 +193,8 @@ export default function PostJobPage() {
                 placeholder="Describe the role, team, and what makes this opportunity unique..."
                 rows={5}
                 required
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
           </CardContent>

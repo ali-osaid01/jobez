@@ -5,19 +5,55 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { mockJobs } from '@/lib/mock-data';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useGetJobsQuery, useToggleBookmarkMutation } from '@/lib/store';
 import { Search, MapPin, Banknote, Briefcase, Sparkles, Filter, Bookmark } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [jobs] = useState(mockJobs);
+  const [page, setPage] = useState(1);
 
-  const filteredJobs = jobs.filter(job => 
-    job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    job.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: jobsData, isLoading, isError } = useGetJobsQuery({
+    page,
+    limit: 20,
+    ...(searchQuery ? { search: searchQuery } : {}),
+  });
+  const [toggleBookmark] = useToggleBookmarkMutation();
+
+  const jobs = jobsData?.data ?? [];
+  const totalPages = jobsData?.total_pages ?? 1;
+
+  const handleBookmark = async (jobId: string) => {
+    try {
+      const result = await toggleBookmark(jobId).unwrap();
+      toast.success(result.bookmarked ? 'Job saved to bookmarks' : 'Bookmark removed');
+    } catch {
+      toast.error('Failed to update bookmark');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-16 w-full" />
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-48" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-2">Failed to load jobs</h2>
+        <p className="text-muted-foreground">Please try again later.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -41,7 +77,10 @@ export default function JobsPage() {
               <Input
                 placeholder="Search by job title, company, or location..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
                 className="pl-10"
               />
             </div>
@@ -56,13 +95,13 @@ export default function JobsPage() {
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}
+          Showing {jobs.length} of {jobsData?.total ?? 0} job{(jobsData?.total ?? 0) !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Job Listings */}
       <div className="space-y-4">
-        {filteredJobs.map((job) => (
+        {jobs.map((job) => (
           <Card key={job.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -76,7 +115,7 @@ export default function JobsPage() {
                       <CardDescription className="text-base">{job.company}</CardDescription>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
@@ -104,7 +143,11 @@ export default function JobsPage() {
                   <Link href={`/job-seeker/jobs/${job.id}`}>
                     <Button className="w-full md:w-auto">View Details</Button>
                   </Link>
-                  <Button variant="outline" className="w-full md:w-auto">
+                  <Button
+                    variant="outline"
+                    className="w-full md:w-auto"
+                    onClick={() => handleBookmark(job.id)}
+                  >
                     <Bookmark className="h-4 w-4" />
                   </Button>
                 </div>
@@ -116,7 +159,7 @@ export default function JobsPage() {
               </p>
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                 <span>Posted {job.postedDate}</span>
-                {job.applicantsCount && (
+                {job.applicantsCount > 0 && (
                   <span>{job.applicantsCount} applicants</span>
                 )}
               </div>
@@ -125,7 +168,7 @@ export default function JobsPage() {
         ))}
       </div>
 
-      {filteredJobs.length === 0 && (
+      {jobs.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
@@ -135,6 +178,29 @@ export default function JobsPage() {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4 text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
       )}
     </div>
   );

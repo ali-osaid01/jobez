@@ -166,6 +166,75 @@ export interface ResumeExtractResponseData {
   bio: string;
 }
 
+// ─── Job Types ───────────────────────────────────────────────
+
+export type JobLocationType = 'Remote' | 'On-site' | 'Hybrid';
+export type JobType = 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
+export type JobExperienceLevel = 'Entry' | 'Mid' | 'Senior' | 'Lead';
+export type JobStatus = 'active' | 'closed';
+
+export interface JobResponseData {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  locationType: JobLocationType;
+  salary: string;
+  type: JobType;
+  experienceLevel: JobExperienceLevel;
+  description: string;
+  requirements: string[];
+  responsibilities: string[];
+  benefits: string[];
+  postedDate: string;
+  applicationDeadline: string | null;
+  employerId: string;
+  matchScore: number | null;
+  applicantsCount: number;
+  status: JobStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateJobRequest {
+  title: string;
+  company: string;
+  location: string;
+  locationType: JobLocationType;
+  salary: string;
+  type: JobType;
+  experienceLevel: JobExperienceLevel;
+  description: string;
+  requirements?: string[];
+  responsibilities?: string[];
+  benefits?: string[];
+  applicationDeadline?: string;
+}
+
+export type UpdateJobRequest = Partial<CreateJobRequest>;
+
+export interface JobsListResponse {
+  data: JobResponseData[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface JobsQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  employerId?: string;
+  type?: JobType;
+  locationType?: JobLocationType;
+  experienceLevel?: JobExperienceLevel;
+}
+
+export interface BookmarkResponse {
+  bookmarked: boolean;
+}
+
 // ─── UI Types ─────────────────────────────────────────────────
 
 export interface ModalState {

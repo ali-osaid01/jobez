@@ -60,7 +60,7 @@ export default function EmployerJobsPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <p className="text-sm text-muted-foreground">Total Views</p>
             <Eye className="h-4 w-4 text-green-600" />
@@ -77,7 +77,7 @@ export default function EmployerJobsPage() {
           <CardContent>
             <p className="text-2xl font-bold text-orange-600">88%</p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Job Listings */}

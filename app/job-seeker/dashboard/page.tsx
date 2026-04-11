@@ -38,13 +38,13 @@ export default function JobSeekerDashboard() {
       description: 'Scheduled',
       color: 'text-purple-600'
     },
-    {
-      title: 'Profile Views',
-      value: 48,
-      icon: TrendingUp,
-      description: 'This month',
-      color: 'text-green-600'
-    },
+    // {
+    //   title: 'Profile Views',
+    //   value: 48,
+    //   icon: TrendingUp,
+    //   description: 'This month',
+    //   color: 'text-green-600'
+    // },
   ];
 
   const getStatusColor = (status: string) => {

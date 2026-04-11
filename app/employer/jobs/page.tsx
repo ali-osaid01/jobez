@@ -4,16 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetJobsQuery, useDeleteJobMutation, useAppSelector, selectCurrentUser } from '@/lib/store';
-import { Briefcase, Users, Eye, PlusCircle, MoreVertical, Edit, Trash2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useGetJobsQuery, useAppSelector, selectCurrentUser } from '@/lib/store';
+import { Briefcase, Users, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
-import { toast } from 'sonner';
 
 export default function EmployerJobsPage() {
   const user = useAppSelector(selectCurrentUser);
@@ -21,18 +14,7 @@ export default function EmployerJobsPage() {
     user ? { employerId: user.id } : undefined,
     { skip: !user },
   );
-  const [deleteJob] = useDeleteJobMutation();
-
   const jobs = jobsData?.data ?? [];
-
-  const handleCloseJob = async (jobId: string) => {
-    try {
-      await deleteJob(jobId).unwrap();
-      toast.success('Job closed successfully');
-    } catch {
-      toast.error('Failed to close job');
-    }
-  };
 
   if (isLoading) {
     return (
@@ -174,26 +156,6 @@ export default function EmployerJobsPage() {
                         View Applicants ({job.applicantsCount || 0})
                       </Button>
                     </Link>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-full">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Job
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => handleCloseJob(job.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Close Job
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </div>
               </CardHeader>

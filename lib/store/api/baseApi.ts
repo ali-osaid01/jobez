@@ -4,26 +4,30 @@ import {
   type BaseQueryFn,
   type FetchArgs,
   type FetchBaseQueryError,
-} from '@reduxjs/toolkit/query/react';
+} from "@reduxjs/toolkit/query/react";
 
-import { setCredentials, logout } from '../features/authSlice';
+import { setCredentials, logout } from "../features/authSlice";
 import type {
   AuthState,
   ApiResponse,
   RefreshTokenResponseData,
-} from '../types';
-import { TAG_TYPES } from './tags';
+} from "../types";
+import { TAG_TYPES } from "./tags";
 
 // ─── Base Query ───────────────────────────────────────────────
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api/v1',
+  baseUrl:
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    "https://8172-103-72-86-163.ngrok-free.app/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as { auth: AuthState }).auth.token;
 
     if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
+
+    headers.set("ngrok-skip-browser-warning", "true");
 
     return headers;
   },
@@ -66,8 +70,8 @@ const baseQueryWithReauth: BaseQueryFn<
       try {
         const refreshResult = await baseQuery(
           {
-            url: '/auth/refresh',
-            method: 'POST',
+            url: "/auth/refresh",
+            method: "POST",
             body: { refreshToken },
           },
           api,
@@ -75,7 +79,8 @@ const baseQueryWithReauth: BaseQueryFn<
         );
 
         if (refreshResult.data) {
-          const response = refreshResult.data as ApiResponse<RefreshTokenResponseData>;
+          const response =
+            refreshResult.data as ApiResponse<RefreshTokenResponseData>;
           const { token, user } = response.data;
           api.dispatch(setCredentials({ user, token }));
           return true;
@@ -103,7 +108,7 @@ const baseQueryWithReauth: BaseQueryFn<
 // ─── API ──────────────────────────────────────────────────────
 
 export const baseApi = createApi({
-  reducerPath: 'api',
+  reducerPath: "api",
   baseQuery: baseQueryWithReauth,
   tagTypes: TAG_TYPES,
   endpoints: () => ({}),

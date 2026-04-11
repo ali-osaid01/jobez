@@ -53,12 +53,12 @@ export default function EmployerLayout({
               <span className="text-sm text-muted-foreground">Employer</span>
             </div>
             <div className="flex items-center gap-2">
-              <Link href="/employer/jobs/new">
+              {/* <Link href="/employer/jobs/new">
                 <Button className="gap-2 bg-secondary hover:bg-secondary/90">
                   <PlusCircle className="h-4 w-4" />
                   Post Job
                 </Button>
-              </Link>
+              </Link> */}
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>

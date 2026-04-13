@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { ArrowLeft, Sparkles, Plus, X, Briefcase, Building2, MapPin, Clock, TrendingUp, Banknote, FileText } from 'lucide-react';
+import { ArrowLeft, Sparkles, Plus, X, Briefcase, MapPin, Clock, TrendingUp, Banknote, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useCreateJobMutation, useAppSelector, selectCurrentUser } from '@/lib/store';
-import type { JobLocationType, JobType, JobExperienceLevel } from '@/lib/store';
+import type { JobLocationType, JobType, JobExperienceLevel, ApiError } from '@/lib/store';
+import { validateJobPostForm } from '@/lib/validations/job-post.validation';
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function PostJobPage() {
   const [createJob, { isLoading: saving }] = useCreateJobMutation();
 
   const [title, setTitle] = useState('');
-  const [company, setCompany] = useState(user?.company ?? '');
+  const [company] = useState(user?.company ?? '');
   const [location, setLocation] = useState('');
   const [locationType, setLocationType] = useState<JobLocationType | ''>('');
   const [type, setType] = useState<JobType | ''>('');
@@ -37,25 +38,44 @@ export default function PostJobPage() {
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
   const [benefits, setBenefits] = useState<string[]>(['']);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const clearError = (field: string) => {
+    if (errors[field]) setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!locationType || !type || !experienceLevel) {
-      toast.error('Please fill in all required fields');
+    const validationErrors = validateJobPostForm({
+      title,
+      location,
+      locationType: locationType as JobLocationType,
+      type: type as JobType,
+      experienceLevel: experienceLevel as JobExperienceLevel,
+      salary,
+      description,
+      applicationDeadline: applicationDeadline || undefined,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please fix the errors before publishing.');
       return;
     }
 
+    setErrors({});
+
     try {
       await createJob({
-        title,
+        title: title.trim(),
         company,
-        location,
-        locationType,
-        type,
-        experienceLevel,
-        salary,
-        description,
+        location: location.trim(),
+        locationType: locationType as JobLocationType,
+        type: type as JobType,
+        experienceLevel: experienceLevel as JobExperienceLevel,
+        salary: salary.trim(),
+        description: description.trim(),
         requirements: requirements.filter(Boolean),
         responsibilities: responsibilities.filter(Boolean),
         benefits: benefits.filter(Boolean),
@@ -64,8 +84,15 @@ export default function PostJobPage() {
 
       toast.success('Job posted successfully!');
       router.push('/employer/jobs');
-    } catch {
-      toast.error('Failed to post job. Please try again.');
+    } catch (err) {
+      const apiErr = err as { data?: ApiError };
+      const details = apiErr?.data?.error?.details;
+      if (details) {
+        setErrors(details);
+        Object.values(details).forEach((msg) => toast.error(msg));
+      } else {
+        toast.error('Failed to post job. Please try again.');
+      }
     }
   };
 
@@ -103,7 +130,7 @@ export default function PostJobPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -113,24 +140,40 @@ export default function PostJobPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="title" className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-muted-foreground" />Job Title *</Label>
-                <Input id="title" placeholder="e.g. Senior Frontend Developer" required value={title} onChange={(e) => setTitle(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="company" className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-muted-foreground" />Company Name *</Label>
-                <Input id="company" placeholder="Your company name" required value={company} onChange={(e) => setCompany(e.target.value)} />
+                <Label htmlFor="title" className="flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />Job Title *
+                </Label>
+                <Input
+                  id="title"
+                  placeholder="e.g. Senior Frontend Developer"
+                  value={title}
+                  onChange={(e) => { setTitle(e.target.value); clearError('title'); }}
+                  className={errors.title ? 'border-destructive focus-visible:ring-destructive' : ''}
+                />
+                {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="location" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location *</Label>
-                <Input id="location" placeholder="e.g. Lahore, Karachi, Islamabad" required value={location} onChange={(e) => setLocation(e.target.value)} />
+                <Label htmlFor="location" className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location *
+                </Label>
+                <Input
+                  id="location"
+                  placeholder="e.g. Lahore, Karachi, Islamabad"
+                  value={location}
+                  onChange={(e) => { setLocation(e.target.value); clearError('location'); }}
+                  className={errors.location ? 'border-destructive focus-visible:ring-destructive' : ''}
+                />
+                {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="locationType" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location Type *</Label>
-                <Select value={locationType} onValueChange={(v) => setLocationType(v as JobLocationType)}>
-                  <SelectTrigger id="locationType">
+                <Label htmlFor="locationType" className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />Location Type *
+                </Label>
+                <Select value={locationType} onValueChange={(v) => { setLocationType(v as JobLocationType); clearError('locationType'); }}>
+                  <SelectTrigger id="locationType" className={errors.locationType ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -139,14 +182,17 @@ export default function PostJobPage() {
                     <SelectItem value="Hybrid">Hybrid</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.locationType && <p className="text-sm text-destructive">{errors.locationType}</p>}
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="type" className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-muted-foreground" />Job Type *</Label>
-                <Select value={type} onValueChange={(v) => setType(v as JobType)}>
-                  <SelectTrigger id="type">
+                <Label htmlFor="type" className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />Job Type *
+                </Label>
+                <Select value={type} onValueChange={(v) => { setType(v as JobType); clearError('type'); }}>
+                  <SelectTrigger id="type" className={errors.type ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -156,11 +202,14 @@ export default function PostJobPage() {
                     <SelectItem value="Internship">Internship</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="experience" className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />Experience Level *</Label>
-                <Select value={experienceLevel} onValueChange={(v) => setExperienceLevel(v as JobExperienceLevel)}>
-                  <SelectTrigger id="experience">
+                <Label htmlFor="experience" className="flex items-center gap-1.5">
+                  <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />Experience Level *
+                </Label>
+                <Select value={experienceLevel} onValueChange={(v) => { setExperienceLevel(v as JobExperienceLevel); clearError('experienceLevel'); }}>
+                  <SelectTrigger id="experience" className={errors.experienceLevel ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -170,11 +219,36 @@ export default function PostJobPage() {
                     <SelectItem value="Lead">Lead</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.experienceLevel && <p className="text-sm text-destructive">{errors.experienceLevel}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="salary" className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5 text-muted-foreground" />Salary Range *</Label>
-                <Input id="salary" placeholder="e.g. 200,000 - 400,000 PKR" required value={salary} onChange={(e) => setSalary(e.target.value)} />
+                <Label htmlFor="salary" className="flex items-center gap-1.5">
+                  <Banknote className="h-3.5 w-3.5 text-muted-foreground" />Salary Range *
+                </Label>
+                <Input
+                  id="salary"
+                  placeholder="e.g. 200,000 - 400,000 PKR"
+                  value={salary}
+                  onChange={(e) => { setSalary(e.target.value); clearError('salary'); }}
+                  className={errors.salary ? 'border-destructive focus-visible:ring-destructive' : ''}
+                />
+                {errors.salary && <p className="text-sm text-destructive">{errors.salary}</p>}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="applicationDeadline" className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />Application Deadline
+                <span className="text-muted-foreground text-xs ml-1">(optional)</span>
+              </Label>
+              <Input
+                id="applicationDeadline"
+                type="date"
+                value={applicationDeadline}
+                onChange={(e) => { setApplicationDeadline(e.target.value); clearError('applicationDeadline'); }}
+                className={errors.applicationDeadline ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
+              {errors.applicationDeadline && <p className="text-sm text-destructive">{errors.applicationDeadline}</p>}
             </div>
           </CardContent>
         </Card>
@@ -187,15 +261,26 @@ export default function PostJobPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="description" className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-muted-foreground" />Description *</Label>
+              <Label htmlFor="description" className="flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />Description *
+              </Label>
               <Textarea
                 id="description"
                 placeholder="Describe the role, team, and what makes this opportunity unique..."
                 rows={5}
-                required
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => { setDescription(e.target.value); clearError('description'); }}
+                className={errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}
               />
+              <div className="flex justify-between items-center">
+                {errors.description
+                  ? <p className="text-sm text-destructive">{errors.description}</p>
+                  : <span />
+                }
+                <span className={`text-xs ml-auto ${description.trim().length >= 50 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                  {description.trim().length} / 50 min
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -215,25 +300,14 @@ export default function PostJobPage() {
                   placeholder="e.g. 5+ years of experience with React"
                 />
                 {requirements.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeItem(index, requirements, setRequirements)}
-                  >
+                  <Button type="button" variant="outline" size="icon" onClick={() => removeItem(index, requirements, setRequirements)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => addItem(requirements, setRequirements)}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Requirement
+            <Button type="button" variant="outline" onClick={() => addItem(requirements, setRequirements)} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />Add Requirement
             </Button>
           </CardContent>
         </Card>
@@ -253,25 +327,14 @@ export default function PostJobPage() {
                   placeholder="e.g. Build and maintain web applications"
                 />
                 {responsibilities.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeItem(index, responsibilities, setResponsibilities)}
-                  >
+                  <Button type="button" variant="outline" size="icon" onClick={() => removeItem(index, responsibilities, setResponsibilities)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => addItem(responsibilities, setResponsibilities)}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Responsibility
+            <Button type="button" variant="outline" onClick={() => addItem(responsibilities, setResponsibilities)} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />Add Responsibility
             </Button>
           </CardContent>
         </Card>
@@ -291,25 +354,14 @@ export default function PostJobPage() {
                   placeholder="e.g. Health insurance"
                 />
                 {benefits.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeItem(index, benefits, setBenefits)}
-                  >
+                  <Button type="button" variant="outline" size="icon" onClick={() => removeItem(index, benefits, setBenefits)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => addItem(benefits, setBenefits)}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Benefit
+            <Button type="button" variant="outline" onClick={() => addItem(benefits, setBenefits)} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />Add Benefit
             </Button>
           </CardContent>
         </Card>

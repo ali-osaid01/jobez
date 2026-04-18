@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetJobByIdQuery, useToggleBookmarkMutation } from '@/lib/store';
+import { useApplyForJobMutation, useGetApplicationsQuery, useGetJobByIdQuery, useToggleBookmarkMutation } from '@/lib/store';
 import {
   MapPin,
   Banknote,
@@ -27,15 +27,60 @@ export default function JobDetailPage() {
   const jobId = params.id as string;
 
   const { data: job, isLoading, isError } = useGetJobByIdQuery(jobId);
+  const { data: applicationsData, isLoading: applicationsLoading } = useGetApplicationsQuery({
+    jobId,
+    limit: 1,
+  });
   const [toggleBookmark] = useToggleBookmarkMutation();
+  const [applyForJob, { isLoading: applying }] = useApplyForJobMutation();
   const [applied, setApplied] = useState(false);
 
-  const handleApply = () => {
-    setApplied(true);
-    toast.success('Application submitted successfully!');
-    setTimeout(() => {
-      router.push('/job-seeker/applications');
-    }, 2000);
+  const getApiErrorMessage = (err: unknown): string => {
+    const maybeError = err as {
+      data?: {
+        error?: { message?: string };
+        detail?: string;
+        message?: string;
+      } | string;
+      error?: string;
+    };
+
+    if (typeof maybeError?.data === 'string' && maybeError.data.trim()) {
+      return maybeError.data;
+    }
+
+    if (maybeError?.data && typeof maybeError.data === 'object') {
+      return (
+        maybeError.data.error?.message ||
+        maybeError.data.detail ||
+        maybeError.data.message ||
+        'Failed to submit application'
+      );
+    }
+
+    if (maybeError?.error) {
+      return maybeError.error;
+    }
+
+    return 'Failed to submit application';
+  };
+
+  const alreadyApplied = Boolean(
+    applicationsData?.data?.some((application) => application.jobId === jobId),
+  );
+  const isCheckingApplication = applicationsLoading && !applicationsData;
+
+  const handleApply = async () => {
+    try {
+      await applyForJob(jobId).unwrap();
+      setApplied(true);
+      toast.success('Application submitted successfully!');
+      setTimeout(() => {
+        router.push('/job-seeker/applications');
+      }, 2000);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
   };
 
   const handleSaveJob = async () => {
@@ -131,21 +176,24 @@ export default function JobDetailPage() {
             </div>
 
             <div className="flex flex-col gap-2 md:w-48">
-              {!applied ? (
+              {isCheckingApplication ? (
+                <div className="text-center p-4 bg-muted/40 border rounded-lg">
+                  <p className="text-sm text-muted-foreground">Checking application status...</p>
+                </div>
+              ) : alreadyApplied || applied ? (
+                <div className="text-center p-4 bg-muted/40 border rounded-lg">
+                  <CheckCircle2 className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <p className="font-semibold">You have already applied to this job</p>
+                </div>
+              ) : (
                 <>
-                  <Button size="lg" onClick={handleApply} className="w-full">
-                    Apply Now
+                  <Button size="lg" onClick={handleApply} className="w-full" disabled={applying}>
+                    {applying ? 'Applying...' : 'Apply Now'}
                   </Button>
                   <Button variant="outline" size="lg" className="w-full" onClick={handleSaveJob}>
                     Save Job
                   </Button>
                 </>
-              ) : (
-                <div className="text-center p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                  <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="font-semibold text-green-800">Applied!</p>
-                  <p className="text-xs text-green-700">Redirecting...</p>
-                </div>
               )}
             </div>
           </div>

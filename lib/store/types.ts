@@ -1,4 +1,4 @@
-import type { UserRole } from '@/lib/auth';
+import type { UserRole } from "@/lib/auth";
 
 // ─── API Response Wrappers ───────────────────────────────────
 
@@ -105,6 +105,7 @@ export interface EmployerProfile {
 // Backend returns/accepts flat profile fields (not nested)
 export interface UpdateProfileRequest {
   onboardingComplete?: boolean;
+  name?: string | null;
   // Job Seeker fields
   title?: string | null;
   experience?: string | null;
@@ -168,10 +169,10 @@ export interface ResumeExtractResponseData {
 
 // ─── Job Types ───────────────────────────────────────────────
 
-export type JobLocationType = 'Remote' | 'On-site' | 'Hybrid';
-export type JobType = 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
-export type JobExperienceLevel = 'Entry' | 'Mid' | 'Senior' | 'Lead';
-export type JobStatus = 'active' | 'closed';
+export type JobLocationType = "Remote" | "On-site" | "Hybrid";
+export type JobType = "Full-time" | "Part-time" | "Contract" | "Internship";
+export type JobExperienceLevel = "Entry" | "Mid" | "Senior" | "Lead";
+export type JobStatus = "active" | "closed";
 
 export interface JobResponseData {
   id: string;
@@ -194,6 +195,32 @@ export interface JobResponseData {
   status: JobStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ApplicationResponseData {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  applicantId: string;
+  applicantName: string;
+  applicantEmail: string;
+  status: string;
+  appliedDate: string;
+  resume: string | null;
+  coverLetter: string | null;
+  matchScore: number | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApplicationsListResponse {
+  data: ApplicationResponseData[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 export interface CreateJobRequest {
@@ -225,10 +252,21 @@ export interface JobsQueryParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: JobStatus;
   employerId?: string;
   type?: JobType;
   locationType?: JobLocationType;
   experienceLevel?: JobExperienceLevel;
+  sortBy?: "postedDate" | "salary";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface ApplicationsQueryParams {
+  page?: number;
+  limit?: number;
+  status?: string | null;
+  jobId?: string | null;
+  search?: string | null;
 }
 
 export interface BookmarkResponse {
@@ -242,7 +280,7 @@ export interface ModalState {
   props?: Record<string, unknown>;
 }
 
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = "light" | "dark" | "system";
 
 export interface UiState {
   sidebarOpen: boolean;
@@ -253,5 +291,5 @@ export interface UiState {
 
 // ─── API Tag Types (re-export from api/tags.ts) ──────────────
 
-export type { ApiTagType } from './api/tags';
-export { TAG_TYPES as API_TAG_TYPES } from './api/tags';
+export type { ApiTagType } from "./api/tags";
+export { TAG_TYPES as API_TAG_TYPES } from "./api/tags";

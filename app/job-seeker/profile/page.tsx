@@ -78,6 +78,7 @@ export default function ProfilePage() {
     if (!editForm) return;
     try {
       await updateProfile({
+        name: editForm.name || null,
         title: editForm.title || null,
         experience: editForm.experience || null,
         skills: editForm.skills,

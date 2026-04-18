@@ -1,45 +1,53 @@
-import { baseApi } from './baseApi';
-import { updateUser } from '../features/authSlice';
+import { baseApi } from "./baseApi";
+import { updateUser } from "../features/authSlice";
 import type {
   UpdateProfileRequest,
   ProfileResponseData,
   ResumeExtractResponseData,
   ApiResponse,
-} from '../types';
+} from "../types";
 
 // ─── Profile API ─────────────────────────────────────────────
 
 export const profileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getProfile: builder.query<ProfileResponseData, void>({
-      query: () => '/profile/me',
+      query: () => "/profile/me",
       transformResponse: (response: ApiResponse<ProfileResponseData>) =>
         response.data,
-      providesTags: ['Profile', 'User'],
+      providesTags: ["Profile", "User"],
     }),
 
     updateProfile: builder.mutation<ProfileResponseData, UpdateProfileRequest>({
       query: (body) => ({
-        url: '/profile/me',
-        method: 'PATCH',
+        url: "/profile/me",
+        method: "PATCH",
         body,
       }),
       transformResponse: (response: ApiResponse<ProfileResponseData>) =>
         response.data,
-      invalidatesTags: ['Profile', 'User'],
       async onQueryStarted(_args, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          baseApi.util.updateQueryData("getProfile", undefined, (draft) => {
+            if (typeof _args.name !== "undefined" && _args.name !== null) {
+              draft.name = _args.name;
+            }
+          }),
+        );
+
         try {
           const { data } = await queryFulfilled;
           // Response is flat — extract auth-relevant fields to sync Redux auth state
           dispatch(
             updateUser({
-              name: data.name,
+              name: _args.name ?? data.name,
               email: data.email,
               phone: data.phone,
               onboardingComplete: data.onboardingComplete,
             }),
           );
         } catch {
+          patchResult.undo();
           // Error handled by component via the mutation hook
         }
       },
@@ -47,8 +55,8 @@ export const profileApi = baseApi.injectEndpoints({
 
     extractResume: builder.mutation<ResumeExtractResponseData, FormData>({
       query: (formData) => ({
-        url: '/profile/resume/extract',
-        method: 'POST',
+        url: "/profile/resume/extract",
+        method: "POST",
         body: formData,
         // Let browser set Content-Type with boundary for FormData
         formData: true,

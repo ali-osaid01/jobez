@@ -1,12 +1,12 @@
 // ─── Store ────────────────────────────────────────────────────
-export { makeStore } from './store';
-export type { AppStore, RootState, AppDispatch } from './store';
+export { makeStore } from "./store";
+export type { AppStore, RootState, AppDispatch } from "./store";
 
 // ─── Hooks ────────────────────────────────────────────────────
-export { useAppDispatch, useAppSelector, useAppStore } from './hooks';
+export { useAppDispatch, useAppSelector, useAppStore } from "./hooks";
 
 // ─── Provider ─────────────────────────────────────────────────
-export { default as StoreProvider } from './provider';
+export { default as StoreProvider } from "./provider";
 
 // ─── Auth Slice ───────────────────────────────────────────────
 export {
@@ -20,7 +20,7 @@ export {
   selectUserRole,
   selectToken,
   selectRefreshToken,
-} from './features/authSlice';
+} from "./features/authSlice";
 
 // ─── UI Slice ─────────────────────────────────────────────────
 export {
@@ -34,34 +34,36 @@ export {
   selectSidebarCollapsed,
   selectActiveModal,
   selectTheme,
-} from './features/uiSlice';
+} from "./features/uiSlice";
 
 // ─── API ──────────────────────────────────────────────────────
-export { baseApi } from './api/baseApi';
-export { TAG_TYPES } from './api/tags';
+export { baseApi } from "./api/baseApi";
+export { TAG_TYPES } from "./api/tags";
 export {
   authApi,
   useLoginMutation,
   useSignupMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
-} from './api/authApi';
+} from "./api/authApi";
 export {
   profileApi,
   useGetProfileQuery,
   useUpdateProfileMutation,
   useExtractResumeMutation,
-} from './api/profileApi';
+} from "./api/profileApi";
 export {
   jobsApi,
   useGetJobsQuery,
   useGetRecommendedJobsQuery,
   useGetJobByIdQuery,
+  useGetApplicationsQuery,
   useCreateJobMutation,
   useUpdateJobMutation,
   useDeleteJobMutation,
   useToggleBookmarkMutation,
-} from './api/jobsApi';
+  useApplyForJobMutation,
+} from "./api/jobsApi";
 
 // ─── Types ────────────────────────────────────────────────────
 export type {
@@ -95,4 +97,4 @@ export type {
   ThemeMode,
   UiState,
   ApiTagType,
-} from './types';
+} from "./types";

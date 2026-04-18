@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useSignupMutation } from '@/lib/store/api/authApi';
 import type { ApiError } from '@/lib/store/types';
 import type { UserRole } from '@/lib/auth';
+import { validateSignupForm } from '@/lib/validations/signup.validation';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,53 +25,24 @@ export default function SignupPage() {
     phone: '',
     password: ''
   });
-  const [touched, setTouched] = useState({
-    name: false,
-    email: false,
-    phone: false,
-    password: false
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [signup, { isLoading: loading }] = useSignupMutation();
+
+  const clearError = (field: string) => {
+    if (errors[field]) setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+  };
 
   const handleRoleSelect = (selectedRole: UserRole) => {
     setRole(selectedRole);
     setStep('details');
   };
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone: string) => {
-    const phoneRegex = /^\+?[\d\s\-\(\)]+$/;
-    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
-  };
-
-  const validatePassword = (password: string) => {
-    return password.length >= 6;
-  };
-
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    if (!validateEmail(formData.email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    if (!validatePhone(formData.phone)) {
-      toast.error('Please enter a valid phone number (at least 10 digits)');
-      return;
-    }
-
-    if (!validatePassword(formData.password)) {
-      toast.error('Password must be at least 6 characters');
+    const validationErrors = validateSignupForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -78,6 +50,8 @@ export default function SignupPage() {
       toast.error('Please select a role');
       return;
     }
+
+    setErrors({});
 
     try {
       await signup({
@@ -92,10 +66,12 @@ export default function SignupPage() {
       router.push('/onboarding');
     } catch (err) {
       const apiError = err as { data?: ApiError };
-      const message =
-        apiError.data?.error?.message ??
-        'Failed to create account. Please try again.';
-      toast.error(message);
+      const details = apiError?.data?.error?.details;
+      if (details) {
+        setErrors(details);
+      } else {
+        toast.error(apiError.data?.error?.message ?? 'Failed to create account. Please try again.');
+      }
     }
   };
 
@@ -207,14 +183,11 @@ export default function SignupPage() {
                     id="name"
                     placeholder="Muhammad Ali"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    onBlur={() => setTouched({ ...touched, name: true })}
+                    onChange={(e) => { setFormData({ ...formData, name: e.target.value }); clearError('name'); }}
                     disabled={loading}
-                    className={touched.name && !formData.name ? 'border-destructive' : ''}
+                    className={errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
-                  {touched.name && !formData.name && (
-                    <p className="text-xs text-destructive">Name is required</p>
-                  )}
+                  {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -224,14 +197,11 @@ export default function SignupPage() {
                     type="email"
                     placeholder="muhammad.ali@gmail.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    onBlur={() => setTouched({ ...touched, email: true })}
+                    onChange={(e) => { setFormData({ ...formData, email: e.target.value }); clearError('email'); }}
                     disabled={loading}
-                    className={touched.email && formData.email && !validateEmail(formData.email) ? 'border-destructive' : ''}
+                    className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
-                  {touched.email && formData.email && !validateEmail(formData.email) && (
-                    <p className="text-xs text-destructive">Please enter a valid email address</p>
-                  )}
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -241,14 +211,11 @@ export default function SignupPage() {
                     type="tel"
                     placeholder="+92 300 1234567"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    onBlur={() => setTouched({ ...touched, phone: true })}
+                    onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); clearError('phone'); }}
                     disabled={loading}
-                    className={touched.phone && formData.phone && !validatePhone(formData.phone) ? 'border-destructive' : ''}
+                    className={errors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
-                  {touched.phone && formData.phone && !validatePhone(formData.phone) && (
-                    <p className="text-xs text-destructive">Please enter a valid phone number (at least 10 digits)</p>
-                  )}
+                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -258,21 +225,18 @@ export default function SignupPage() {
                     type="password"
                     placeholder="At least 6 characters"
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    onBlur={() => setTouched({ ...touched, password: true })}
+                    onChange={(e) => { setFormData({ ...formData, password: e.target.value }); clearError('password'); }}
                     disabled={loading}
-                    className={touched.password && formData.password && !validatePassword(formData.password) ? 'border-destructive' : ''}
+                    className={errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
-                  {touched.password && formData.password && !validatePassword(formData.password) && (
-                    <p className="text-xs text-destructive">Password must be at least 6 characters</p>
-                  )}
+                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full btn-press bg-primary hover:bg-primary/90"
                   size="lg"
-                  disabled={loading || !formData.name || !formData.email || !formData.phone || !formData.password}
+                  disabled={loading}
                 >
                   {loading ? (
                     <span className="shimmer">Creating account...</span>

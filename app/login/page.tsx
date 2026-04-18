@@ -12,20 +12,29 @@ import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
 import { useLoginMutation } from '@/lib/store/api/authApi';
 import type { ApiError } from '@/lib/store/types';
+import { validateLoginForm } from '@/lib/validations/login.validation';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [login, { isLoading: loading }] = useLoginMutation();
+
+  const clearError = (field: string) => {
+    if (errors[field]) setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
+    const validationErrors = validateLoginForm({ email, password });
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+
+    setErrors({});
 
     try {
       const { user } = await login({ email, password }).unwrap();
@@ -113,9 +122,11 @@ export default function LoginPage() {
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                   disabled={loading}
+                  className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
@@ -130,9 +141,11 @@ export default function LoginPage() {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
                   disabled={loading}
+                  className={errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}
                 />
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
 
               <Button

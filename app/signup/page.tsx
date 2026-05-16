@@ -126,7 +126,7 @@ export default function SignupPage() {
                       Find your dream job with AI-powered matching and instant applications
                     </p>
                   </div>
-                  <Button className="w-full group-hover:bg-primary" variant="outline">
+                  <Button className="w-full group-hover:bg-primary group-hover:text-white" variant="outline">
                     Continue as Job Seeker
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -147,7 +147,7 @@ export default function SignupPage() {
                       Post jobs, manage applications, and find top talent with AI screening
                     </p>
                   </div>
-                  <Button className="w-full group-hover:bg-secondary" variant="outline">
+                  <Button className="w-full group-hover:bg-secondary group-hover:text-white" variant="outline">
                     Continue as Employer
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>

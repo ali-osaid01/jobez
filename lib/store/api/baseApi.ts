@@ -19,7 +19,7 @@ import { TAG_TYPES } from "./tags";
 const baseQuery = fetchBaseQuery({
   baseUrl:
     process.env.NEXT_PUBLIC_API_BASE_URL ??
-    "https://34bc-103-72-86-173.ngrok-free.app/api/v1",
+    "https://21ba-103-72-86-87.ngrok-free.app/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as { auth: AuthState }).auth.token;
 

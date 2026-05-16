@@ -45,6 +45,7 @@ export default function OnboardingPage() {
   const [certInput, setCertInput] = useState('');
   const [educationForm, setEducationForm] = useState({ degree: '', institution: '', year: '' });
   const [workForm, setWorkForm] = useState({ title: '', company: '', duration: '' });
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   // Employer Form Data
   const [employerData, setEmployerData] = useState({
@@ -57,9 +58,11 @@ export default function OnboardingPage() {
   });
 
   const [skillInput, setSkillInput] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   // Redirect if not authenticated or already onboarded
   useEffect(() => {
+    setMounted(true);
     if (!isAuthenticated) {
       router.push('/signup');
       return;
@@ -102,37 +105,66 @@ export default function OnboardingPage() {
     ];
 
     if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a PDF, DOC, or DOCX file');
+      setResumeError('Please upload a PDF, DOC, or DOCX file');
       return;
     }
 
-    setSeekerData({ ...seekerData, resumeFile: file, resumeUploaded: true });
+    setResumeError(null);
+    setSeekerData({ ...seekerData, resumeFile: file, resumeUploaded: false });
 
     // Extract resume data via API
     const formData = new FormData();
-    formData.append('resume', file);
+    // API expects field name `file`
+    formData.append('file', file);
 
     try {
       const extracted = await extractResume(formData).unwrap();
+      // Handle both nested `data` structure and flat response
+      const data = extracted.data || extracted;
       setSeekerData((prev) => ({
         ...prev,
         resumeFile: file,
         resumeUploaded: true,
-        title: extracted.title || prev.title,
-        experience: extracted.experience || prev.experience,
-        skills: extracted.skills.length > 0 ? extracted.skills : prev.skills,
-        location: extracted.location || prev.location,
-        education: extracted.education.length > 0 ? extracted.education : prev.education,
-        certifications: extracted.certifications.length > 0 ? extracted.certifications : prev.certifications,
-        workExperience: extracted.workExperience.length > 0 ? extracted.workExperience : prev.workExperience,
-        bio: extracted.bio || prev.bio,
+        title: data.title || prev.title,
+        experience: data.experience || prev.experience,
+        skills: (data.skills && data.skills.length > 0) ? data.skills : prev.skills,
+        location: data.location || prev.location,
+        education: (data.education && data.education.length > 0) ? data.education : prev.education,
+        certifications: (data.certifications && data.certifications.length > 0) ? data.certifications : prev.certifications,
+        workExperience: (data.workExperience && data.workExperience.length > 0) ? data.workExperience : prev.workExperience,
+        bio: data.bio || prev.bio,
       }));
+      setResumeError(null);
       toast.success('Resume parsed successfully! Fields have been auto-filled.');
     } catch (err) {
       const apiError = err as { data?: ApiError };
       const message =
-        apiError.data?.error?.message ?? 'Failed to parse resume. You can fill in details manually.';
+        apiError.data?.error?.message ?? 'Failed to parse resume. Please try uploading again or fill in details manually.';
+      setSeekerData((prev) => ({ ...prev, resumeUploaded: false }));
+      setResumeError(message);
       toast.error(message);
+    }
+  };
+
+  const handleRetryResume = () => {
+    setResumeError(null);
+    setSeekerData((prev) => ({
+      ...prev,
+      resumeFile: null,
+      resumeUploaded: false,
+    }));
+    // Trigger file input click
+    const fileInput = document.querySelector('input[type="file"][accept=".pdf,.doc,.docx"]') as HTMLInputElement;
+    fileInput?.click();
+  };
+
+  const goToVerification = () => {
+    try {
+      const payload = JSON.stringify(seekerData);
+      sessionStorage.setItem('onboardingDraft', payload);
+      router.push('/onboarding/verify');
+    } catch (e) {
+      toast.error('Failed to proceed to verification');
     }
   };
 
@@ -222,7 +254,7 @@ export default function OnboardingPage() {
     }
   };
 
-  if (!user) {
+  if (!user || !mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -298,14 +330,43 @@ export default function OnboardingPage() {
                             disabled={extracting}
                           />
                           {extracting && (
-                            <div className="mt-3 text-sm text-muted-foreground animate-pulse">
-                              Parsing resume...
+                            <div className="mt-6 space-y-4">
+                              <div className="flex justify-center">
+                                <div className="relative w-16 h-16">
+                                  <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                                  <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin"></div>
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm font-medium text-foreground">Parsing your resume...</p>
+                                <p className="text-xs text-muted-foreground mt-1">This may take a moment. Please wait.</p>
+                              </div>
                             </div>
                           )}
-                          {seekerData.resumeUploaded && !extracting && (
-                            <div className="mt-3 flex items-center gap-2 text-sm text-primary">
-                              <CheckCircle className="h-4 w-4" />
-                              <span>{seekerData.resumeFile?.name}</span>
+                          {resumeError && !extracting && (
+                            <div className="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-lg space-y-3">
+                              <div>
+                                <p className="text-sm text-destructive font-medium">❌ Error parsing resume</p>
+                                <p className="text-xs text-destructive/80 mt-1">{resumeError}</p>
+                                <p className="text-xs text-muted-foreground mt-2">You can still fill in your details manually using the 'Fill Manually' option.</p>
+                              </div>
+                              <button
+                                onClick={handleRetryResume}
+                                className="w-full px-3 py-2 text-sm font-medium bg-destructive text-white rounded-md hover:bg-destructive/90 transition-colors"
+                              >
+                                🔄 Retry Upload
+                              </button>
+                            </div>
+                          )}
+                          {seekerData.resumeUploaded && !extracting && !resumeError && (
+                            <div className="mt-3 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                              <div className="flex items-center gap-2 text-sm text-primary">
+                                <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                                <div className="flex-1">
+                                  <p className="font-medium">Resume parsed successfully</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{seekerData.resumeFile?.name}</p>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -327,7 +388,7 @@ export default function OnboardingPage() {
                           <Button
                             variant="outline"
                             className="w-full group-hover:bg-secondary group-hover:text-white group-hover:border-secondary"
-                            onClick={handleNext}
+                            onClick={goToVerification}
                           >
                             Continue Manually
                             <ArrowRight className="ml-2 h-4 w-4" />
@@ -339,7 +400,7 @@ export default function OnboardingPage() {
 
                   {seekerData.resumeUploaded && !extracting && (
                     <div className="flex justify-end">
-                <Button onClick={handleNext} size="lg" className="bg-primary hover:bg-primary/90">
+                <Button onClick={goToVerification} size="lg" className="bg-primary hover:bg-primary/90">
                   Continue with Resume
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

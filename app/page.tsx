@@ -239,21 +239,21 @@ export default function LandingPage() {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className={`group p-8 bg-slate-50 rounded-2xl hover-lift border border-transparent hover:border-primary/20 transition-all duration-500 ${testimonialsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                className={`group p-8 bg-slate-50 rounded-2xl hover-lift border border-transparent hover:border-primary/20 transition-all duration-500 flex flex-col justify-between h-full ${testimonialsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 style={{ transitionDelay: testimonialsRef.isVisible ? `${200 + index * 150}ms` : '0ms' }}
               >
-                <div className="space-y-6">
+                <div>
                   <p className="text-lg font-medium text-foreground leading-relaxed">
                     &ldquo;{testimonial.content}&rdquo;
                   </p>
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground text-base">{testimonial.name}</div>
-                      <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                    </div>
+                </div>
+                <div className="flex items-center gap-4 pt-6">
+                  <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition-transform duration-300">
+                    {testimonial.avatar}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground text-base">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
               </div>

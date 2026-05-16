@@ -19,7 +19,7 @@ import { Logo } from '@/components/logo';
 const navigation = [
   { name: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
   { name: 'All Jobs', href: '/job-seeker/all-jobs', icon: Briefcase },
-  { name: 'Recommended', href: '/job-seeker/jobs', icon: Sparkles },
+  { name: 'Recommended', href: '/job-seeker/recommended-jobs', icon: Sparkles },
   { name: 'My Applications', href: '/job-seeker/applications', icon: FileText },
   { name: 'Interviews', href: '/job-seeker/interviews', icon: Calendar },
   { name: 'Profile', href: '/job-seeker/profile', icon: User },

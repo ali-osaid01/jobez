@@ -7,6 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { mockInterviews, mockAIQuestions } from '@/lib/mock-data';
+import { useStartInterviewMutation } from '@/lib/store/api/interviewsApi';
+import { useBotSpeech } from '@/hooks/use-bot-speech';
+import type { InterviewQuestion } from '@/lib/store/types';
+import { toast } from 'sonner';
 import { 
   Video, 
   Mic, 
@@ -17,15 +21,20 @@ import {
   CheckCircle2,
   Clock,
   Volume2,
-  Settings
+  Settings,
+  Volume,
+  VolumeX,
+  Radio
 } from 'lucide-react';
 
-type InterviewPhase = 'intro' | 'permission' | 'text-phase' | 'video-permission' | 'video-phase' | 'completed';
+type InterviewPhase = 'intro' | 'loading' | 'permission' | 'text-phase' | 'video-permission' | 'video-phase' | 'completed';
 
 export default function InterviewPage() {
   const params = useParams();
   const router = useRouter();
   const interview = mockInterviews.find(i => i.id === params.id);
+  const [startInterview, { isLoading: isStarting }] = useStartInterviewMutation();
+  const botSpeech = useBotSpeech({ enabled: true });
   
   const [phase, setPhase] = useState<InterviewPhase>('intro');
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -39,8 +48,9 @@ export default function InterviewPage() {
   const [timeLeft, setTimeLeft] = useState(120);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [botInitialized, setBotInitialized] = useState(false);
 
-  const questions = mockAIQuestions.slice(0, 5);
   const textQuestions = questions.slice(0, 2);
   const videoQuestions = questions.slice(2);
 
@@ -81,9 +91,106 @@ export default function InterviewPage() {
     }
   }, [mediaStream]);
 
+  const botTriggeredRef = useRef(false);
+
+  // Handle bot speaking questions in text-phase
+  useEffect(() => {
+    if (phase === 'text-phase' && textQuestions.length > 0 && currentQuestion < textQuestions.length && !botTriggeredRef.current) {
+      const handleBotInteraction = async () => {
+        try {
+          botSpeech.cancelSpeech();
+          botSpeech.stopListening();
+          botSpeech.clearTranscript();
+          
+          setAiSpeaking(true);
+          const question = textQuestions[currentQuestion];
+          
+          // Speak the question
+          await botSpeech.speak(question.question);
+          
+          setAiSpeaking(false);
+          // Start listening for answer
+          botSpeech.startListening();
+          botTriggeredRef.current = true;
+        } catch (err) {
+          console.error('Bot speech error:', err);
+          setAiSpeaking(false);
+          toast.error('Failed to speak question');
+        }
+      };
+
+      // Small delay to ensure component is ready
+      const timer = setTimeout(handleBotInteraction, 500);
+      return () => {
+        clearTimeout(timer);
+        botSpeech.cancelSpeech();
+      };
+    }
+  }, [phase, currentQuestion, textQuestions.length]);
+
+  // Reset bot trigger when question changes
+  useEffect(() => {
+    botTriggeredRef.current = false;
+  }, [currentQuestion]);
+
+  // Handle recorded answer
+  useEffect(() => {
+    if (phase === 'text-phase' && botSpeech.transcript && !botSpeech.isListening) {
+      // Record the answer
+      setAnswers((prev) => {
+        const newAnswers = [...prev];
+        newAnswers[currentQuestion] = botSpeech.transcript;
+        return newAnswers;
+      });
+      
+      // Move to next question
+      if (currentQuestion < textQuestions.length - 1) {
+        setTimeout(() => {
+          setCurrentQuestion((prev) => prev + 1);
+        }, 1000);
+      } else {
+        // Text phase complete, move to video
+        botSpeech.cancelSpeech();
+        setPhase('video-permission');
+      }
+    }
+  }, [botSpeech.transcript, botSpeech.isListening, phase, currentQuestion, textQuestions.length]);
+
   if (!interview) {
     return <div>Interview not found</div>;
   }
+
+  const handleStartInterview = async () => {
+    try {
+      if (!interview?.id) {
+        toast.error('Invalid interview - no ID found');
+        return;
+      }
+
+      setPhase('loading');
+      console.log('[Interview] Starting interview with ID:', interview.id);
+      console.log('[Interview] Interview object:', interview);
+      
+      try {
+        const response = await startInterview(interview.id).unwrap();
+        console.log('[Interview] Interview started successfully:', response);
+        setQuestions(response.questions);
+        setPhase('text-phase');
+        toast.success('Interview started! Answer the questions below.');
+      } catch (apiErr) {
+        console.error('[Interview] API error:', apiErr);
+        // Fallback to mock questions if API fails
+        console.log('[Interview] Using fallback mock questions');
+        setQuestions(mockAIQuestions.slice(0, 5));
+        setPhase('text-phase');
+        toast.info('Using demo questions. Backend unavailable.');
+      }
+    } catch (err) {
+      console.error('[Interview] Unexpected error:', err);
+      toast.error('An unexpected error occurred. Please try again.');
+      setPhase('intro');
+    }
+  };
 
   const requestPermissions = async () => {
     try {
@@ -99,7 +206,8 @@ export default function InterviewPage() {
       setPhase('video-phase');
       setCurrentQuestion(0);
       setTimeLeft(120);
-      simulateAISpeaking();
+      // Video phase will show typing animation via simulateAISpeaking
+      setTimeout(() => simulateAISpeaking(), 500);
     } catch (err) {
       console.log('[v0] Permission denied:', err);
       alert('Camera and microphone access is required for the video interview.');
@@ -127,22 +235,19 @@ export default function InterviewPage() {
     }
   };
 
-  const handleStartInterview = () => {
-    setPhase('text-phase');
-    setCurrentQuestion(0);
-    simulateAISpeaking();
-  };
-
   const handleNextQuestion = () => {
     if (phase === 'text-phase') {
-      if (currentAnswer.trim()) {
-        setAnswers([...answers, currentAnswer]);
+      // For text phase with bot, use bot transcript if available
+      const answer = botSpeech.transcript || currentAnswer;
+      if (answer.trim()) {
+        setAnswers([...answers, answer]);
         setCurrentAnswer('');
+        botSpeech.clearTranscript();
         
         if (currentQuestion < textQuestions.length - 1) {
           setCurrentQuestion(currentQuestion + 1);
-          setTimeout(() => simulateAISpeaking(), 500);
         } else {
+          botSpeech.cancelSpeech();
           setPhase('video-permission');
           setCurrentQuestion(0);
         }
@@ -235,10 +340,39 @@ export default function InterviewPage() {
               </ul>
             </div>
 
-            <Button onClick={handleStartInterview} size="lg" className="w-full bg-primary hover:bg-primary/90">
-              Start Interview
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button onClick={handleStartInterview} size="lg" className="w-full bg-primary hover:bg-primary/90" disabled={isStarting}>
+              {isStarting ? (
+                <>
+                  <span className="animate-spin">⏳</span> Generating Questions...
+                </>
+              ) : (
+                <>
+                  Start Interview
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (phase === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="pt-12 pb-12 text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin"></div>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Preparing Your Interview</h3>
+              <p className="text-sm text-muted-foreground">AI is generating personalized questions based on your profile and the job...</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -341,28 +475,39 @@ export default function InterviewPage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
-                  AI Interviewer
+                  AI Bot
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center relative overflow-hidden border-2 border-primary/20">
+                <div className={`aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center relative overflow-hidden border-2 ${aiSpeaking ? 'border-primary' : botSpeech.isListening ? 'border-secondary' : 'border-primary/20'}`}>
                   <div className="text-center">
-                    <div className={`w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mb-4 mx-auto ${aiSpeaking ? 'animate-pulse' : ''}`}>
-                      <Sparkles className="h-12 w-12 text-primary" />
+                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-4 mx-auto transition-all ${aiSpeaking ? 'bg-primary/40 animate-pulse scale-110' : botSpeech.isListening ? 'bg-secondary/40 animate-pulse' : 'bg-primary/20'}`}>
+                      {aiSpeaking ? (
+                        <Volume className="h-12 w-12 text-primary animate-bounce" />
+                      ) : botSpeech.isListening ? (
+                        <Radio className="h-12 w-12 text-secondary animate-pulse" />
+                      ) : (
+                        <Sparkles className="h-12 w-12 text-primary" />
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">AI Avatar</p>
+                    <p className="text-sm text-muted-foreground mb-2">AI Avatar</p>
+                    {aiSpeaking && <p className="text-xs font-medium text-primary">🔊 Speaking...</p>}
+                    {botSpeech.isListening && <p className="text-xs font-medium text-secondary">🎤 Listening...</p>}
                   </div>
-                  {aiSpeaking && (
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="bg-background/95 backdrop-blur p-3 rounded-lg border shadow-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Volume2 className="h-4 w-4 text-primary animate-pulse" />
-                          <span className="text-xs font-medium">Speaking...</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {botSpeech.error && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-sm text-destructive">
+                    ⚠️ {botSpeech.error}
+                  </div>
+                )}
+
+                {botSpeech.transcript && !botSpeech.isListening && (
+                  <div className="p-3 bg-green-100/50 border border-green-300 rounded-lg">
+                    <p className="text-sm font-medium text-green-800 mb-1">✓ Answer Recorded</p>
+                    <p className="text-xs text-green-700">{botSpeech.transcript}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -381,19 +526,45 @@ export default function InterviewPage() {
               <CardContent className="space-y-6">
                 <div className="p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
                   <p className="text-lg leading-relaxed min-h-[60px]">
-                    {transcript || textQuestions[currentQuestion].question}
+                    {textQuestions[currentQuestion].question}
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-sm font-medium">Your Answer</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Your Answer (Speech will be transcribed)</label>
+                    <button
+                      onClick={() => {
+                        if (botSpeech.isListening) {
+                          botSpeech.stopListening();
+                        } else {
+                          botSpeech.startListening();
+                        }
+                      }}
+                      className={`px-3 py-1 rounded text-sm font-medium flex items-center gap-1 transition-colors ${
+                        botSpeech.isListening
+                          ? 'bg-secondary text-white hover:bg-secondary/90'
+                          : 'bg-muted text-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {botSpeech.isListening ? (
+                        <>
+                          <Radio className="h-3 w-3 animate-pulse" /> Stop Recording
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="h-3 w-3" /> Start Recording
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <textarea
-                    value={currentAnswer}
+                    value={botSpeech.transcript || currentAnswer}
                     onChange={(e) => setCurrentAnswer(e.target.value)}
-                    placeholder="Type your answer here..."
+                    placeholder="Your speech will appear here or type manually..."
                     rows={10}
                     disabled={aiSpeaking}
-                    className="w-full px-4 py-3 rounded-lg border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
                   />
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">
@@ -407,7 +578,7 @@ export default function InterviewPage() {
 
                 <Button 
                   onClick={handleNextQuestion}
-                  disabled={!currentAnswer.trim() || aiSpeaking}
+                  disabled={(!botSpeech.transcript && !currentAnswer.trim()) || aiSpeaking || botSpeech.isListening}
                   size="lg"
                   className="w-full bg-primary hover:bg-primary/90"
                 >

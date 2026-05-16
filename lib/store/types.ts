@@ -273,6 +273,22 @@ export interface BookmarkResponse {
   bookmarked: boolean;
 }
 
+// ─── Interview Types ──────────────────────────────────────────
+
+export interface InterviewQuestion {
+  id: string;
+  question: string;
+  type: "behavioral" | "technical" | "situational" | "general";
+  category: string;
+  expectedDuration: number;
+}
+
+export interface InterviewStartResponseData {
+  interviewId: string;
+  totalQuestions: number;
+  questions: InterviewQuestion[];
+}
+
 // ─── UI Types ─────────────────────────────────────────────────
 
 export interface ModalState {

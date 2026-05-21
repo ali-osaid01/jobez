@@ -4,8 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { mockApplications } from '@/lib/mock-data';
-import { useAppSelector, selectCurrentUser, useGetJobsQuery } from '@/lib/store';
+import {
+  useAppSelector,
+  selectCurrentUser,
+  useGetJobsQuery,
+  useGetApplicationsQuery,
+  useGetDashboardStatsQuery,
+} from '@/lib/store';
+import type { EmployerDashboardStats } from '@/lib/store/types';
 import {
   Briefcase,
   Users,
@@ -25,21 +31,25 @@ export default function EmployerDashboard() {
     { skip: !user },
   );
 
-  // Filter to active jobs and cap at 4 for the dashboard card
-  const allJobs     = jobsData?.data ?? [];
-  const activeJobs  = allJobs.filter((j) => j.status === 'active');
+  const { data: applicationsData, isLoading: appsLoading } = useGetApplicationsQuery({ limit: 3 });
+  const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
+
+  const allJobs = jobsData?.data ?? [];
+  const activeJobs = allJobs.filter((j) => j.status === 'active');
   const dashboardJobs = activeJobs.slice(0, 4);
   const totalApplicants = allJobs.reduce((sum, j) => sum + (j.applicantsCount ?? 0), 0);
 
-  const recentApplicants = mockApplications.slice(0, 3);
+  const recentApplicants = applicationsData?.data ?? [];
+  const stats = statsData as EmployerDashboardStats | undefined;
 
-  const stats = [
+  const statCards = [
     {
       title: 'Active Jobs',
       value: jobsLoading ? '—' : activeJobs.length,
       icon: Briefcase,
       description: 'Currently posted',
       color: 'text-blue-600',
+      loading: jobsLoading,
     },
     {
       title: 'Total Applicants',
@@ -47,20 +57,23 @@ export default function EmployerDashboard() {
       icon: Users,
       description: 'Across all jobs',
       color: 'text-purple-600',
+      loading: jobsLoading,
     },
     {
       title: 'Shortlisted',
-      value: 12,
+      value: statsLoading ? '—' : (stats?.shortlistedApplications ?? 0),
       icon: UserCheck,
       description: 'Ready to contact',
       color: 'text-green-600',
+      loading: statsLoading,
     },
     {
-      title: 'Contacted',
-      value: 8,
+      title: 'Hired',
+      value: statsLoading ? '—' : (stats?.hiredCandidates ?? 0),
       icon: Phone,
-      description: 'In progress',
+      description: 'Successfully hired',
       color: 'text-orange-600',
+      loading: statsLoading,
     },
   ];
 
@@ -68,7 +81,7 @@ export default function EmployerDashboard() {
     switch (status) {
       case 'pending':    return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'shortlisted':return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'contacted':  return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'interview-scheduled': return 'bg-purple-100 text-purple-800 border-purple-300';
       case 'rejected':   return 'bg-red-100 text-red-800 border-red-300';
       case 'hired':      return 'bg-green-100 text-green-800 border-green-300';
       default:           return 'bg-gray-100 text-gray-800 border-gray-300';
@@ -98,7 +111,7 @@ export default function EmployerDashboard() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -107,7 +120,7 @@ export default function EmployerDashboard() {
               <stat.icon className={`h-4 w-4 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              {jobsLoading && (stat.title === 'Active Jobs' || stat.title === 'Total Applicants') ? (
+              {stat.loading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
                 <div className="text-2xl font-bold">{stat.value}</div>
@@ -140,8 +153,6 @@ export default function EmployerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-
-            {/* Loading */}
             {jobsLoading && (
               <>
                 {[...Array(3)].map((_, i) => (
@@ -157,7 +168,6 @@ export default function EmployerDashboard() {
               </>
             )}
 
-            {/* Error */}
             {!jobsLoading && jobsError && (
               <div className="flex flex-col items-center gap-2 py-6 text-center text-sm text-muted-foreground">
                 <AlertCircle className="h-6 w-6 text-destructive" />
@@ -165,7 +175,6 @@ export default function EmployerDashboard() {
               </div>
             )}
 
-            {/* Empty */}
             {!jobsLoading && !jobsError && dashboardJobs.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Briefcase className="h-10 w-10 mx-auto mb-2 opacity-20" />
@@ -178,7 +187,6 @@ export default function EmployerDashboard() {
               </div>
             )}
 
-            {/* Jobs list */}
             {!jobsLoading && !jobsError && dashboardJobs.map((job) => (
               <div
                 key={job.id}
@@ -205,7 +213,6 @@ export default function EmployerDashboard() {
                 </Link>
               </div>
             ))}
-
           </CardContent>
         </Card>
 
@@ -229,30 +236,49 @@ export default function EmployerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentApplicants.map((applicant) => (
-              <div
-                key={applicant.id}
-                className="flex items-start justify-between p-4 rounded-lg border bg-card"
-              >
-                <div className="space-y-1.5">
-                  <div>
-                    <h4 className="font-semibold">{applicant.applicantName}</h4>
-                    <p className="text-sm text-muted-foreground">{applicant.jobTitle}</p>
+            {appsLoading ? (
+              <>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-start justify-between p-4 rounded-lg border">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-20" />
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>Applied {applicant.appliedDate}</span>
-                    {applicant.matchScore && (
-                      <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
-                        {applicant.matchScore}% match
-                      </Badge>
-                    )}
+                ))}
+              </>
+            ) : recentApplicants.length > 0 ? (
+              recentApplicants.map((applicant) => (
+                <div
+                  key={applicant.id}
+                  className="flex items-start justify-between p-4 rounded-lg border bg-card"
+                >
+                  <div className="space-y-1.5">
+                    <div>
+                      <h4 className="font-semibold">{applicant.applicantName}</h4>
+                      <p className="text-sm text-muted-foreground">{applicant.jobTitle}</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>Applied {applicant.appliedDate}</span>
+                      {applicant.matchScore && (
+                        <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                          {applicant.matchScore}% match
+                        </Badge>
+                      )}
+                    </div>
                   </div>
+                  <Badge className={getStatusColor(applicant.status)}>
+                    {applicant.status.replace('-', ' ')}
+                  </Badge>
                 </div>
-                <Badge className={getStatusColor(applicant.status)}>
-                  {applicant.status.replace('-', ' ')}
-                </Badge>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                <p className="text-sm">No applicants yet</p>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 

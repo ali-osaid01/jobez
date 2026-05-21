@@ -1,40 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGetRecommendedJobsQuery, useToggleBookmarkMutation } from '@/lib/store';
 import type { JobResponseData } from '@/lib/store/types';
-import { mockJobs } from '@/lib/mock-data';
-import { Search, MapPin, Banknote, Briefcase, Building2, Clock, BookmarkPlus, BookmarkCheck, ExternalLink, Zap } from 'lucide-react';
+import {
+  Search,
+  MapPin,
+  Banknote,
+  Briefcase,
+  Building2,
+  Clock,
+  BookmarkPlus,
+  BookmarkCheck,
+  ExternalLink,
+  Zap,
+  AlertCircle,
+} from 'lucide-react';
 import Link from 'next/link';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 import { toast } from 'sonner';
 
 export default function RecommendedJobsPage() {
-  const { data: apiRecommendedJobs = [], isLoading, isError, error, refetch } = useGetRecommendedJobsQuery();
+  const { data: recommendedJobs = [], isLoading, isError, refetch } = useGetRecommendedJobsQuery();
   const [toggleBookmark] = useToggleBookmarkMutation();
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
-  const [useMockData, setUseMockData] = useState(false);
-
-  // Use mock data if API fails
-  const recommendedJobs = useMockData || isError ? (mockJobs as any[]).slice(0, 6) : apiRecommendedJobs;
-
-  useEffect(() => {
-    console.log('[RecommendedJobs] Data:', apiRecommendedJobs);
-    console.log('[RecommendedJobs] IsLoading:', isLoading);
-    console.log('[RecommendedJobs] IsError:', isError);
-    console.log('[RecommendedJobs] Error:', error);
-    
-    // Switch to mock data if API fails
-    if (isError && !useMockData) {
-      console.log('[RecommendedJobs] API failed, switching to mock data');
-      setUseMockData(true);
-      toast.info('Using demo recommendations. Backend unavailable.');
-    }
-  }, [apiRecommendedJobs, isLoading, isError, error, useMockData]);
 
   const headerRef = useScrollAnimation({ threshold: 0.1 });
 
@@ -53,7 +46,7 @@ export default function RecommendedJobsPage() {
         }
         return newSet;
       });
-    } catch (err) {
+    } catch {
       toast.error('Failed to update bookmark');
     }
   };
@@ -74,7 +67,7 @@ export default function RecommendedJobsPage() {
       </div>
 
       {/* Loading State */}
-      {isLoading && !useMockData ? (
+      {isLoading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i}>
@@ -90,7 +83,20 @@ export default function RecommendedJobsPage() {
             </Card>
           ))}
         </div>
+      ) : isError ? (
+        /* Error State */
+        <Card className="border-dashed">
+          <CardContent className="pt-12 pb-12 text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4 opacity-50" />
+            <h3 className="font-semibold text-lg mb-2">Recommendations unavailable</h3>
+            <p className="text-muted-foreground mb-6">
+              The recommendation service is currently unavailable. Please try again later.
+            </p>
+            <Button onClick={() => refetch()}>Retry</Button>
+          </CardContent>
+        </Card>
       ) : recommendedJobs.length === 0 ? (
+        /* Empty State */
         <Card className="border-dashed">
           <CardContent className="pt-12 pb-12 text-center">
             <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
@@ -105,13 +111,7 @@ export default function RecommendedJobsPage() {
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recommendedJobs.map((job: any) => {
-            const title = (job as JobResponseData).jobTitle || (job as any).title;
-            const company = (job as JobResponseData).companyName || (job as any).company;
-            const jobType = (job as JobResponseData).jobType || (job as any).type;
-            const postedDate = (job as JobResponseData).createdAt || (job as any).postedDate;
-            
-            return (
+          {recommendedJobs.map((job: JobResponseData) => (
             <Link key={job.id} href={`/job-seeker/jobs/${job.id}`}>
               <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
                 <CardContent className="pt-6 space-y-4">
@@ -119,7 +119,7 @@ export default function RecommendedJobsPage() {
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h3 className="font-bold text-lg group-hover:text-primary transition-colors line-clamp-2">
-                        {title}
+                        {job.title}
                       </h3>
                       <button
                         onClick={(e) => handleToggleBookmark(job.id, e)}
@@ -134,7 +134,7 @@ export default function RecommendedJobsPage() {
                     </div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <Building2 className="h-4 w-4" />
-                      {company}
+                      {job.company}
                     </p>
                   </div>
 
@@ -146,30 +146,30 @@ export default function RecommendedJobsPage() {
                         {job.location} • {job.locationType}
                       </p>
                     )}
-                    {(job.salaryMin || job.salary) && (
+                    {job.salary && (
                       <p className="flex items-center gap-2 text-muted-foreground">
                         <Banknote className="h-4 w-4" />
-                        {job.salaryMin ? `PKR ${(job.salaryMin / 100000).toFixed(0)}L - ${(job.salaryMax / 100000).toFixed(0)}L` : job.salary}
+                        {job.salary}
                       </p>
                     )}
-                    {jobType && (
+                    {job.type && (
                       <p className="flex items-center gap-2 text-muted-foreground">
                         <Briefcase className="h-4 w-4" />
-                        {jobType}
+                        {job.type}
                       </p>
                     )}
                   </div>
 
-                  {/* Experience Level & Time */}
+                  {/* Badges */}
                   <div className="flex flex-wrap gap-2">
                     {job.experienceLevel && (
                       <Badge variant="secondary">{job.experienceLevel}</Badge>
                     )}
-                    {postedDate && (
+                    {job.createdAt && (
                       <Badge variant="outline" className="text-xs flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {Math.floor(
-                          (Date.now() - new Date(postedDate).getTime()) / (1000 * 60 * 60 * 24)
+                          (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24)
                         )}d ago
                       </Badge>
                     )}
@@ -194,8 +194,7 @@ export default function RecommendedJobsPage() {
                 </CardContent>
               </Card>
             </Link>
-            );
-          })}
+          ))}
         </div>
       )}
     </div>

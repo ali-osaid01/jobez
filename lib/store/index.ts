@@ -63,7 +63,21 @@ export {
   useDeleteJobMutation,
   useToggleBookmarkMutation,
   useApplyForJobMutation,
+  useUpdateApplicationStatusMutation,
+  useGetApplicationResumeQuery,
+  useContactApplicantMutation,
 } from "./api/jobsApi";
+export {
+  interviewsApi,
+  useGetInterviewsQuery,
+  useGetInterviewByIdQuery,
+  useStartInterviewMutation,
+  useSubmitInterviewResponsesMutation,
+  useGetInterviewResultsQuery,
+  useScheduleInterviewMutation,
+  useUpdateInterviewMutation,
+} from "./api/interviewsApi";
+export { dashboardApi, useGetDashboardStatsQuery } from "./api/dashboardApi";
 
 // ─── Types ────────────────────────────────────────────────────
 export type {
@@ -93,6 +107,22 @@ export type {
   JobsListResponse,
   JobsQueryParams,
   BookmarkResponse,
+  ApplicationResponseData,
+  ApplicationsListResponse,
+  ApplicationsQueryParams,
+  ApplicationStatusUpdateRequest,
+  InterviewResponseData,
+  InterviewsListResponse,
+  InterviewsQueryParams,
+  InterviewStatus,
+  InterviewType,
+  InterviewQuestion,
+  InterviewResultsData,
+  ScheduleInterviewRequest,
+  UpdateInterviewRequest,
+  JobSeekerDashboardStats,
+  EmployerDashboardStats,
+  DashboardStats,
   ModalState,
   ThemeMode,
   UiState,

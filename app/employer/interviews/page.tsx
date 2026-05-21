@@ -4,20 +4,58 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { mockInterviews } from '@/lib/mock-data';
-import { Sparkles, UserCheck, UserX, Phone, Clock, MessageSquare } from 'lucide-react';
+import { useGetInterviewsQuery } from '@/lib/store/api/interviewsApi';
+import { useUpdateApplicationStatusMutation, useContactApplicantMutation } from '@/lib/store';
+import type { InterviewResponseData } from '@/lib/store/types';
+import { Sparkles, UserCheck, UserX, Phone, Clock, MessageSquare, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 
 export default function EmployerInterviewsPage() {
-  const [interviews] = useState(mockInterviews);
+  const { data, isLoading, isError } = useGetInterviewsQuery();
+  const [updateStatus, { isLoading: isUpdating }] = useUpdateApplicationStatusMutation();
+  const [contactApplicant, { isLoading: isContacting }] = useContactApplicantMutation();
+
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectComment, setRejectComment] = useState('');
 
+  const interviews = data?.data ?? [];
   const completedInterviews = interviews.filter(i => i.status === 'completed');
   const pendingInterviews = interviews.filter(i => i.status === 'scheduled');
 
-  const InterviewCard = ({ interview }: { interview: typeof interviews[0] }) => (
+  const handleShortlist = async (interview: InterviewResponseData) => {
+    try {
+      await updateStatus({ id: interview.applicationId, body: { status: 'shortlisted' } }).unwrap();
+      toast.success(`${interview.applicantName} has been shortlisted`);
+    } catch {
+      toast.error('Failed to shortlist candidate');
+    }
+  };
+
+  const handleReject = async (interview: InterviewResponseData) => {
+    if (!rejectComment.trim()) return;
+    try {
+      await updateStatus({ id: interview.applicationId, body: { status: 'rejected', rejectionReason: rejectComment } }).unwrap();
+      toast.success('Candidate has been rejected');
+      setRejectingId(null);
+      setRejectComment('');
+    } catch {
+      toast.error('Failed to reject candidate');
+    }
+  };
+
+  const handleContact = async (interview: InterviewResponseData) => {
+    try {
+      await contactApplicant(interview.applicationId).unwrap();
+      toast.success(`Contact request sent to ${interview.applicantName}`);
+    } catch {
+      toast.error('Failed to send contact request');
+    }
+  };
+
+  const InterviewCard = ({ interview }: { interview: InterviewResponseData }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -41,7 +79,7 @@ export default function EmployerInterviewsPage() {
 
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">AI Interview</Badge>
-              {interview.aiScore !== undefined && interview.aiScore > 0 && (
+              {interview.aiScore !== null && interview.aiScore !== undefined && interview.aiScore > 0 && (
                 <Badge className="bg-green-100 text-green-800 border-green-300">
                   AI Score: {interview.aiScore}/100
                 </Badge>
@@ -84,8 +122,8 @@ export default function EmployerInterviewsPage() {
                   <Button
                     size="sm"
                     variant="destructive"
-                    disabled={!rejectComment.trim()}
-                    onClick={() => { toast.success('Candidate has been rejected'); setRejectingId(null); setRejectComment(''); }}
+                    disabled={!rejectComment.trim() || isUpdating}
+                    onClick={() => handleReject(interview)}
                   >
                     Confirm Rejection
                   </Button>
@@ -104,19 +142,38 @@ export default function EmployerInterviewsPage() {
           <div className="flex flex-col gap-2 md:w-48">
             {interview.status === 'completed' && (
               <>
-                <Button size="sm" className="bg-secondary hover:bg-secondary/90 gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  View AI Results
-                </Button>
-                <Button size="sm" className="gap-2" variant="outline" onClick={() => toast.success('Candidate has been shortlisted')}>
+                <Link href={`/job-seeker/interviews/${interview.id}/results`}>
+                  <Button size="sm" className="w-full bg-secondary hover:bg-secondary/90 gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    View AI Results
+                  </Button>
+                </Link>
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  variant="outline"
+                  disabled={isUpdating}
+                  onClick={() => handleShortlist(interview)}
+                >
                   <UserCheck className="h-4 w-4" />
                   Shortlist
                 </Button>
-                <Button size="sm" className="gap-2" variant="outline" onClick={() => toast.success('Contact request sent to candidate')}>
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  variant="outline"
+                  disabled={isContacting}
+                  onClick={() => handleContact(interview)}
+                >
                   <Phone className="h-4 w-4" />
                   Contact Candidate
                 </Button>
-                <Button size="sm" variant="outline" className="gap-2" onClick={() => setRejectingId(interview.id)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setRejectingId(interview.id)}
+                >
                   <UserX className="h-4 w-4" />
                   Reject
                 </Button>
@@ -133,6 +190,25 @@ export default function EmployerInterviewsPage() {
     </Card>
   );
 
+  const LoadingSkeleton = () => (
+    <>
+      {[...Array(2)].map((_, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      ))}
+    </>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -146,6 +222,16 @@ export default function EmployerInterviewsPage() {
         </p>
       </div>
 
+      {/* Error */}
+      {isError && (
+        <Card>
+          <CardContent className="py-8 flex flex-col items-center gap-2 text-center text-muted-foreground">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+            Failed to load interviews. Please try again.
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -156,7 +242,9 @@ export default function EmployerInterviewsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">{pendingInterviews.length}</p>
+            {isLoading ? <Skeleton className="h-8 w-12" /> : (
+              <p className="text-2xl font-bold text-yellow-600">{pendingInterviews.length}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -167,7 +255,9 @@ export default function EmployerInterviewsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">{completedInterviews.length}</p>
+            {isLoading ? <Skeleton className="h-8 w-12" /> : (
+              <p className="text-2xl font-bold text-green-600">{completedInterviews.length}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -178,7 +268,9 @@ export default function EmployerInterviewsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-purple-600">{interviews.length}</p>
+            {isLoading ? <Skeleton className="h-8 w-12" /> : (
+              <p className="text-2xl font-bold text-purple-600">{interviews.length}</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -186,7 +278,9 @@ export default function EmployerInterviewsPage() {
       {/* Completed Interviews */}
       <div className="space-y-4">
         <h2 className="text-xl font-heading font-semibold">Completed Interviews</h2>
-        {completedInterviews.length > 0 ? (
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : completedInterviews.length > 0 ? (
           <div className="space-y-4">
             {completedInterviews.map(interview => (
               <InterviewCard key={interview.id} interview={interview} />
@@ -208,7 +302,9 @@ export default function EmployerInterviewsPage() {
       {/* Pending Interviews */}
       <div className="space-y-4">
         <h2 className="text-xl font-heading font-semibold">Awaiting Candidate Response</h2>
-        {pendingInterviews.length > 0 ? (
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : pendingInterviews.length > 0 ? (
           <div className="space-y-4">
             {pendingInterviews.map(interview => (
               <InterviewCard key={interview.id} interview={interview} />

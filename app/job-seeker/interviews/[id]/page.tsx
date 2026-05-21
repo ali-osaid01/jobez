@@ -6,8 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { mockInterviews, mockAIQuestions } from '@/lib/mock-data';
-import { useStartInterviewMutation } from '@/lib/store/api/interviewsApi';
+import { mockAIQuestions } from '@/lib/mock-data';
+import {
+  useGetInterviewByIdQuery,
+  useStartInterviewMutation,
+  useSubmitInterviewResponsesMutation,
+} from '@/lib/store/api/interviewsApi';
 import { useBotSpeech } from '@/hooks/use-bot-speech';
 import type { InterviewQuestion } from '@/lib/store/types';
 import { toast } from 'sonner';
@@ -32,8 +36,10 @@ type InterviewPhase = 'intro' | 'loading' | 'permission' | 'text-phase' | 'video
 export default function InterviewPage() {
   const params = useParams();
   const router = useRouter();
-  const interview = mockInterviews.find(i => i.id === params.id);
+  const interviewId = params.id as string;
+  const { data: interview, isLoading: interviewLoading } = useGetInterviewByIdQuery(interviewId);
   const [startInterview, { isLoading: isStarting }] = useStartInterviewMutation();
+  const [submitResponses] = useSubmitInterviewResponsesMutation();
   const botSpeech = useBotSpeech({ enabled: true });
   
   const [phase, setPhase] = useState<InterviewPhase>('intro');
@@ -156,31 +162,32 @@ export default function InterviewPage() {
     }
   }, [botSpeech.transcript, botSpeech.isListening, phase, currentQuestion, textQuestions.length]);
 
+  if (interviewLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!interview) {
     return <div>Interview not found</div>;
   }
 
   const handleStartInterview = async () => {
     try {
-      if (!interview?.id) {
-        toast.error('Invalid interview - no ID found');
-        return;
-      }
-
       setPhase('loading');
-      console.log('[Interview] Starting interview with ID:', interview.id);
-      console.log('[Interview] Interview object:', interview);
-      
+
       try {
-        const response = await startInterview(interview.id).unwrap();
-        console.log('[Interview] Interview started successfully:', response);
+        const response = await startInterview(interviewId).unwrap();
         setQuestions(response.questions);
         setPhase('text-phase');
         toast.success('Interview started! Answer the questions below.');
       } catch (apiErr) {
         console.error('[Interview] API error:', apiErr);
-        // Fallback to mock questions if API fails
-        console.log('[Interview] Using fallback mock questions');
         setQuestions(mockAIQuestions.slice(0, 5));
         setPhase('text-phase');
         toast.info('Using demo questions. Backend unavailable.');
@@ -235,7 +242,7 @@ export default function InterviewPage() {
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (phase === 'text-phase') {
       // For text phase with bot, use bot transcript if available
       const answer = botSpeech.transcript || currentAnswer;
@@ -243,7 +250,7 @@ export default function InterviewPage() {
         setAnswers([...answers, answer]);
         setCurrentAnswer('');
         botSpeech.clearTranscript();
-        
+
         if (currentQuestion < textQuestions.length - 1) {
           setCurrentQuestion(currentQuestion + 1);
         } else {
@@ -253,15 +260,27 @@ export default function InterviewPage() {
         }
       }
     } else if (phase === 'video-phase') {
-      setAnswers([...answers, transcript]);
+      const newAnswers = [...answers, transcript];
+      setAnswers(newAnswers);
       setTranscript('');
-      
+
       if (currentQuestion < videoQuestions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
         setTimeLeft(120);
         setTimeout(() => simulateAISpeaking(), 500);
       } else {
-        router.push(`/job-seeker/interviews/${params.id}/results`);
+        // Submit all responses to backend before navigating to results
+        const allResponses = questions.map((q, idx) => ({
+          questionId: q.id,
+          answer: newAnswers[idx] ?? '',
+        }));
+        try {
+          await submitResponses({ interviewId, responses: allResponses }).unwrap();
+        } catch (err) {
+          console.error('[Interview] Failed to submit responses:', err);
+          // Navigate to results even if submission fails
+        }
+        router.push(`/job-seeker/interviews/${interviewId}/results`);
       }
     }
   };

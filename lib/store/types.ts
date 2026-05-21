@@ -298,6 +298,110 @@ export interface InterviewStartResponseData {
   questions: InterviewQuestion[];
 }
 
+export type InterviewStatus = "scheduled" | "in-progress" | "completed" | "cancelled";
+export type InterviewType = "ai" | "human";
+
+export interface InterviewResponseData {
+  id: string;
+  jobId: string;
+  applicationId: string;
+  applicantId: string;
+  jobTitle: string;
+  company: string;
+  applicantName: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  duration: number;
+  status: InterviewStatus;
+  type: InterviewType;
+  meetingLink: string | null;
+  notes: string | null;
+  questions: InterviewQuestion[] | null;
+  responses: Array<{ questionId: string; answer: string }> | null;
+  evaluation: {
+    technicalScore?: number;
+    communicationScore?: number;
+    problemSolvingScore?: number;
+    cultureFitScore?: number;
+    strengths?: string[];
+    improvements?: string[];
+  } | null;
+  aiScore: number | null;
+  aiSummary: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InterviewsListResponse {
+  data: InterviewResponseData[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface InterviewsQueryParams {
+  page?: number;
+  limit?: number;
+  status?: InterviewStatus;
+  type?: InterviewType;
+}
+
+export interface InterviewSubmitResponsesRequest {
+  responses: Array<{ questionId: string; answer: string }>;
+}
+
+export interface InterviewResultsData {
+  aiScore: number;
+  aiSummary: string;
+  evaluation: {
+    technicalScore?: number;
+    communicationScore?: number;
+    problemSolvingScore?: number;
+    cultureFitScore?: number;
+    strengths?: string[];
+    improvements?: string[];
+  } | null;
+}
+
+export interface ScheduleInterviewRequest {
+  applicationId: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  duration: number;
+  type: InterviewType;
+  meetingLink?: string;
+  notes?: string;
+}
+
+export type UpdateInterviewRequest = Partial<Omit<ScheduleInterviewRequest, "applicationId">>;
+
+export interface ApplicationStatusUpdateRequest {
+  status: "shortlisted" | "interview-scheduled" | "rejected" | "hired";
+  rejectionReason?: string;
+}
+
+// ─── Dashboard Stats ──────────────────────────────────────────
+
+export interface JobSeekerDashboardStats {
+  totalApplications: number;
+  pendingApplications: number;
+  shortlistedApplications: number;
+  interviewsScheduled: number;
+  savedJobs: number;
+}
+
+export interface EmployerDashboardStats {
+  totalJobs: number;
+  activeJobs: number;
+  totalApplications: number;
+  shortlistedApplications: number;
+  hiredCandidates: number;
+  interviewScheduled: number;
+}
+
+export type DashboardStats = JobSeekerDashboardStats | EmployerDashboardStats;
+
 // ─── UI Types ─────────────────────────────────────────────────
 
 export interface ModalState {

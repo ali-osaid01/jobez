@@ -1,20 +1,30 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockInterviews } from '@/lib/mock-data';
-import { Calendar, Clock, Video, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
+import { useGetInterviewsQuery } from '@/lib/store';
+import type { InterviewResponseData } from '@/lib/store/types';
+import { Calendar, Clock, Video, Sparkles, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function InterviewsPage() {
-  const [interviews] = useState(mockInterviews);
+  const { data, isLoading, isError } = useGetInterviewsQuery();
 
+  const interviews = data?.data ?? [];
   const scheduledInterviews = interviews.filter(i => i.status === 'scheduled');
   const completedInterviews = interviews.filter(i => i.status === 'completed');
   const cancelledInterviews = interviews.filter(i => i.status === 'cancelled');
+
+  const avgAiScore =
+    completedInterviews.length > 0
+      ? Math.round(
+          completedInterviews.reduce((sum, i) => sum + (i.aiScore || 0), 0) /
+            completedInterviews.length
+        )
+      : 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -26,7 +36,7 @@ export default function InterviewsPage() {
     }
   };
 
-  const InterviewCard = ({ interview }: { interview: typeof interviews[0] }) => (
+  const InterviewCard = ({ interview }: { interview: InterviewResponseData }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -60,7 +70,7 @@ export default function InterviewsPage() {
               <Badge variant="secondary">
                 {interview.type === 'ai' ? 'AI Interview' : 'Human Interview'}
               </Badge>
-              {interview.aiScore !== undefined && interview.aiScore > 0 && (
+              {interview.aiScore !== null && interview.aiScore !== undefined && interview.aiScore > 0 && (
                 <Badge className="bg-green-100 text-green-800 border-green-300">
                   Score: {interview.aiScore}/100
                 </Badge>
@@ -98,6 +108,25 @@ export default function InterviewsPage() {
     </Card>
   );
 
+  const LoadingSkeleton = () => (
+    <>
+      {[...Array(2)].map((_, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      ))}
+    </>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -111,6 +140,16 @@ export default function InterviewsPage() {
         </p>
       </div>
 
+      {/* Error */}
+      {isError && (
+        <Card>
+          <CardContent className="py-8 flex flex-col items-center gap-2 text-center text-muted-foreground">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+            Failed to load interviews. Please try again.
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -121,7 +160,11 @@ export default function InterviewsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{scheduledInterviews.length}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <p className="text-2xl font-bold text-blue-600">{scheduledInterviews.length}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -132,7 +175,11 @@ export default function InterviewsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">{completedInterviews.length}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <p className="text-2xl font-bold text-green-600">{completedInterviews.length}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -143,14 +190,11 @@ export default function InterviewsPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-purple-600">
-              {completedInterviews.length > 0
-                ? Math.round(
-                    completedInterviews.reduce((sum, i) => sum + (i.aiScore || 0), 0) /
-                      completedInterviews.length
-                  )
-                : 0}
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <p className="text-2xl font-bold text-purple-600">{avgAiScore}</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -170,7 +214,9 @@ export default function InterviewsPage() {
         </TabsList>
 
         <TabsContent value="scheduled" className="space-y-4">
-          {scheduledInterviews.length > 0 ? (
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : scheduledInterviews.length > 0 ? (
             scheduledInterviews.map(interview => (
               <InterviewCard key={interview.id} interview={interview} />
             ))
@@ -188,7 +234,9 @@ export default function InterviewsPage() {
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">
-          {completedInterviews.length > 0 ? (
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : completedInterviews.length > 0 ? (
             completedInterviews.map(interview => (
               <InterviewCard key={interview.id} interview={interview} />
             ))
@@ -206,7 +254,9 @@ export default function InterviewsPage() {
         </TabsContent>
 
         <TabsContent value="cancelled" className="space-y-4">
-          {cancelledInterviews.length > 0 ? (
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : cancelledInterviews.length > 0 ? (
             cancelledInterviews.map(interview => (
               <InterviewCard key={interview.id} interview={interview} />
             ))

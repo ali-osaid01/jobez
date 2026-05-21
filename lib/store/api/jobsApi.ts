@@ -9,6 +9,7 @@ import type {
   ApplicationsListResponse,
   ApplicationsQueryParams,
   BookmarkResponse,
+  ApplicationStatusUpdateRequest,
   ApiResponse,
 } from "../types";
 
@@ -157,6 +158,38 @@ export const jobsApi = baseApi.injectEndpoints({
         { type: "Applications", id: "LIST" },
       ],
     }),
+
+    // PATCH /applications/:id/status — update application status (employer)
+    updateApplicationStatus: builder.mutation<
+      ApplicationResponseData,
+      { id: string; body: ApplicationStatusUpdateRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/applications/${id}/status`,
+        method: "PATCH",
+        body,
+      }),
+      transformResponse: (response: ApiResponse<ApplicationResponseData>) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Applications", id },
+        { type: "Applications", id: "LIST" },
+      ],
+    }),
+
+    // GET /applications/:id/resume — get resume URL (employer)
+    getApplicationResume: builder.query<{ url: string }, string>({
+      query: (id) => `/applications/${id}/resume`,
+      transformResponse: (response: ApiResponse<{ url: string }>) => response.data,
+    }),
+
+    // POST /applications/:id/contact — contact applicant (employer)
+    contactApplicant: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/applications/${id}/contact`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, id) => [{ type: "Applications", id }],
+    }),
   }),
 });
 
@@ -172,4 +205,7 @@ export const {
   useDeleteJobMutation,
   useToggleBookmarkMutation,
   useApplyForJobMutation,
+  useUpdateApplicationStatusMutation,
+  useGetApplicationResumeQuery,
+  useContactApplicantMutation,
 } = jobsApi;

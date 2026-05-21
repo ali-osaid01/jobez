@@ -3,48 +3,55 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { auth } from '@/lib/auth';
-import { mockJobs, mockApplications, mockInterviews } from '@/lib/mock-data';
-import { 
-  Briefcase, 
-  Calendar, 
-  TrendingUp, 
-  Clock, 
-  MapPin, 
+import {
+  useGetApplicationsQuery,
+  useGetInterviewsQuery,
+  useGetJobsQuery,
+  useGetDashboardStatsQuery,
+} from '@/lib/store';
+import type { JobSeekerDashboardStats } from '@/lib/store/types';
+import {
+  Briefcase,
+  Calendar,
+  Clock,
+  MapPin,
   Banknote,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function JobSeekerDashboard() {
   const user = auth.getUser();
-  const recentApplications = mockApplications.slice(0, 3);
-  const upcomingInterviews = mockInterviews.filter(i => i.status === 'scheduled').slice(0, 2);
-  const recommendedJobs = mockJobs.slice(0, 3);
 
-  const stats = [
+  const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
+  const { data: applicationsData, isLoading: appsLoading } = useGetApplicationsQuery({ limit: 3 });
+  const { data: interviewsData, isLoading: interviewsLoading } = useGetInterviewsQuery({ status: 'scheduled', limit: 3 });
+  const { data: jobsData, isLoading: jobsLoading } = useGetJobsQuery({ limit: 3 });
+
+  const stats = statsData as JobSeekerDashboardStats | undefined;
+  const recentApplications = applicationsData?.data ?? [];
+  const upcomingInterviews = interviewsData?.data ?? [];
+  const recommendedJobs = jobsData?.data ?? [];
+
+  const statCards = [
     {
       title: 'Applications',
-      value: mockApplications.length,
+      value: statsLoading ? '—' : (stats?.totalApplications ?? recentApplications.length),
       icon: Briefcase,
       description: 'Total applied',
-      color: 'text-blue-600'
+      color: 'text-blue-600',
     },
     {
       title: 'Interviews',
-      value: upcomingInterviews.length,
+      value: statsLoading ? '—' : (stats?.interviewsScheduled ?? upcomingInterviews.length),
       icon: Calendar,
       description: 'Scheduled',
-      color: 'text-purple-600'
+      color: 'text-purple-600',
     },
-    // {
-    //   title: 'Profile Views',
-    //   value: 48,
-    //   icon: TrendingUp,
-    //   description: 'This month',
-    //   color: 'text-green-600'
-    // },
   ];
 
   const getStatusColor = (status: string) => {
@@ -72,7 +79,7 @@ export default function JobSeekerDashboard() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -81,7 +88,11 @@ export default function JobSeekerDashboard() {
               <stat.icon className={`h-4 w-4 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">{stat.value}</div>
+              )}
               <p className="text-xs text-muted-foreground">{stat.description}</p>
             </CardContent>
           </Card>
@@ -109,7 +120,19 @@ export default function JobSeekerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {upcomingInterviews.length > 0 ? (
+            {interviewsLoading ? (
+              <>
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-lg border">
+                    <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : upcomingInterviews.length > 0 ? (
               upcomingInterviews.map((interview) => (
                 <div
                   key={interview.id}
@@ -163,21 +186,40 @@ export default function JobSeekerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentApplications.map((application) => (
-              <div
-                key={application.id}
-                className="flex items-start justify-between p-4 rounded-lg border bg-card"
-              >
-                <div className="space-y-1">
-                  <h4 className="font-semibold">{application.jobTitle}</h4>
-                  <p className="text-sm text-muted-foreground">{application.company}</p>
-                  <p className="text-xs text-muted-foreground">Applied {application.appliedDate}</p>
+            {appsLoading ? (
+              <>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-start justify-between p-4 rounded-lg border">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                ))}
+              </>
+            ) : recentApplications.length > 0 ? (
+              recentApplications.map((application) => (
+                <div
+                  key={application.id}
+                  className="flex items-start justify-between p-4 rounded-lg border bg-card"
+                >
+                  <div className="space-y-1">
+                    <h4 className="font-semibold">{application.jobTitle}</h4>
+                    <p className="text-sm text-muted-foreground">{application.company}</p>
+                    <p className="text-xs text-muted-foreground">Applied {application.appliedDate}</p>
+                  </div>
+                  <Badge className={getStatusColor(application.status)}>
+                    {application.status.replace('-', ' ')}
+                  </Badge>
                 </div>
-                <Badge className={getStatusColor(application.status)}>
-                  {application.status.replace('-', ' ')}
-                </Badge>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Briefcase className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                <p>No applications yet</p>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       </div>
@@ -202,39 +244,58 @@ export default function JobSeekerDashboard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {recommendedJobs.map((job) => (
-            <div
-              key={job.id}
-              className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-            >
-              <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold">{job.title}</h4>
-                  {job.matchScore && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 shrink-0">
-                      {job.matchScore}% match
-                    </Badge>
-                  )}
+          {jobsLoading ? (
+            <>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-lg border">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <Skeleton className="h-9 w-24" />
                 </div>
-                <p className="text-sm text-muted-foreground">{job.company}</p>
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {job.location}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Banknote className="h-3 w-3" />
-                    {job.salary}
-                  </span>
-                  <Badge variant="outline" className="text-xs">{job.type}</Badge>
-                  <Badge variant="outline" className="text-xs">{job.locationType}</Badge>
+              ))}
+            </>
+          ) : recommendedJobs.length > 0 ? (
+            recommendedJobs.map((job) => (
+              <div
+                key={job.id}
+                className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold">{job.title}</h4>
+                    {job.matchScore && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 shrink-0">
+                        {job.matchScore}% match
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{job.company}</p>
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {job.location}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Banknote className="h-3 w-3" />
+                      {job.salary}
+                    </span>
+                    <Badge variant="outline" className="text-xs">{job.type}</Badge>
+                    <Badge variant="outline" className="text-xs">{job.locationType}</Badge>
+                  </div>
                 </div>
+                <Link href={`/job-seeker/jobs/${job.id}`} className="shrink-0">
+                  <Button>View Details</Button>
+                </Link>
               </div>
-              <Link href={`/job-seeker/jobs/${job.id}`} className="shrink-0">
-                <Button>View Details</Button>
-              </Link>
+            ))
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
+              <p>No jobs available right now</p>
             </div>
-          ))}
+          )}
         </CardContent>
       </Card>
     </div>

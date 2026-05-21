@@ -207,5 +207,6 @@ export const {
   useApplyForJobMutation,
   useUpdateApplicationStatusMutation,
   useGetApplicationResumeQuery,
+  useLazyGetApplicationResumeQuery,
   useContactApplicantMutation,
 } = jobsApi;

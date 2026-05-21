@@ -348,12 +348,12 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/40">
                 <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                 <a
-                  href={profileData.resumeUrl}
+                  href={profileData.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline flex items-center gap-1 truncate"
                 >
-                  View Resume
+                  Download Resume
                   <ExternalLink className="h-3 w-3 shrink-0" />
                 </a>
               </div>

@@ -31,6 +31,7 @@ import {
   useUpdateApplicationStatusMutation,
   useContactApplicantMutation,
   useScheduleInterviewMutation,
+  useLazyGetApplicationResumeQuery,
 } from '@/lib/store';
 import type { ApplicationResponseData, ScheduleInterviewRequest } from '@/lib/store/types';
 import {
@@ -44,6 +45,7 @@ import {
   Trophy,
   AlertCircle,
   CalendarPlus,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -73,6 +75,7 @@ export default function ApplicantsPage() {
   const [updateStatus, { isLoading: isUpdating }] = useUpdateApplicationStatusMutation();
   const [contactApplicant, { isLoading: isContacting }] = useContactApplicantMutation();
   const [scheduleInterview, { isLoading: isScheduling }] = useScheduleInterviewMutation();
+  const [triggerGetResume] = useLazyGetApplicationResumeQuery();
 
   const applications = data?.data ?? [];
 
@@ -123,6 +126,15 @@ export default function ApplicantsPage() {
       toast.success(`Contact request sent to ${app.applicantName}`);
     } catch {
       toast.error('Failed to send contact request');
+    }
+  };
+
+  const handleDownloadResume = async (appId: string) => {
+    try {
+      const result = await triggerGetResume(appId).unwrap();
+      window.open(result.url, '_blank');
+    } catch {
+      toast.error('Failed to get resume download link');
     }
   };
 
@@ -205,6 +217,18 @@ export default function ApplicantsPage() {
             <Badge className={`${getStatusColor(application.status)} justify-center py-1`}>
               {application.status.replace('-', ' ').toUpperCase()}
             </Badge>
+
+            {application.resume && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => handleDownloadResume(application.id)}
+              >
+                <Download className="h-4 w-4" />
+                Download Resume
+              </Button>
+            )}
 
             {application.status === 'pending' && (
               <>

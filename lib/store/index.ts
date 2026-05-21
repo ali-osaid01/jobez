@@ -65,6 +65,7 @@ export {
   useApplyForJobMutation,
   useUpdateApplicationStatusMutation,
   useGetApplicationResumeQuery,
+  useLazyGetApplicationResumeQuery,
   useContactApplicantMutation,
 } from "./api/jobsApi";
 export {

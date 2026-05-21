@@ -154,11 +154,7 @@ export default function ApplicationsPage() {
   const { data, isLoading, isError, refetch } = useGetApplicationsQuery();
 
   const applications: ApplicationResponseData[] = data?.data ?? [];
-
-  const byStatus = (status: string) => applications.filter((a) => a.status === status);
-  const pending     = byStatus('pending');
-  const shortlisted = byStatus('shortlisted');
-  const interviews  = byStatus('interview-scheduled');
+  const counts = data?.counts;
 
   // ── Error ──────────────────────────────────────────────────
 
@@ -203,10 +199,10 @@ export default function ApplicationsPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: 'Total',        value: applications.length,  icon: FileText,    color: 'text-muted-foreground' },
-          { label: 'Pending',      value: pending.length,       icon: Clock,       color: 'text-yellow-600' },
-          { label: 'Shortlisted',  value: shortlisted.length,   icon: TrendingUp,  color: 'text-blue-600' },
-          { label: 'Interviews',   value: interviews.length,    icon: Calendar,    color: 'text-purple-600' },
+          { label: 'Total',        value: counts?.total,               icon: FileText,    color: 'text-muted-foreground' },
+          { label: 'Pending',      value: counts?.pending,             icon: Clock,       color: 'text-yellow-600' },
+          { label: 'Shortlisted',  value: counts?.shortlisted,         icon: TrendingUp,  color: 'text-blue-600' },
+          { label: 'Interviews',   value: counts?.interviewScheduled,  icon: Calendar,    color: 'text-purple-600' },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -228,16 +224,16 @@ export default function ApplicationsPage() {
       <Tabs defaultValue="all" className="space-y-6">
         <TabsList>
           <TabsTrigger value="all">
-            All {!isLoading && `(${applications.length})`}
+            All {!isLoading && counts !== undefined && `(${counts.total})`}
           </TabsTrigger>
           <TabsTrigger value="pending">
-            Pending {!isLoading && `(${pending.length})`}
+            Pending {!isLoading && counts !== undefined && `(${counts.pending})`}
           </TabsTrigger>
           <TabsTrigger value="shortlisted">
-            Shortlisted {!isLoading && `(${shortlisted.length})`}
+            Shortlisted {!isLoading && counts !== undefined && `(${counts.shortlisted})`}
           </TabsTrigger>
           <TabsTrigger value="interview">
-            Interviews {!isLoading && `(${interviews.length})`}
+            Interviews {!isLoading && counts !== undefined && `(${counts.interviewScheduled})`}
           </TabsTrigger>
         </TabsList>
 
@@ -252,33 +248,30 @@ export default function ApplicationsPage() {
         </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : pending.length === 0 ? (
-            <EmptyState icon={FileText} message="No pending applications" />
-          ) : (
-            pending.map((app) => <ApplicationCard key={app.id} app={app} />)
-          )}
+          {isLoading ? <LoadingSkeleton /> : (() => {
+            const filtered = applications.filter((a) => a.status === 'pending');
+            return filtered.length === 0
+              ? <EmptyState icon={FileText} message="No pending applications" />
+              : filtered.map((app) => <ApplicationCard key={app.id} app={app} />);
+          })()}
         </TabsContent>
 
         <TabsContent value="shortlisted" className="space-y-4">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : shortlisted.length === 0 ? (
-            <EmptyState icon={TrendingUp} message="No shortlisted applications" />
-          ) : (
-            shortlisted.map((app) => <ApplicationCard key={app.id} app={app} />)
-          )}
+          {isLoading ? <LoadingSkeleton /> : (() => {
+            const filtered = applications.filter((a) => a.status === 'shortlisted');
+            return filtered.length === 0
+              ? <EmptyState icon={TrendingUp} message="No shortlisted applications" />
+              : filtered.map((app) => <ApplicationCard key={app.id} app={app} />);
+          })()}
         </TabsContent>
 
         <TabsContent value="interview" className="space-y-4">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : interviews.length === 0 ? (
-            <EmptyState icon={Calendar} message="No scheduled interviews" />
-          ) : (
-            interviews.map((app) => <ApplicationCard key={app.id} app={app} />)
-          )}
+          {isLoading ? <LoadingSkeleton /> : (() => {
+            const filtered = applications.filter((a) => a.status === 'interview-scheduled');
+            return filtered.length === 0
+              ? <EmptyState icon={Calendar} message="No scheduled interviews" />
+              : filtered.map((app) => <ApplicationCard key={app.id} app={app} />);
+          })()}
         </TabsContent>
 
       </Tabs>

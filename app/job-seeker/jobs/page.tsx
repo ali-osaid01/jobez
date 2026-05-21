@@ -148,7 +148,7 @@ export default function JobsPage() {
                     className="w-full md:w-auto"
                     onClick={() => handleBookmark(job.id)}
                   >
-                    <Bookmark className="h-4 w-4" />
+                    <Bookmark className={`h-4 w-4 ${job.isBooked ? 'fill-primary text-primary' : ''}`} />
                   </Button>
                 </div>
               </div>

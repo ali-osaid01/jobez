@@ -16,7 +16,8 @@ import {
   Building2,
   CheckCircle2,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Bookmark,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -190,8 +191,9 @@ export default function JobDetailPage() {
                   <Button size="lg" onClick={handleApply} className="w-full" disabled={applying}>
                     {applying ? 'Applying...' : 'Apply Now'}
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full" onClick={handleSaveJob}>
-                    Save Job
+                  <Button variant="outline" size="lg" className="w-full gap-2" onClick={handleSaveJob}>
+                    <Bookmark className={`h-4 w-4 ${job.isBooked ? 'fill-primary text-primary' : ''}`} />
+                    {job.isBooked ? 'Saved' : 'Save Job'}
                   </Button>
                 </>
               )}

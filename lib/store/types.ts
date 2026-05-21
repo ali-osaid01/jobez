@@ -193,6 +193,7 @@ export interface JobResponseData {
   matchScore: number | null;
   applicantsCount: number;
   status: JobStatus;
+  isBooked: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -215,12 +216,20 @@ export interface ApplicationResponseData {
   updatedAt: string;
 }
 
+export interface ApplicationCounts {
+  total: number;
+  pending: number;
+  shortlisted: number;
+  interviewScheduled: number;
+}
+
 export interface ApplicationsListResponse {
   data: ApplicationResponseData[];
   total: number;
   page: number;
   limit: number;
   total_pages: number;
+  counts: ApplicationCounts;
 }
 
 export interface CreateJobRequest {

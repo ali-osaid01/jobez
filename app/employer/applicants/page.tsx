@@ -59,7 +59,7 @@ export default function ApplicantsPage() {
 
   // Schedule interview dialog state
   const [schedulingApp, setSchedulingApp] = useState<ApplicationResponseData | null>(null);
-  const [scheduleForm, setScheduleForm] = useState<Omit<ScheduleInterviewRequest, 'applicationId'>>({
+    const [scheduleForm, setScheduleForm] = useState<Omit<ScheduleInterviewRequest, 'jobId' | 'applicantId'>>({
     scheduledDate: '',
     scheduledTime: '',
     duration: 60,
@@ -146,7 +146,8 @@ export default function ApplicantsPage() {
     }
     try {
       await scheduleInterview({
-        applicationId: schedulingApp.id,
+        jobId: schedulingApp.jobId,
+        applicantId: schedulingApp.applicantId,
         ...scheduleForm,
       }).unwrap();
       toast.success(`Interview scheduled for ${schedulingApp.applicantName}`);

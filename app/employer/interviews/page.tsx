@@ -78,7 +78,9 @@ export default function EmployerInterviewsPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">AI Interview</Badge>
+              <Badge variant="secondary">
+              {interview.type === 'human' ? 'Human Interview' : 'AI Interview'}
+              </Badge>
               {interview.aiScore !== null && interview.aiScore !== undefined && interview.aiScore > 0 && (
                 <Badge className="bg-green-100 text-green-800 border-green-300">
                   AI Score: {interview.aiScore}/100

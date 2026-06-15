@@ -364,12 +364,23 @@ export interface InterviewResultsData {
   } | null;
 }
 
+// export interface ScheduleInterviewRequest {
+//   applicationId: string;
+//   scheduledDate: string;
+//   scheduledTime: string;
+//   duration: number;
+//   type: InterviewType;
+//   meetingLink?: string;
+//   notes?: string;
+// }
+
 export interface ScheduleInterviewRequest {
-  applicationId: string;
+  jobId: string;
+  applicantId: string;
   scheduledDate: string;
   scheduledTime: string;
   duration: number;
-  type: InterviewType;
+  type: 'ai' | 'human';
   meetingLink?: string;
   notes?: string;
 }

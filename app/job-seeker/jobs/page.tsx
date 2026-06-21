@@ -10,6 +10,9 @@ import { useGetJobsQuery, useToggleBookmarkMutation } from '@/lib/store';
 import { Search, MapPin, Banknote, Briefcase, Sparkles, Filter, Bookmark } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { PaginationControls } from '@/components/pagination-controls';
+
+const PAGE_SIZE = 20;
 
 export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +20,7 @@ export default function JobsPage() {
 
   const { data: jobsData, isLoading, isError } = useGetJobsQuery({
     page,
-    limit: 20,
+    limit: PAGE_SIZE,
     ...(searchQuery ? { search: searchQuery } : {}),
   });
   const [toggleBookmark] = useToggleBookmarkMutation();
@@ -182,25 +185,14 @@ export default function JobsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Previous
-          </Button>
-          <span className="flex items-center px-4 text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
-        </div>
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          totalItems={jobsData?.total ?? 0}
+          pageSize={PAGE_SIZE}
+          itemLabel="job"
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

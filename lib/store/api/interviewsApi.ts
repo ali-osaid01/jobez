@@ -1,14 +1,14 @@
 import { baseApi } from "./baseApi";
 import type {
-  InterviewStartResponseData,
+  ApiResponse,
   InterviewResponseData,
+  InterviewResultsData,
   InterviewsListResponse,
   InterviewsQueryParams,
+  InterviewStartResponseData,
   InterviewSubmitResponsesRequest,
-  InterviewResultsData,
   ScheduleInterviewRequest,
   UpdateInterviewRequest,
-  ApiResponse,
 } from "../types";
 
 // ─── Interviews API ──────────────────────────────────────────
@@ -21,7 +21,7 @@ export const interviewsApi = baseApi.injectEndpoints({
         const searchParams = new URLSearchParams();
         if (params) {
           Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
+            if (value !== undefined && value !== null && value !== "") {
               searchParams.set(key, String(value));
             }
           });
@@ -46,7 +46,7 @@ export const interviewsApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: "Interview", id }],
     }),
 
-    // POST /interviews/:id/start — start AI interview (generate questions)
+    // POST /interviews/:id/start — start AI interview
     startInterview: builder.mutation<InterviewStartResponseData, string>({
       query: (interviewId) => ({
         url: `/interviews/${interviewId}/start`,
@@ -69,6 +69,7 @@ export const interviewsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { interviewId }) => [
         { type: "Interview", id: interviewId },
+        { type: "Interviews", id: "LIST" },
       ],
     }),
 
@@ -87,7 +88,10 @@ export const interviewsApi = baseApi.injectEndpoints({
         body,
       }),
       transformResponse: (response: ApiResponse<InterviewResponseData>) => response.data,
-      invalidatesTags: [{ type: "Interviews", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Interviews", id: "LIST" },
+        { type: "Applications", id: "LIST" },
+      ],
     }),
 
     // PATCH /interviews/:id — update interview (employer)

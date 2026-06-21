@@ -8,8 +8,8 @@ import type {
   JobsQueryParams,
   ApplicationsListResponse,
   ApplicationsQueryParams,
+  UpdateApplicationStatusRequest,
   BookmarkResponse,
-  ApplicationStatusUpdateRequest,
   ApiResponse,
 } from "../types";
 
@@ -52,10 +52,20 @@ export const jobsApi = baseApi.injectEndpoints({
     }),
 
     // GET /jobs/recommended — AI-recommended jobs (job-seeker)
-    getRecommendedJobs: builder.query<JobResponseData[], void>({
-      query: () => "/jobs/recommended",
-      transformResponse: (response: ApiResponse<JobResponseData[]>) =>
-        response.data,
+    getRecommendedJobs: builder.query<JobsListResponse, Pick<JobsQueryParams, "page" | "limit"> | void>({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              searchParams.set(key, String(value));
+            }
+          });
+        }
+        const qs = searchParams.toString();
+        return `/jobs/recommended${qs ? `?${qs}` : ""}`;
+      },
+      transformResponse: (response: JobsListResponse) => response,
       providesTags: [{ type: "Jobs", id: "RECOMMENDED" }],
     }),
 
@@ -85,10 +95,46 @@ export const jobsApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Applications' as const, id })),
+              ...result.data.map(({ id }) => ({ type: 'Application' as const, id })),
               { type: 'Applications', id: 'LIST' },
             ]
           : [{ type: 'Applications', id: 'LIST' }],
+    }),
+
+    updateApplicationStatus: builder.mutation<
+      ApplicationResponseData,
+      { id: string; body: UpdateApplicationStatusRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/applications/${id}/status`,
+        method: "PATCH",
+        body,
+      }),
+      transformResponse: (response: ApiResponse<ApplicationResponseData>) =>
+        response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Application", id },
+        { type: "Applications", id: "LIST" },
+        { type: "Interviews", id: "LIST" },
+      ],
+    }),
+
+    getApplicationResume: builder.query<string, string>({
+      query: (id) => `/applications/${id}/resume`,
+      transformResponse: (response: ApiResponse<{ url: string }>) =>
+        response.data.url,
+      providesTags: (_result, _error, id) => [{ type: "Application", id }],
+    }),
+
+    contactApplicant: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/applications/${id}/contact`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Application", id },
+        { type: "Applications", id: "LIST" },
+      ],
     }),
 
     // POST /jobs — create a new job (employer)
@@ -159,37 +205,6 @@ export const jobsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // PATCH /applications/:id/status — update application status (employer)
-    updateApplicationStatus: builder.mutation<
-      ApplicationResponseData,
-      { id: string; body: ApplicationStatusUpdateRequest }
-    >({
-      query: ({ id, body }) => ({
-        url: `/applications/${id}/status`,
-        method: "PATCH",
-        body,
-      }),
-      transformResponse: (response: ApiResponse<ApplicationResponseData>) => response.data,
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: "Applications", id },
-        { type: "Applications", id: "LIST" },
-      ],
-    }),
-
-    // GET /applications/:id/resume — get resume URL (employer)
-    getApplicationResume: builder.query<{ url: string }, string>({
-      query: (id) => `/applications/${id}/resume`,
-      transformResponse: (response: ApiResponse<{ url: string }>) => response.data,
-    }),
-
-    // POST /applications/:id/contact — contact applicant (employer)
-    contactApplicant: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `/applications/${id}/contact`,
-        method: "POST",
-      }),
-      invalidatesTags: (_result, _error, id) => [{ type: "Applications", id }],
-    }),
   }),
 });
 
@@ -200,13 +215,12 @@ export const {
   useGetRecommendedJobsQuery,
   useGetJobByIdQuery,
   useGetApplicationsQuery,
+  useUpdateApplicationStatusMutation,
+  useLazyGetApplicationResumeQuery,
+  useContactApplicantMutation,
   useCreateJobMutation,
   useUpdateJobMutation,
   useDeleteJobMutation,
   useToggleBookmarkMutation,
   useApplyForJobMutation,
-  useUpdateApplicationStatusMutation,
-  useGetApplicationResumeQuery,
-  useLazyGetApplicationResumeQuery,
-  useContactApplicantMutation,
 } = jobsApi;

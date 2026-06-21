@@ -1,17 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGetApplicationsQuery } from '@/lib/store';
-import type { ApplicationResponseData } from '@/lib/store/types';
+import type { ApplicationResponseData, ApplicationStatus } from '@/lib/store/types';
+import { PaginationControls } from '@/components/pagination-controls';
 import {
   FileText, Calendar, Building2, TrendingUp,
   Clock, AlertCircle, RefreshCw, Briefcase,
 } from 'lucide-react';
 import Link from 'next/link';
+
+const PAGE_SIZE = 10;
+type ApplicationTab = 'all' | ApplicationStatus;
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -151,10 +156,29 @@ function LoadingSkeleton() {
 // ─── Page ─────────────────────────────────────────────────────
 
 export default function ApplicationsPage() {
-  const { data, isLoading, isError, refetch } = useGetApplicationsQuery();
+  const [activeTab, setActiveTab] = useState<ApplicationTab>('all');
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isFetching, isError, refetch } = useGetApplicationsQuery({
+    page,
+    limit: PAGE_SIZE,
+    status: activeTab === 'all' ? null : activeTab,
+  });
 
   const applications: ApplicationResponseData[] = data?.data ?? [];
   const counts = data?.counts;
+  const totalApplications = data?.total ?? 0;
+  const totalPages = data?.total_pages ?? 1;
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as ApplicationTab);
+    setPage(1);
+  };
+
+  const renderApplications = (emptyIcon: React.ElementType, emptyMessage: string) => {
+    if (isLoading || isFetching) return <LoadingSkeleton />;
+    if (applications.length === 0) return <EmptyState icon={emptyIcon} message={emptyMessage} />;
+    return applications.map((app) => <ApplicationCard key={app.id} app={app} />);
+  };
 
   // ── Error ──────────────────────────────────────────────────
 
@@ -221,60 +245,51 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="all" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList>
           <TabsTrigger value="all">
-            All {!isLoading && counts !== undefined && `(${counts.total})`}
+            All {!isLoading && counts !== undefined && `(${counts?.total ?? 0})`}
           </TabsTrigger>
           <TabsTrigger value="pending">
-            Pending {!isLoading && counts !== undefined && `(${counts.pending})`}
+            Pending {!isLoading && counts !== undefined && `(${counts?.pending ?? 0})`}
           </TabsTrigger>
           <TabsTrigger value="shortlisted">
-            Shortlisted {!isLoading && counts !== undefined && `(${counts.shortlisted})`}
+            Shortlisted {!isLoading && counts !== undefined && `(${counts?.shortlisted ?? 0})`}
           </TabsTrigger>
-          <TabsTrigger value="interview">
-            Interviews {!isLoading && counts !== undefined && `(${counts.interviewScheduled})`}
+          <TabsTrigger value="interview-scheduled">
+            Interviews {!isLoading && counts !== undefined && `(${counts?.interviewScheduled ?? 0})`}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : applications.length === 0 ? (
-            <EmptyState icon={Briefcase} message="You haven't applied to any jobs yet" />
-          ) : (
-            applications.map((app) => <ApplicationCard key={app.id} app={app} />)
-          )}
+          {renderApplications(Briefcase, "You haven't applied to any jobs yet")}
         </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
-          {isLoading ? <LoadingSkeleton /> : (() => {
-            const filtered = applications.filter((a) => a.status === 'pending');
-            return filtered.length === 0
-              ? <EmptyState icon={FileText} message="No pending applications" />
-              : filtered.map((app) => <ApplicationCard key={app.id} app={app} />);
-          })()}
+          {renderApplications(FileText, 'No pending applications')}
         </TabsContent>
 
         <TabsContent value="shortlisted" className="space-y-4">
-          {isLoading ? <LoadingSkeleton /> : (() => {
-            const filtered = applications.filter((a) => a.status === 'shortlisted');
-            return filtered.length === 0
-              ? <EmptyState icon={TrendingUp} message="No shortlisted applications" />
-              : filtered.map((app) => <ApplicationCard key={app.id} app={app} />);
-          })()}
+          {renderApplications(TrendingUp, 'No shortlisted applications')}
         </TabsContent>
 
-        <TabsContent value="interview" className="space-y-4">
-          {isLoading ? <LoadingSkeleton /> : (() => {
-            const filtered = applications.filter((a) => a.status === 'interview-scheduled');
-            return filtered.length === 0
-              ? <EmptyState icon={Calendar} message="No scheduled interviews" />
-              : filtered.map((app) => <ApplicationCard key={app.id} app={app} />);
-          })()}
+        <TabsContent value="interview-scheduled" className="space-y-4">
+          {renderApplications(Calendar, 'No scheduled interviews')}
         </TabsContent>
 
       </Tabs>
+
+      {applications.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalApplications}
+          pageSize={PAGE_SIZE}
+          itemLabel="application"
+          isLoading={isFetching}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   );
 }

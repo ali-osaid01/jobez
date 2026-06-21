@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 import { toast } from 'sonner';
+import { PaginationControls } from '@/components/pagination-controls';
 
 export default function AllJobsPage() {
   const [searchInput, setSearchInput] = useState('');
@@ -25,7 +26,6 @@ export default function AllJobsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
-  const [jobs, setJobs] = useState<JobResponseData[]>([]);
 
   const queryParams = {
     page,
@@ -44,19 +44,6 @@ export default function AllJobsPage() {
 
   const headerRef = useScrollAnimation({ threshold: 0.1 });
   const filtersRef = useScrollAnimation({ threshold: 0.1 });
-
-  useEffect(() => {
-    if (!jobsData) return;
-
-    setJobs((previousJobs) => {
-      if (page === 1 || previousJobs.length === 0) {
-        return jobsData.data;
-      }
-
-      const seenIds = new Set(previousJobs.map((job) => job.id));
-      return [...previousJobs, ...jobsData.data.filter((job) => !seenIds.has(job.id))];
-    });
-  }, [jobsData, page]);
 
   useEffect(() => {
     if (searchInput === '' && appliedSearch !== '') {
@@ -97,9 +84,10 @@ export default function AllJobsPage() {
     }
   };
 
+  const jobs: JobResponseData[] = jobsData?.data ?? [];
   const totalJobs = jobsData?.total ?? jobs.length;
   const totalPages = jobsData?.total_pages ?? 1;
-  const showLoadingSkeleton = isLoading && jobs.length === 0;
+  const showLoadingSkeleton = (isLoading || isFetching) && jobs.length === 0;
 
   return (
     <div className="space-y-6">
@@ -166,7 +154,7 @@ export default function AllJobsPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Location Type</label>
-                  <Select value={locationFilter} onValueChange={(value) => handleFilterChange(setLocationFilter, value)}>
+                  <Select value={locationFilter} onValueChange={(value) => handleFilterChange(setLocationFilter, value as JobLocationType | 'all')}>
                     <SelectTrigger>
                       <SelectValue placeholder="All locations" />
                     </SelectTrigger>
@@ -181,7 +169,7 @@ export default function AllJobsPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Job Type</label>
-                  <Select value={typeFilter} onValueChange={(value) => handleFilterChange(setTypeFilter, value)}>
+                  <Select value={typeFilter} onValueChange={(value) => handleFilterChange(setTypeFilter, value as JobType | 'all')}>
                     <SelectTrigger>
                       <SelectValue placeholder="All types" />
                     </SelectTrigger>
@@ -197,7 +185,7 @@ export default function AllJobsPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Experience Level</label>
-                  <Select value={experienceFilter} onValueChange={(value) => handleFilterChange(setExperienceFilter, value)}>
+                  <Select value={experienceFilter} onValueChange={(value) => handleFilterChange(setExperienceFilter, value as JobExperienceLevel | 'all')}>
                     <SelectTrigger>
                       <SelectValue placeholder="All levels" />
                     </SelectTrigger>
@@ -420,18 +408,17 @@ export default function AllJobsPage() {
       )}
 
       {/* Load More */}
-      {jobs.length > 0 && page < totalPages && (
-        <div className="flex justify-center pt-4">
-          <Button
-            variant="outline"
-            size="lg"
-            className="hover-scale btn-press"
-            onClick={() => setPage((currentPage) => currentPage + 1)}
-            disabled={isFetching}
-          >
-            {isFetching && page > 1 ? 'Loading more...' : 'Load More Jobs'}
-          </Button>
-        </div>
+      {jobs.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalJobs}
+          pageSize={queryParams.limit}
+          itemLabel="job"
+          isLoading={isFetching}
+          onPageChange={setPage}
+          className="pt-4"
+        />
       )}
     </div>
   );

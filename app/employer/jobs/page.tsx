@@ -7,14 +7,25 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGetJobsQuery, useAppSelector, selectCurrentUser } from '@/lib/store';
 import { Briefcase, Users, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
+import { PaginationControls } from '@/components/pagination-controls';
+
+const PAGE_SIZE = 10;
 
 export default function EmployerJobsPage() {
   const user = useAppSelector(selectCurrentUser);
-  const { data: jobsData, isLoading, isError } = useGetJobsQuery(
-    user ? { employerId: user.id } : undefined,
+  const [page, setPage] = useState(1);
+  const { data: jobsData, isLoading, isFetching, isError } = useGetJobsQuery(
+    user ? { employerId: user.id, status: 'all', page, limit: PAGE_SIZE } : undefined,
+    { skip: !user },
+  );
+  const { data: activeJobsData } = useGetJobsQuery(
+    user ? { employerId: user.id, status: 'active', page: 1, limit: 1 } : undefined,
     { skip: !user },
   );
   const jobs = jobsData?.data ?? [];
+  const totalJobs = jobsData?.total ?? 0;
+  const totalPages = jobsData?.total_pages ?? 1;
 
   if (isLoading) {
     return (
@@ -73,18 +84,18 @@ export default function EmployerJobsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-blue-600">
-              {jobs.filter((j) => j.status === 'active').length}
+              {activeJobsData?.total ?? 0}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <p className="text-sm text-muted-foreground">Total Applicants</p>
-            <Users className="h-4 w-4 text-purple-600" />
+            <p className="text-sm text-muted-foreground">Total Job Postings</p>
+            <Briefcase className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-purple-600">
-              {jobs.reduce((sum, job) => sum + (job.applicantsCount || 0), 0)}
+              {totalJobs}
             </p>
           </CardContent>
         </Card>
@@ -163,6 +174,18 @@ export default function EmployerJobsPage() {
           ))
         )}
       </div>
+
+      {jobs.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalJobs}
+          pageSize={PAGE_SIZE}
+          itemLabel="job posting"
+          isLoading={isFetching}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   );
 }

@@ -15,6 +15,19 @@ export interface ApiError {
   };
 }
 
+export interface PaginatedListResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface PaginationQueryParams {
+  page?: number;
+  limit?: number;
+}
+
 // ─── Auth Types ───────────────────────────────────────────────
 
 export interface AuthUser {
@@ -173,6 +186,12 @@ export type JobLocationType = "Remote" | "On-site" | "Hybrid";
 export type JobType = "Full-time" | "Part-time" | "Contract" | "Internship";
 export type JobExperienceLevel = "Entry" | "Mid" | "Senior" | "Lead";
 export type JobStatus = "active" | "closed";
+export type ApplicationStatus =
+  | "pending"
+  | "shortlisted"
+  | "interview-scheduled"
+  | "rejected"
+  | "hired";
 
 export interface JobResponseData {
   id: string;
@@ -206,7 +225,7 @@ export interface ApplicationResponseData {
   applicantId: string;
   applicantName: string;
   applicantEmail: string;
-  status: string;
+  status: ApplicationStatus;
   appliedDate: string;
   resume: string | null;
   coverLetter: string | null;
@@ -221,15 +240,12 @@ export interface ApplicationCounts {
   pending: number;
   shortlisted: number;
   interviewScheduled: number;
+  rejected: number;
+  hired: number;
 }
 
-export interface ApplicationsListResponse {
-  data: ApplicationResponseData[];
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
-  counts: ApplicationCounts;
+export interface ApplicationsListResponse extends PaginatedListResponse<ApplicationResponseData> {
+  counts: ApplicationCounts | null;
 }
 
 export interface CreateJobRequest {
@@ -249,19 +265,11 @@ export interface CreateJobRequest {
 
 export type UpdateJobRequest = Partial<CreateJobRequest>;
 
-export interface JobsListResponse {
-  data: JobResponseData[];
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
-}
+export type JobsListResponse = PaginatedListResponse<JobResponseData>;
 
-export interface JobsQueryParams {
-  page?: number;
-  limit?: number;
+export interface JobsQueryParams extends PaginationQueryParams {
   search?: string;
-  status?: JobStatus;
+  status?: JobStatus | "all";
   employerId?: string;
   type?: JobType;
   locationType?: JobLocationType;
@@ -270,12 +278,15 @@ export interface JobsQueryParams {
   sortOrder?: "asc" | "desc";
 }
 
-export interface ApplicationsQueryParams {
-  page?: number;
-  limit?: number;
-  status?: string | null;
+export interface ApplicationsQueryParams extends PaginationQueryParams {
+  status?: ApplicationStatus | null;
   jobId?: string | null;
   search?: string | null;
+}
+
+export interface UpdateApplicationStatusRequest {
+  status: ApplicationStatus;
+  rejectionReason?: string | null;
 }
 
 export interface BookmarkResponse {
@@ -283,6 +294,9 @@ export interface BookmarkResponse {
 }
 
 // ─── Interview Types ──────────────────────────────────────────
+
+export type InterviewStatus = "scheduled" | "in-progress" | "completed" | "cancelled";
+export type InterviewType = "ai" | "human";
 
 export interface InterviewQuestion {
   id: string;
@@ -292,23 +306,14 @@ export interface InterviewQuestion {
   expectedDuration: number;
 }
 
-export interface InterviewStartResponseData {
-  interviewId: string;
-  totalQuestions: number;
-  questions: InterviewQuestion[];
-}
-
-export type InterviewStatus = "scheduled" | "in-progress" | "completed" | "cancelled";
-export type InterviewType = "ai" | "human";
-
 export interface InterviewResponseData {
   id: string;
   jobId: string;
   applicationId: string;
-  applicantId: string;
   jobTitle: string;
   company: string;
-  applicantName: string;
+  applicantId: string;
+  applicantName: string | null;
   scheduledDate: string;
   scheduledTime: string;
   duration: number;
@@ -316,9 +321,9 @@ export interface InterviewResponseData {
   type: InterviewType;
   meetingLink: string | null;
   notes: string | null;
-  questions: InterviewQuestion[] | null;
-  responses: Array<{ questionId: string; answer: string }> | null;
-  evaluation: {
+  questions?: InterviewQuestion[] | null;
+  responses?: Array<{ questionId: string; answer: string }> | null;
+  evaluation?: {
     technicalScore?: number;
     communicationScore?: number;
     problemSolvingScore?: number;
@@ -332,19 +337,27 @@ export interface InterviewResponseData {
   updatedAt: string;
 }
 
-export interface InterviewsListResponse {
-  data: InterviewResponseData[];
+export interface InterviewCounts {
   total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
+  scheduled: number;
+  inProgress: number;
+  completed: number;
+  cancelled: number;
 }
 
-export interface InterviewsQueryParams {
-  page?: number;
-  limit?: number;
-  status?: InterviewStatus;
-  type?: InterviewType;
+export interface InterviewsListResponse extends PaginatedListResponse<InterviewResponseData> {
+  counts: InterviewCounts;
+}
+
+export interface InterviewsQueryParams extends PaginationQueryParams {
+  status?: InterviewStatus | null;
+  type?: InterviewType | null;
+}
+
+export interface InterviewStartResponseData {
+  interviewId: string;
+  totalQuestions: number;
+  questions: InterviewQuestion[];
 }
 
 export interface InterviewSubmitResponsesRequest {

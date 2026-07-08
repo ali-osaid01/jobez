@@ -322,14 +322,16 @@ export interface InterviewResponseData {
   meetingLink: string | null;
   notes: string | null;
   questions?: InterviewQuestion[] | null;
-  responses?: Array<{ questionId: string; answer: string }> | null;
+  responses?: Array<{ questionId: string; response: string; duration: number; timestamp: string }> | null;
   evaluation?: {
+    overallScore?: number;
     technicalScore?: number;
     communicationScore?: number;
     problemSolvingScore?: number;
     cultureFitScore?: number;
     strengths?: string[];
     improvements?: string[];
+    summary?: string;
   } | null;
   aiScore: number | null;
   aiSummary: string | null;
@@ -361,20 +363,24 @@ export interface InterviewStartResponseData {
 }
 
 export interface InterviewSubmitResponsesRequest {
-  responses: Array<{ questionId: string; answer: string }>;
+  responses: Array<{ questionId: string; response: string; duration: number; timestamp: string }>;
 }
 
 export interface InterviewResultsData {
   aiScore: number;
   aiSummary: string;
+  summary?: string;
   evaluation: {
+    overallScore?: number;
     technicalScore?: number;
     communicationScore?: number;
     problemSolvingScore?: number;
     cultureFitScore?: number;
     strengths?: string[];
     improvements?: string[];
+    summary?: string;
   } | null;
+  responses?: Array<{ questionId: string; response: string; duration: number; timestamp: string }>;
 }
 
 // export interface ScheduleInterviewRequest {

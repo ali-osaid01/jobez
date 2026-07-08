@@ -190,6 +190,8 @@ export default function InterviewResultsPage() {
   const evaluation = results.evaluation;
   const strengths = evaluation?.strengths ?? [];
   const improvements = evaluation?.improvements ?? [];
+  const summaryText = results.summary ?? results.aiSummary;
+  const responseCount = results.responses?.length ?? 0;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -221,6 +223,9 @@ export default function InterviewResultsPage() {
                 <p className="text-sm text-muted-foreground">
                   Completed on {interview.scheduledDate}
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  {responseCount} responses captured
+                </p>
                 <div className="flex gap-2 mt-2">
                   <Badge className="bg-primary hover:bg-primary/90">
                     {overallScore >= 80 ? 'Excellent' : overallScore >= 60 ? 'Good' : 'Needs Improvement'}
@@ -241,6 +246,18 @@ export default function InterviewResultsPage() {
             </div>
           </div>
         </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Gemini Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground leading-relaxed">{summaryText}</p>
+        </CardContent>
       </Card>
 
       {/* Score Breakdown */}

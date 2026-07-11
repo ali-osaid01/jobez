@@ -114,14 +114,14 @@ function InterviewCard({ interview }: { interview: InterviewResponseData }) {
             {interview.status === 'scheduled' && (
               <Link href={`/job-seeker/interviews/${interview.id}`}>
                 <Button className="w-full">
-                  {interview.type === 'ai' ? 'Start AI Interview' : 'Join Meeting'}
+                  {interview.type === 'ai' ? 'Start AI Interview' : 'View Details'}
                 </Button>
               </Link>
             )}
             {interview.status === 'completed' && (
-              <Link href={`/job-seeker/interviews/${interview.id}/results`}>
+              <Link href={interview.type === 'ai' ? `/job-seeker/interviews/${interview.id}/results` : `/job-seeker/interviews/${interview.id}`}>
                 <Button variant="outline" className="w-full">
-                  View Results
+                  {interview.type === 'ai' ? 'View Results' : 'View Details'}
                 </Button>
               </Link>
             )}

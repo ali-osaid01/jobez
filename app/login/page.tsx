@@ -1,18 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Chrome, Github, Mail, Lock } from 'lucide-react';
+import { Chrome, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
-import { useLoginMutation } from '@/lib/store/api/authApi';
+import { useGoogleLoginMutation, useLoginMutation } from '@/lib/store/api/authApi';
 import type { ApiError } from '@/lib/store/types';
 import { validateLoginForm } from '@/lib/validations/login.validation';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,9 +37,56 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [login, { isLoading: loading }] = useLoginMutation();
+  const [googleLogin, { isLoading: googleLoading }] = useGoogleLoginMutation();
+  const [googleReady, setGoogleReady] = useState(false);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
   const clearError = (field: string) => {
     if (errors[field]) setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+  };
+
+  useEffect(() => {
+    if (!googleReady || !googleClientId || !window.google) return;
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: async (response) => {
+        if (!response.credential) {
+          toast.error('Google login failed. Please try again.');
+          return;
+        }
+
+        try {
+          const { user } = await googleLogin({ credential: response.credential }).unwrap();
+          toast.success('Welcome back!');
+
+          if (!user.onboardingComplete) {
+            router.push('/onboarding');
+          } else if (user.role === 'job-seeker') {
+            router.push('/job-seeker/dashboard');
+          } else {
+            router.push('/employer/dashboard');
+          }
+        } catch (err) {
+          const apiError = err as { data?: ApiError };
+          toast.error(apiError.data?.error?.message ?? 'Google login failed. Please try again.');
+        }
+      },
+    });
+  }, [googleReady, googleClientId, googleLogin, router]);
+
+  const handleGoogleLogin = () => {
+    if (!googleClientId) {
+      toast.error('Google login is not configured.');
+      return;
+    }
+
+    if (!window.google) {
+      toast.error('Google login is still loading. Please try again.');
+      return;
+    }
+
+    window.google.accounts.id.prompt();
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -58,6 +122,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={() => setGoogleReady(true)}
+      />
       {/* Left Side - Branding */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-primary via-primary/90 to-secondary text-white gradient-animate">
         <Link href="/" className="slide-in-left">
@@ -173,14 +242,15 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" disabled className="hover-lift">
+            <div className="grid grid-cols-1 gap-4">
+              <Button
+                variant="outline"
+                className="hover-lift"
+                onClick={handleGoogleLogin}
+                disabled={loading || googleLoading || !googleClientId}
+              >
                 <Chrome className="mr-2 h-4 w-4" />
                 Google
-              </Button>
-              <Button variant="outline" disabled className="hover-lift">
-                <Github className="mr-2 h-4 w-4" />
-                GitHub
               </Button>
             </div>
 

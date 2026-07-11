@@ -20,7 +20,7 @@ const baseQuery = fetchBaseQuery({
   baseUrl:
     process.env.NEXT_PUBLIC_API_BASE_URL ??
     // "https://21ba-103-72-86-87.ngrok-free.app/api/v1",
-    "http://127.0.0.1:8000/api/v1",
+    "http://127.0.0.1:8002/api/v1",
     
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as { auth: AuthState }).auth.token;

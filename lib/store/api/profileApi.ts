@@ -26,28 +26,21 @@ export const profileApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<ProfileResponseData>) =>
         response.data,
+      invalidatesTags: ["Profile", "User"],
       async onQueryStarted(_args, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          baseApi.util.updateQueryData("getProfile", undefined, (draft) => {
-            if (typeof _args.name !== "undefined" && _args.name !== null) {
-              draft.name = _args.name;
-            }
-          }),
-        );
-
         try {
           const { data } = await queryFulfilled;
           // Response is flat — extract auth-relevant fields to sync Redux auth state
           dispatch(
             updateUser({
-              name: _args.name ?? data.name,
+              name: data.name,
               email: data.email,
               phone: data.phone,
+              company: data.company ?? undefined,
               onboardingComplete: data.onboardingComplete,
             }),
           );
         } catch {
-          patchResult.undo();
           // Error handled by component via the mutation hook
         }
       },

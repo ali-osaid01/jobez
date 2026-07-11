@@ -8,7 +8,7 @@ import { auth } from '@/lib/auth';
 import {
   useGetApplicationsQuery,
   useGetInterviewsQuery,
-  useGetJobsQuery,
+  useGetRecommendedJobsQuery,
   useGetDashboardStatsQuery,
 } from '@/lib/store';
 import type { JobSeekerDashboardStats } from '@/lib/store/types';
@@ -30,7 +30,7 @@ export default function JobSeekerDashboard() {
   const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
   const { data: applicationsData, isLoading: appsLoading } = useGetApplicationsQuery({ limit: 3 });
   const { data: interviewsData, isLoading: interviewsLoading } = useGetInterviewsQuery({ status: 'scheduled', limit: 3 });
-  const { data: jobsData, isLoading: jobsLoading } = useGetJobsQuery({ limit: 3 });
+  const { data: jobsData, isLoading: jobsLoading } = useGetRecommendedJobsQuery({ limit: 3 });
 
   const stats = statsData as JobSeekerDashboardStats | undefined;
   const recentApplications = applicationsData?.data ?? [];

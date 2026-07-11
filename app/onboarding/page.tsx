@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,19 +17,44 @@ import { selectCurrentUser, selectIsAuthenticated } from '@/lib/store/features/a
 import { useUpdateProfileMutation, useExtractResumeMutation } from '@/lib/store/api/profileApi';
 import type { ApiError } from '@/lib/store/types';
 
+type SeekerOnboardingData = {
+  resumeUploaded: boolean;
+  resumeFileName: string | null;
+  title: string;
+  experience: string;
+  skills: string[];
+  location: string;
+  expectedSalary: string;
+  education: { degree: string; institution: string; year: string }[];
+  certifications: string[];
+  workExperience: { title: string; company: string; duration: string }[];
+  preferredRole: string;
+  bio: string;
+};
+
+type OnboardingDraft = {
+  step: number;
+  seekerData: SeekerOnboardingData;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => (
+  typeof value === 'object' && value !== null
+);
+
 export default function OnboardingPage() {
   const router = useRouter();
   const user = useAppSelector(selectCurrentUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [step, setStep] = useState(1);
+  const resumeInputRef = useRef<HTMLInputElement | null>(null);
 
   const [updateProfile, { isLoading: saving }] = useUpdateProfileMutation();
   const [extractResume, { isLoading: extracting }] = useExtractResumeMutation();
 
   // Job Seeker Form Data
-  const [seekerData, setSeekerData] = useState({
+  const [seekerData, setSeekerData] = useState<SeekerOnboardingData>({
     resumeUploaded: false,
-    resumeFile: null as File | null,
+    resumeFileName: null,
     title: '',
     experience: '',
     skills: [] as string[],
@@ -59,6 +84,7 @@ export default function OnboardingPage() {
 
   const [skillInput, setSkillInput] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [draftHydrated, setDraftHydrated] = useState(false);
 
   // Redirect if not authenticated or already onboarded
   useEffect(() => {
@@ -76,6 +102,53 @@ export default function OnboardingPage() {
       }
     }
   }, [isAuthenticated, user, router]);
+
+  useEffect(() => {
+    if (!mounted || user?.role !== 'job-seeker') return;
+
+    try {
+      const raw = sessionStorage.getItem('onboardingDraft');
+      if (!raw) {
+        setDraftHydrated(true);
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as unknown;
+      const draft = isRecord(parsed)
+        ? (isRecord(parsed.seekerData) ? (parsed.seekerData as Partial<SeekerOnboardingData>) : (parsed as Partial<SeekerOnboardingData>))
+        : null;
+      const nextStep = isRecord(parsed) && typeof parsed.step === 'number' ? parsed.step : 1;
+
+      if (draft) {
+        setSeekerData((prev) => ({
+          ...prev,
+          ...draft,
+          resumeUploaded: Boolean(draft.resumeUploaded),
+          resumeFileName: draft.resumeFileName ?? null,
+        }));
+      }
+
+      setStep(nextStep >= 1 ? nextStep : 1);
+    } catch {
+      sessionStorage.removeItem('onboardingDraft');
+    } finally {
+      setDraftHydrated(true);
+    }
+  }, [mounted, user?.role]);
+
+  useEffect(() => {
+    if (!mounted || !draftHydrated || user?.role !== 'job-seeker') return;
+
+    try {
+      const payload: OnboardingDraft = {
+        step,
+        seekerData,
+      };
+      sessionStorage.setItem('onboardingDraft', JSON.stringify(payload));
+    } catch {
+      // Ignore storage failures and keep the form functional.
+    }
+  }, [mounted, draftHydrated, seekerData, step, user?.role]);
 
   const handleAddSkill = () => {
     if (skillInput && !seekerData.skills.includes(skillInput)) {
@@ -106,11 +179,12 @@ export default function OnboardingPage() {
 
     if (!validTypes.includes(file.type)) {
       setResumeError('Please upload a PDF, DOC, or DOCX file');
+      e.target.value = '';
       return;
     }
 
     setResumeError(null);
-    setSeekerData({ ...seekerData, resumeFile: file, resumeUploaded: false });
+    setSeekerData((prev) => ({ ...prev, resumeFileName: file.name, resumeUploaded: false }));
 
     // Extract resume data via API
     const formData = new FormData();
@@ -119,12 +193,11 @@ export default function OnboardingPage() {
 
     try {
       const extracted = await extractResume(formData).unwrap();
-      // Handle both nested `data` structure and flat response
-      const data = extracted.data || extracted;
+      const data = extracted;
       setSeekerData((prev) => ({
         ...prev,
-        resumeFile: file,
         resumeUploaded: true,
+        resumeFileName: file.name,
         title: data.title || prev.title,
         experience: data.experience || prev.experience,
         skills: (data.skills && data.skills.length > 0) ? data.skills : prev.skills,
@@ -143,6 +216,8 @@ export default function OnboardingPage() {
       setSeekerData((prev) => ({ ...prev, resumeUploaded: false }));
       setResumeError(message);
       toast.error(message);
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -150,17 +225,18 @@ export default function OnboardingPage() {
     setResumeError(null);
     setSeekerData((prev) => ({
       ...prev,
-      resumeFile: null,
+      resumeFileName: null,
       resumeUploaded: false,
     }));
-    // Trigger file input click
-    const fileInput = document.querySelector('input[type="file"][accept=".pdf,.doc,.docx"]') as HTMLInputElement;
-    fileInput?.click();
+    if (resumeInputRef.current) {
+      resumeInputRef.current.value = '';
+      resumeInputRef.current.click();
+    }
   };
 
   const goToVerification = () => {
     try {
-      const payload = JSON.stringify(seekerData);
+      const payload = JSON.stringify({ step, seekerData });
       sessionStorage.setItem('onboardingDraft', payload);
       router.push('/onboarding/verify');
     } catch (e) {
@@ -240,6 +316,7 @@ export default function OnboardingPage() {
 
       await updateProfile(body).unwrap();
       toast.success('Profile setup complete!');
+      sessionStorage.removeItem('onboardingDraft');
 
       if (user?.role === 'job-seeker') {
         router.push('/job-seeker/dashboard');
@@ -323,6 +400,7 @@ export default function OnboardingPage() {
                             PDF, DOC, or DOCX (Max 5MB)
                           </p>
                           <Input
+                            ref={resumeInputRef}
                             type="file"
                             accept=".pdf,.doc,.docx"
                             onChange={handleResumeUpload}
@@ -364,7 +442,7 @@ export default function OnboardingPage() {
                                 <CheckCircle className="h-4 w-4 flex-shrink-0" />
                                 <div className="flex-1">
                                   <p className="font-medium">Resume parsed successfully</p>
-                                  <p className="text-xs text-muted-foreground mt-0.5">{seekerData.resumeFile?.name}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{seekerData.resumeFileName}</p>
                                 </div>
                               </div>
                             </div>
@@ -388,7 +466,7 @@ export default function OnboardingPage() {
                           <Button
                             variant="outline"
                             className="w-full group-hover:bg-secondary group-hover:text-white group-hover:border-secondary"
-                            onClick={goToVerification}
+                            onClick={() => setStep(2)}
                           >
                             Continue Manually
                             <ArrowRight className="ml-2 h-4 w-4" />
@@ -400,10 +478,10 @@ export default function OnboardingPage() {
 
                   {seekerData.resumeUploaded && !extracting && (
                     <div className="flex justify-end">
-                <Button onClick={goToVerification} size="lg" className="bg-primary hover:bg-primary/90">
-                  Continue with Resume
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                      <Button onClick={() => setStep(2)} size="lg" className="bg-primary hover:bg-primary/90">
+                        Continue with Resume
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
                   )}
 

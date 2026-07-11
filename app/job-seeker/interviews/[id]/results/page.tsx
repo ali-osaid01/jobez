@@ -86,6 +86,23 @@ export default function InterviewResultsPage() {
     );
   }
 
+  if (interview.type !== 'ai') {
+    return (
+      <div className="max-w-5xl mx-auto text-center py-20">
+        <Sparkles className="h-12 w-12 mx-auto mb-4 text-primary opacity-50" />
+        <p className="font-medium">This interview uses the human interview flow.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Open the interview details page to view the meeting link and instructions.
+        </p>
+        <Link href={`/job-seeker/interviews/${interview.id}`}>
+          <Button className="mt-4" variant="outline">
+            View Details
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
   if (resultsError || !results) {
     // Fallback: use aiScore and aiSummary stored on the interview itself
     const fallbackScore = interview.aiScore ?? 0;

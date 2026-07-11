@@ -59,7 +59,6 @@ export default function EmployerInterviewsPage() {
     page,
     limit: PAGE_SIZE,
     status: activeTab,
-    type: 'ai',
   });
   const [updateApplicationStatus, { isLoading: isUpdatingApplication }] = useUpdateApplicationStatusMutation();
 
@@ -119,10 +118,12 @@ export default function EmployerInterviewsPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">AI Interview</Badge>
+              <Badge variant="secondary">
+                {interview.type === 'ai' ? 'AI Interview' : 'Human Interview'}
+              </Badge>
               {interview.aiScore !== null && interview.aiScore > 0 && (
                 <Badge className="bg-green-100 text-green-800 border-green-300">
-                  AI Score: {interview.aiScore}/100
+                  Score: {interview.aiScore}/100
                 </Badge>
               )}
               {interview.status === 'scheduled' && (
@@ -141,7 +142,7 @@ export default function EmployerInterviewsPage() {
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm font-medium mb-1 flex items-center gap-1">
                   <MessageSquare className="h-3 w-3" />
-                  AI Evaluation Summary
+                  Evaluation Summary
                 </p>
                 <p className="text-sm text-muted-foreground italic">
                   {interview.aiSummary}
@@ -199,7 +200,7 @@ export default function EmployerInterviewsPage() {
             )}
             {interview.status === 'scheduled' && (
               <p className="text-xs text-muted-foreground text-center">
-                Waiting for candidate to complete AI interview
+                Waiting for candidate to complete interview
               </p>
             )}
           </div>
@@ -219,7 +220,7 @@ export default function EmployerInterviewsPage() {
       <div className="space-y-6">
         <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
           <Sparkles className="h-8 w-8 text-secondary" />
-          AI Interview Results
+          Interviews
         </h1>
         <Card>
           <CardContent className="py-12 flex flex-col items-center gap-4 text-center">
@@ -241,10 +242,10 @@ export default function EmployerInterviewsPage() {
       <div>
         <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
           <Sparkles className="h-8 w-8 text-secondary" />
-          AI Interview Results
+          Interviews
         </h1>
         <p className="text-muted-foreground mt-2">
-          Review candidate AI interview responses and evaluations
+          Review candidate interview responses and evaluations
         </p>
       </div>
 
@@ -275,7 +276,7 @@ export default function EmployerInterviewsPage() {
           <CardHeader className="pb-2">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Total AI Interviews
+              Total Interviews
             </p>
           </CardHeader>
           <CardContent>
@@ -291,7 +292,7 @@ export default function EmployerInterviewsPage() {
         </TabsList>
 
         <TabsContent value="completed" className="space-y-4">
-          {renderInterviews(Sparkles, 'No completed interviews yet', 'Completed AI interview results will appear here')}
+          {renderInterviews(Sparkles, 'No completed interviews yet', 'Completed interview results will appear here')}
         </TabsContent>
 
         <TabsContent value="scheduled" className="space-y-4">

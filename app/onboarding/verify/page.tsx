@@ -11,11 +11,37 @@ import { selectCurrentUser } from '@/lib/store/features/authSlice';
 import { useUpdateProfileMutation } from '@/lib/store/api/profileApi';
 import { toast } from 'sonner';
 
+type OnboardingDraft = {
+  step?: number;
+  seekerData?: {
+    title?: string;
+    experience?: string;
+    skills?: string[];
+    location?: string;
+    expectedSalary?: string;
+    education?: { degree: string; institution: string; year: string }[];
+    certifications?: string[];
+    workExperience?: { title: string; company: string; duration: string }[];
+    preferredRole?: string;
+    bio?: string;
+  };
+  title?: string;
+  experience?: string;
+  skills?: string[];
+  location?: string;
+  expectedSalary?: string;
+  education?: { degree: string; institution: string; year: string }[];
+  certifications?: string[];
+  workExperience?: { title: string; company: string; duration: string }[];
+  preferredRole?: string;
+  bio?: string;
+};
+
 export default function OnboardingVerifyPage() {
   const router = useRouter();
   const user = useAppSelector(selectCurrentUser);
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
-  const [draft, setDraft] = useState<any | null>(null);
+  const [draft, setDraft] = useState<OnboardingDraft | null>(null);
 
   useEffect(() => {
     try {
@@ -24,14 +50,27 @@ export default function OnboardingVerifyPage() {
         router.push('/onboarding');
         return;
       }
-      setDraft(JSON.parse(raw));
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === 'object') {
+        setDraft(parsed as OnboardingDraft);
+      } else {
+        router.push('/onboarding');
+      }
     } catch (e) {
       toast.error('Failed to load onboarding data');
       router.push('/onboarding');
     }
   }, [router]);
 
+  const data = draft?.seekerData ?? draft;
+
   const handleEdit = () => {
+    if (draft) {
+      sessionStorage.setItem('onboardingDraft', JSON.stringify({
+        ...draft,
+        step: 1,
+      }));
+    }
     router.push('/onboarding');
   };
 
@@ -41,16 +80,16 @@ export default function OnboardingVerifyPage() {
     try {
       const body = {
         onboardingComplete: true,
-        title: draft.title,
-        experience: draft.experience,
-        skills: draft.skills,
-        location: draft.location,
-        expectedSalary: draft.expectedSalary,
-        education: draft.education,
-        certifications: draft.certifications,
-        workExperience: draft.workExperience,
-        preferredRole: draft.preferredRole,
-        bio: draft.bio,
+        title: data?.title,
+        experience: data?.experience,
+        skills: data?.skills,
+        location: data?.location,
+        expectedSalary: data?.expectedSalary,
+        education: data?.education,
+        certifications: data?.certifications,
+        workExperience: data?.workExperience,
+        preferredRole: data?.preferredRole,
+        bio: data?.bio,
       };
 
       await updateProfile(body).unwrap();
@@ -95,24 +134,24 @@ export default function OnboardingVerifyPage() {
           <CardContent className="space-y-4">
             <div className="p-4 bg-muted rounded-lg">
               <div className="text-sm font-semibold mb-2">Job Title</div>
-              <div>{draft.title || 'Not specified'}</div>
+              <div>{data?.title || 'Not specified'}</div>
             </div>
 
             <div className="p-4 bg-muted rounded-lg">
               <div className="text-sm font-semibold mb-2">Preferred Role</div>
-              <div className="capitalize">{draft.preferredRole?.replace('-', ' ') || 'Not specified'}</div>
+              <div className="capitalize">{data?.preferredRole?.replace('-', ' ') || 'Not specified'}</div>
             </div>
 
             <div className="p-4 bg-muted rounded-lg">
               <div className="text-sm font-semibold mb-2">Experience</div>
-              <div>{draft.experience || 'Not specified'}</div>
+              <div>{data?.experience || 'Not specified'}</div>
             </div>
 
             <div className="p-4 bg-muted rounded-lg">
               <div className="text-sm font-semibold mb-2">Skills</div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {draft.skills && draft.skills.length > 0 ? (
-                  draft.skills.map((skill: string) => (
+                {data?.skills && data.skills.length > 0 ? (
+                  data.skills.map((skill: string) => (
                     <span key={skill} className="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-sm">{skill}</span>
                   ))
                 ) : (
@@ -124,8 +163,8 @@ export default function OnboardingVerifyPage() {
             <div className="p-4 bg-muted rounded-lg">
               <div className="text-sm font-semibold mb-2">Education</div>
               <div className="space-y-2">
-                {draft.education && draft.education.length > 0 ? (
-                  draft.education.map((edu: any, idx: number) => (
+                {data?.education && data.education.length > 0 ? (
+                  data.education.map((edu: any, idx: number) => (
                     <div key={idx} className="text-sm">{edu.degree} - {edu.institution} ({edu.year})</div>
                   ))
                 ) : (
@@ -136,7 +175,7 @@ export default function OnboardingVerifyPage() {
 
             <div className="p-4 bg-muted rounded-lg">
               <div className="text-sm font-semibold mb-2">Location</div>
-              <div>{draft.location || 'Not specified'}</div>
+              <div>{data?.location || 'Not specified'}</div>
             </div>
 
             <div className="flex gap-3">

@@ -54,6 +54,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface GoogleLoginRequest {
+  credential: string;
+  role?: UserRole | null;
+}
+
 export interface SignupRequest {
   email: string;
   password: string;
@@ -119,6 +124,7 @@ export interface EmployerProfile {
 export interface UpdateProfileRequest {
   onboardingComplete?: boolean;
   name?: string | null;
+  phone?: string | null;
   // Job Seeker fields
   title?: string | null;
   experience?: string | null;

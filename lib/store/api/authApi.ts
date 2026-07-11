@@ -2,6 +2,7 @@ import { baseApi } from './baseApi';
 import { setCredentials, logout } from '../features/authSlice';
 import type {
   LoginRequest,
+  GoogleLoginRequest,
   SignupRequest,
   AuthResponseData,
   RefreshTokenRequest,
@@ -20,6 +21,31 @@ export const authApi = baseApi.injectEndpoints({
         body: credentials,
       }),
       // Unwrap { data: ..., message: ... } → just the inner data
+      transformResponse: (response: ApiResponse<AuthResponseData>) =>
+        response.data,
+      invalidatesTags: ['User'],
+      async onQueryStarted(_args, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            setCredentials({
+              user: data.user,
+              token: data.token,
+              refreshToken: data.refreshToken,
+            }),
+          );
+        } catch {
+          // Error handled by component via the mutation hook
+        }
+      },
+    }),
+
+    googleLogin: builder.mutation<AuthResponseData, GoogleLoginRequest>({
+      query: (body) => ({
+        url: '/auth/google',
+        method: 'POST',
+        body,
+      }),
       transformResponse: (response: ApiResponse<AuthResponseData>) =>
         response.data,
       invalidatesTags: ['User'],
@@ -95,6 +121,7 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useLoginMutation,
+  useGoogleLoginMutation,
   useSignupMutation,
   useLogoutMutation,
   useRefreshTokenMutation,

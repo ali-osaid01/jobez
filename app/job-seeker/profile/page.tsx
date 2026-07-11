@@ -79,6 +79,7 @@ export default function ProfilePage() {
     try {
       await updateProfile({
         name: editForm.name || null,
+        phone: editForm.phone || null,
         title: editForm.title || null,
         experience: editForm.experience || null,
         skills: editForm.skills,

@@ -49,6 +49,7 @@ export default function EmployerProfilePage() {
     try {
       await updateProfile({
         company: profile.company,
+        phone: profile.phone,
         location: profile.location,
         companySize: profile.companySize,
         industry: profile.industry,

@@ -19,8 +19,11 @@ import {
 import type { InterviewQuestion } from '@/lib/store/types';
 import { toast } from 'sonner';
 import {
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Calendar,
+  ExternalLink,
   Loader2,
   Mic,
   MicOff,
@@ -40,7 +43,7 @@ type RecordedAnswer = {
 };
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8000/api/v1';
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8002/api/v1';
 
 function formatTime(seconds: number) {
   const mins = Math.floor(seconds / 60);
@@ -55,6 +58,11 @@ function upsertResponse(
   const withoutCurrent = responses.filter((item) => item.questionId !== nextResponse.questionId);
   const merged = [...withoutCurrent, nextResponse];
   return merged.sort((a, b) => a.questionId.localeCompare(b.questionId));
+}
+
+function getScheduledDateTime(date: string, time: string) {
+  const parsed = new Date(`${date}T${time}`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 export default function InterviewPage() {
@@ -90,29 +98,92 @@ export default function InterviewPage() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((responses.length / questions.length) * 100) : 0;
+  const scheduledAt = useMemo(
+    () => (interview ? getScheduledDateTime(interview.scheduledDate, interview.scheduledTime) : null),
+    [interview?.scheduledDate, interview?.scheduledTime],
+  );
+  const interviewIsAvailable = scheduledAt ? scheduledAt.getTime() <= Date.now() : true;
   const hasRecordedCurrentQuestion = useMemo(
     () => responses.some((item) => item.questionId === currentQuestion?.id),
     [responses, currentQuestion?.id],
   );
 
+  const stopAudioPlayback = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    if (questionAudioUrlRef.current) {
+      URL.revokeObjectURL(questionAudioUrlRef.current);
+      questionAudioUrlRef.current = null;
+    }
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  const stopRecordingSession = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+  };
+
+  const handleLeaveInterview = () => {
+    const shouldLeave = phase !== 'active' || window.confirm('Leaving now will discard any in-progress interview answers.');
+    if (!shouldLeave) return;
+    stopAudioPlayback();
+    stopRecordingSession();
+    router.push('/job-seeker/interviews');
+  };
+
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
-      if (questionAudioUrlRef.current) {
-        URL.revokeObjectURL(questionAudioUrlRef.current);
-        questionAudioUrlRef.current = null;
-      }
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      stopAudioPlayback();
+      stopRecordingSession();
       if (timerRef.current) {
         window.clearInterval(timerRef.current);
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (phase === 'active' || phase === 'loading' || phase === 'submitting') {
+      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      };
+
+      const handlePopState = () => {
+        const shouldLeave = window.confirm('Leaving now will discard any in-progress interview answers.');
+        if (shouldLeave) {
+          stopAudioPlayback();
+          stopRecordingSession();
+          window.removeEventListener('popstate', handlePopState);
+          router.push('/job-seeker/interviews');
+          return;
+        }
+
+        window.history.pushState({ interviewGuard: true }, '', window.location.href);
+      };
+
+      window.history.pushState({ interviewGuard: true }, '', window.location.href);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+
+    return undefined;
+  }, [phase, router]);
 
   useEffect(() => {
     if (phase !== 'active' || !currentQuestion) return;
@@ -122,6 +193,7 @@ export default function InterviewPage() {
     const playQuestion = async () => {
       setQuestionError(null);
       setStatusMessage('Playing question');
+      stopAudioPlayback();
 
       try {
         const response = await fetch(
@@ -174,9 +246,11 @@ export default function InterviewPage() {
         setQuestionError('Question audio could not be loaded. You can still answer manually.');
         setStatusMessage('Answer when ready');
         console.error('[Interview] Audio playback failed:', error);
+        stopAudioPlayback();
         const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
         utterance.rate = 1;
-        window.speechSynthesis.cancel();
+        utterance.pitch = 1;
+        utterance.volume = 1;
         window.speechSynthesis.speak(utterance);
       }
     };
@@ -185,9 +259,7 @@ export default function InterviewPage() {
 
     return () => {
       cancelled = true;
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      stopAudioPlayback();
     };
   }, [phase, currentQuestion, interviewId, token]);
 
@@ -372,6 +444,7 @@ export default function InterviewPage() {
 
   const handleStartInterview = async () => {
     if (!interview) return;
+    if (interview.type !== 'ai') return;
 
     try {
       setPhase('loading');
@@ -413,8 +486,101 @@ export default function InterviewPage() {
   }
 
   if (phase === 'intro') {
+    if (interview.type === 'human') {
+      return (
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" className="gap-2" onClick={handleLeaveInterview}>
+              <ArrowLeft className="h-4 w-4" />
+              Back to interviews
+            </Button>
+            <Badge variant="secondary">Human Interview</Badge>
+          </div>
+
+          <Card className="border-2">
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-secondary/10">
+                  <Calendar className="h-8 w-8 text-secondary" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-3xl">Interview Details</CardTitle>
+                  <p className="text-muted-foreground mt-2 text-lg">
+                    {interview.jobTitle} at {interview.company}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card className="bg-muted/40">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Interview Type</p>
+                    <p className="text-2xl font-bold">Human</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-muted/40">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Scheduled</p>
+                    <p className="text-2xl font-bold">{interview.scheduledDate}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-muted/40">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Duration</p>
+                    <p className="text-2xl font-bold">{interview.duration}m</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="rounded-xl border bg-muted/30 p-5 space-y-3">
+                <h3 className="font-semibold text-lg">Instructions</h3>
+                <p className="text-sm text-muted-foreground">
+                  This is a human interview. Use the meeting link provided by the employer to join the session.
+                </p>
+                {interview.notes && (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{interview.notes}</p>
+                )}
+                {interview.meetingLink ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      asChild
+                      disabled={!interviewIsAvailable}
+                      className="gap-2"
+                    >
+                      <a href={interview.meetingLink} target="_blank" rel="noreferrer">
+                        {interviewIsAvailable ? 'Join Meeting' : 'Meeting not open yet'}
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                    {scheduledAt && !interviewIsAvailable && (
+                      <p className="text-xs text-muted-foreground">
+                        Available at {scheduledAt.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    The meeting link has not been added yet. Check back with the employer.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" className="gap-2" onClick={handleLeaveInterview}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to interviews
+          </Button>
+          <Badge variant="secondary">AI Interview</Badge>
+        </div>
+
         <Card className="border-2">
           <CardHeader>
             <div className="flex items-start gap-4">
@@ -473,12 +639,20 @@ export default function InterviewPage() {
               </div>
             </div>
 
-            <Button onClick={handleStartInterview} size="lg" className="w-full gap-2" disabled={isStarting}>
+            {!interviewIsAvailable && scheduledAt && (
+              <p className="text-sm text-muted-foreground">
+                This interview opens at {scheduledAt.toLocaleString()}.
+              </p>
+            )}
+
+            <Button onClick={handleStartInterview} size="lg" className="w-full gap-2" disabled={isStarting || !interviewIsAvailable}>
               {isStarting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Preparing interview
                 </>
+              ) : !interviewIsAvailable ? (
+                'Unavailable until the scheduled time'
               ) : (
                 <>
                   Start Interview
@@ -495,6 +669,10 @@ export default function InterviewPage() {
   if (phase === 'loading') {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
+        <Button variant="ghost" className="gap-2" onClick={handleLeaveInterview}>
+          <ArrowLeft className="h-4 w-4" />
+          Back to interviews
+        </Button>
         <Skeleton className="h-10 w-52" />
         <Skeleton className="h-48 w-full rounded-xl" />
       </div>

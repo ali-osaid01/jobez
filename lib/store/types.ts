@@ -241,6 +241,13 @@ export interface ApplicationResponseData {
   updatedAt: string;
 }
 
+export interface ApplicationApplyResponseData {
+  application: ApplicationResponseData;
+  interview: InterviewResponseData | null;
+  eligibleForInterview: boolean;
+  interviewThreshold: number | null;
+}
+
 export interface ApplicationCounts {
   total: number;
   pending: number;

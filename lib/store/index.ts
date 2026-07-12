@@ -114,6 +114,7 @@ export type {
   InterviewCounts,
   BookmarkResponse,
   ApplicationResponseData,
+  ApplicationApplyResponseData,
   ApplicationsListResponse,
   ApplicationsQueryParams,
   ApplicationStatusUpdateRequest,

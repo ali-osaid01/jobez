@@ -73,8 +73,14 @@ export default function JobDetailPage() {
 
   const handleApply = async () => {
     try {
-      await applyForJob(jobId).unwrap();
+      const result = await applyForJob(jobId).unwrap();
       setApplied(true);
+      if (result.interview) {
+        toast.success('Application submitted. AI interview unlocked.');
+        router.push(`/job-seeker/interviews/${result.interview.id}`);
+        return;
+      }
+
       toast.success('Application submitted successfully!');
       setTimeout(() => {
         router.push('/job-seeker/applications');

@@ -2,6 +2,7 @@ import { baseApi } from "./baseApi";
 import type {
   JobResponseData,
   ApplicationResponseData,
+  ApplicationApplyResponseData,
   CreateJobRequest,
   UpdateJobRequest,
   JobsListResponse,
@@ -192,16 +193,19 @@ export const jobsApi = baseApi.injectEndpoints({
 
     // POST /applications — submit an application for the current job seeker
     // Backend contract (OpenAPI): { jobId: string, resume?: string | null, coverLetter?: string | null }
-    applyForJob: builder.mutation<void, string>({
+    applyForJob: builder.mutation<ApplicationApplyResponseData, string>({
       query: (id) => ({
         url: "/applications",
         method: "POST",
         body: { jobId: id },
       }),
+      transformResponse: (response: ApiResponse<ApplicationApplyResponseData>) =>
+        response.data,
       invalidatesTags: (_result, _error, id) => [
         { type: "Job", id },
         { type: "Jobs", id: "LIST" },
         { type: "Applications", id: "LIST" },
+        { type: "Interviews", id: "LIST" },
       ],
     }),
 

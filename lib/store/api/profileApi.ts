@@ -18,6 +18,12 @@ export const profileApi = baseApi.injectEndpoints({
       providesTags: ["Profile", "User"],
     }),
 
+    getCandidateProfile: builder.query<ProfileResponseData, string>({
+      query: (userId) => `/profile/candidates/${userId}`,
+      transformResponse: (response: ApiResponse<ProfileResponseData>) =>
+        response.data,
+    }),
+
     updateProfile: builder.mutation<ProfileResponseData, UpdateProfileRequest>({
       query: (body) => ({
         url: "/profile/me",
@@ -64,6 +70,7 @@ export const profileApi = baseApi.injectEndpoints({
 
 export const {
   useGetProfileQuery,
+  useGetCandidateProfileQuery,
   useUpdateProfileMutation,
   useExtractResumeMutation,
 } = profileApi;

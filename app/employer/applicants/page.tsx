@@ -44,6 +44,7 @@ import {
   Sparkles,
   Trophy,
   UserCheck,
+  UserRound,
   UserX,
   Users,
 } from 'lucide-react';
@@ -305,6 +306,13 @@ export default function ApplicantsPage() {
                 </Link>
               </Button>
             )}
+
+            <Button size="sm" variant="outline" className="gap-2" asChild>
+              <Link href={`/employer/applicants/${application.applicantId}/profile`}>
+                <UserRound className="h-4 w-4" />
+                View Profile
+              </Link>
+            </Button>
 
             {application.resume && (
               <Button

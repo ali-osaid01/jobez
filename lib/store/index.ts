@@ -49,6 +49,7 @@ export {
 export {
   profileApi,
   useGetProfileQuery,
+  useGetCandidateProfileQuery,
   useUpdateProfileMutation,
   useExtractResumeMutation,
 } from "./api/profileApi";

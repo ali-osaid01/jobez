@@ -11,7 +11,8 @@ import {
   User, 
   LogOut, 
   Sparkles,
-  FileText
+  FileText,
+  BookmarkCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
   { name: 'All Jobs', href: '/job-seeker/all-jobs', icon: Briefcase },
   { name: 'Recommended', href: '/job-seeker/recommended-jobs', icon: Sparkles },
+  { name: 'Saved Jobs', href: '/job-seeker/saved-jobs', icon: BookmarkCheck },
   { name: 'My Applications', href: '/job-seeker/applications', icon: FileText },
   { name: 'Interviews', href: '/job-seeker/interviews', icon: Calendar },
   { name: 'Profile', href: '/job-seeker/profile', icon: User },

@@ -76,6 +76,25 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     if (!editForm) return;
+
+    const cleanEducation = editForm.education
+      .map((item) => ({
+        degree: item.degree.trim(),
+        institution: item.institution.trim(),
+        year: item.year.trim(),
+      }))
+      .filter((item) => item.degree || item.institution || item.year);
+    const cleanWorkExperience = editForm.workExperience
+      .map((item) => ({
+        title: item.title.trim(),
+        company: item.company.trim(),
+        duration: item.duration.trim(),
+      }))
+      .filter((item) => item.title || item.company || item.duration);
+    const cleanCertifications = editForm.certifications
+      .map((certification) => certification.trim())
+      .filter(Boolean);
+
     try {
       await updateProfile({
         name: editForm.name || null,
@@ -85,9 +104,9 @@ export default function ProfilePage() {
         skills: editForm.skills,
         location: editForm.location || null,
         expectedSalary: editForm.expectedSalary || null,
-        education: editForm.education,
-        certifications: editForm.certifications,
-        workExperience: editForm.workExperience,
+        education: cleanEducation,
+        certifications: cleanCertifications,
+        workExperience: cleanWorkExperience,
         preferredRole: editForm.preferredRole || null,
         bio: editForm.bio || null,
       }).unwrap();
@@ -114,6 +133,89 @@ export default function ProfilePage() {
   const removeSkill = (skill: string) => {
     if (!editForm) return;
     setEditForm({ ...editForm, skills: editForm.skills.filter(s => s !== skill) });
+  };
+
+  const addEducation = () => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      education: [...editForm.education, { degree: '', institution: '', year: '' }],
+    });
+  };
+
+  const updateEducation = (
+    index: number,
+    field: keyof EditForm['education'][number],
+    value: string,
+  ) => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      education: editForm.education.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item
+      ),
+    });
+  };
+
+  const removeEducation = (index: number) => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      education: editForm.education.filter((_, itemIndex) => itemIndex !== index),
+    });
+  };
+
+  const addWorkExperience = () => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      workExperience: [...editForm.workExperience, { title: '', company: '', duration: '' }],
+    });
+  };
+
+  const updateWorkExperience = (
+    index: number,
+    field: keyof EditForm['workExperience'][number],
+    value: string,
+  ) => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      workExperience: editForm.workExperience.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item
+      ),
+    });
+  };
+
+  const removeWorkExperience = (index: number) => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      workExperience: editForm.workExperience.filter((_, itemIndex) => itemIndex !== index),
+    });
+  };
+
+  const addCertification = () => {
+    if (!editForm) return;
+    setEditForm({ ...editForm, certifications: [...editForm.certifications, ''] });
+  };
+
+  const updateCertification = (index: number, value: string) => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      certifications: editForm.certifications.map((item, itemIndex) =>
+        itemIndex === index ? value : item
+      ),
+    });
+  };
+
+  const removeCertification = (index: number) => {
+    if (!editForm) return;
+    setEditForm({
+      ...editForm,
+      certifications: editForm.certifications.filter((_, itemIndex) => itemIndex !== index),
+    });
   };
 
   // ── Loading ────────────────────────────────────────────────
@@ -413,7 +515,62 @@ export default function ProfilePage() {
           <CardDescription>Your academic background</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {education.length > 0 ? (
+          {isEditing ? (
+            <>
+              {education.length > 0 ? (
+                education.map((edu, index) => (
+                  <div key={index} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium">Education {index + 1}</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeEducation(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label htmlFor={`degree-${index}`}>Degree</Label>
+                        <Input
+                          id={`degree-${index}`}
+                          value={edu.degree}
+                          placeholder="e.g. BS Computer Science"
+                          onChange={(event) => updateEducation(index, 'degree', event.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`institution-${index}`}>Institution</Label>
+                        <Input
+                          id={`institution-${index}`}
+                          value={edu.institution}
+                          placeholder="e.g. University of Punjab"
+                          onChange={(event) => updateEducation(index, 'institution', event.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`education-year-${index}`}>Year</Label>
+                        <Input
+                          id={`education-year-${index}`}
+                          value={edu.year}
+                          placeholder="e.g. 2024"
+                          onChange={(event) => updateEducation(index, 'year', event.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No education added yet</p>
+              )}
+              <Button type="button" variant="outline" className="w-full gap-2" onClick={addEducation}>
+                <Plus className="h-4 w-4" />
+                Add Education
+              </Button>
+            </>
+          ) : education.length > 0 ? (
             education.map((edu, index) => (
               <div key={index} className="p-4 border rounded-lg space-y-1">
                 <h4 className="font-semibold">{edu.degree}</h4>
@@ -428,7 +585,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Work Experience */}
-      {workExp.length > 0 && (
+      {(workExp.length > 0 || isEditing) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -438,19 +595,76 @@ export default function ProfilePage() {
             <CardDescription>Your professional history</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {workExp.map((work, index) => (
-              <div key={index} className="p-4 border rounded-lg space-y-1">
-                <h4 className="font-semibold">{work.title}</h4>
-                <p className="text-sm text-muted-foreground">{work.company}</p>
-                <p className="text-xs text-muted-foreground">{work.duration}</p>
-              </div>
-            ))}
+            {isEditing ? (
+              <>
+                {workExp.length > 0 ? (
+                  workExp.map((work, index) => (
+                    <div key={index} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">Work Experience {index + 1}</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeWorkExperience(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div className="space-y-2">
+                          <Label htmlFor={`work-title-${index}`}>Title</Label>
+                          <Input
+                            id={`work-title-${index}`}
+                            value={work.title}
+                            placeholder="e.g. Frontend Developer"
+                            onChange={(event) => updateWorkExperience(index, 'title', event.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`work-company-${index}`}>Company</Label>
+                          <Input
+                            id={`work-company-${index}`}
+                            value={work.company}
+                            placeholder="e.g. Systems Limited"
+                            onChange={(event) => updateWorkExperience(index, 'company', event.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`work-duration-${index}`}>Duration</Label>
+                          <Input
+                            id={`work-duration-${index}`}
+                            value={work.duration}
+                            placeholder="e.g. 2022 - Present"
+                            onChange={(event) => updateWorkExperience(index, 'duration', event.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No work experience added yet</p>
+                )}
+                <Button type="button" variant="outline" className="w-full gap-2" onClick={addWorkExperience}>
+                  <Plus className="h-4 w-4" />
+                  Add Work Experience
+                </Button>
+              </>
+            ) : (
+              workExp.map((work, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-1">
+                  <h4 className="font-semibold">{work.title}</h4>
+                  <p className="text-sm text-muted-foreground">{work.company}</p>
+                  <p className="text-xs text-muted-foreground">{work.duration}</p>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* Certifications */}
-      {certifications.length > 0 && (
+      {(certifications.length > 0 || isEditing) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -459,14 +673,46 @@ export default function ProfilePage() {
             </CardTitle>
             <CardDescription>Your professional certifications</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {certifications.map((cert) => (
-                <Badge key={cert} variant="outline" className="text-sm py-1 px-3">
-                  {cert}
-                </Badge>
-              ))}
-            </div>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                {certifications.length > 0 ? (
+                  <div className="space-y-3">
+                    {certifications.map((cert, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={cert}
+                          placeholder="e.g. AWS Certified Developer"
+                          onChange={(event) => updateCertification(index, event.target.value)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeCertification(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No certifications added yet</p>
+                )}
+                <Button type="button" variant="outline" className="w-full gap-2" onClick={addCertification}>
+                  <Plus className="h-4 w-4" />
+                  Add Certification
+                </Button>
+              </>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {certifications.map((cert) => (
+                  <Badge key={cert} variant="outline" className="text-sm py-1 px-3">
+                    {cert}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -56,6 +56,7 @@ export {
   jobsApi,
   useGetJobsQuery,
   useGetRecommendedJobsQuery,
+  useGetSavedJobsQuery,
   useGetJobByIdQuery,
   useGetApplicationsQuery,
   useUpdateApplicationStatusMutation,

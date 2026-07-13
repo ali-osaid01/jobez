@@ -70,6 +70,30 @@ export const jobsApi = baseApi.injectEndpoints({
       providesTags: [{ type: "Jobs", id: "RECOMMENDED" }],
     }),
 
+    // GET /jobs/saved — bookmarked jobs for the current job-seeker
+    getSavedJobs: builder.query<JobsListResponse, Pick<JobsQueryParams, "page" | "limit"> | void>({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              searchParams.set(key, String(value));
+            }
+          });
+        }
+        const qs = searchParams.toString();
+        return `/jobs/saved${qs ? `?${qs}` : ""}`;
+      },
+      transformResponse: (response: JobsListResponse) => response,
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.data.map(({ id }) => ({ type: "Job" as const, id })),
+              { type: "SavedJobs", id: "LIST" },
+            ]
+          : [{ type: "SavedJobs", id: "LIST" }],
+    }),
+
     // GET /jobs/:id — single job detail
     getJobById: builder.query<JobResponseData, string>({
       query: (id) => `/jobs/${id}`,
@@ -188,7 +212,10 @@ export const jobsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<BookmarkResponse>) =>
         response.data,
-      invalidatesTags: (_result, _error, id) => [{ type: "Job", id }],
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Job", id },
+        { type: "SavedJobs", id: "LIST" },
+      ],
     }),
 
     // POST /applications — submit an application for the current job seeker
@@ -217,6 +244,7 @@ export const jobsApi = baseApi.injectEndpoints({
 export const {
   useGetJobsQuery,
   useGetRecommendedJobsQuery,
+  useGetSavedJobsQuery,
   useGetJobByIdQuery,
   useGetApplicationsQuery,
   useUpdateApplicationStatusMutation,

@@ -6,14 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Building2, Mail, Phone, Globe, Users, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useGetProfileQuery, useUpdateProfileMutation } from '@/lib/store/api/profileApi';
-import type { ApiError } from '@/lib/store/types';
+import { useGetDashboardStatsQuery } from '@/lib/store/api/dashboardApi';
+import type { ApiError, EmployerDashboardStats } from '@/lib/store/types';
 
 export default function EmployerProfilePage() {
   const { data: profileData, isLoading } = useGetProfileQuery();
   const [updateProfile, { isLoading: saving }] = useUpdateProfileMutation();
+  const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
+  const stats = statsData as EmployerDashboardStats | undefined;
 
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
@@ -253,22 +257,21 @@ export default function EmployerProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground">Jobs Posted</p>
-              <p className="text-2xl font-bold">12</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground">Total Applicants</p>
-              <p className="text-2xl font-bold">284</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground">Interviews Conducted</p>
-              <p className="text-2xl font-bold">45</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <p className="text-sm text-muted-foreground">Hires Made</p>
-              <p className="text-2xl font-bold">8</p>
-            </div>
+            {[
+              { label: 'Jobs Posted', value: stats?.totalJobs ?? 0 },
+              { label: 'Total Applicants', value: stats?.totalApplications ?? 0 },
+              { label: 'Interviews Scheduled', value: stats?.interviewScheduled ?? 0 },
+              { label: 'Hires Made', value: stats?.hiredCandidates ?? 0 },
+            ].map((item) => (
+              <div key={item.label} className="p-4 border rounded-lg">
+                <p className="text-sm text-muted-foreground">{item.label}</p>
+                {statsLoading ? (
+                  <Skeleton className="mt-2 h-8 w-16" />
+                ) : (
+                  <p className="text-2xl font-bold">{item.value}</p>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

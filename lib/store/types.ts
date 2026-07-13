@@ -237,6 +237,8 @@ export interface ApplicationResponseData {
   coverLetter: string | null;
   matchScore: number | null;
   rejectionReason: string | null;
+  latestInterviewId: string | null;
+  latestInterviewStatus: InterviewStatus | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -380,19 +382,15 @@ export interface InterviewSubmitResponsesRequest {
 }
 
 export interface InterviewResultsData {
-  aiScore: number;
-  aiSummary: string;
-  summary?: string;
-  evaluation: {
-    overallScore?: number;
-    technicalScore?: number;
-    communicationScore?: number;
-    problemSolvingScore?: number;
-    cultureFitScore?: number;
-    strengths?: string[];
-    improvements?: string[];
-    summary?: string;
-  } | null;
+  interviewId: string;
+  overallScore: number;
+  technicalScore: number;
+  communicationScore: number;
+  problemSolvingScore: number;
+  cultureFitScore: number;
+  strengths: string[];
+  improvements: string[];
+  summary: string;
   responses?: Array<{ questionId: string; response: string; duration: number; timestamp: string }>;
 }
 

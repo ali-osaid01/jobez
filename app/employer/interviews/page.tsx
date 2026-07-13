@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -183,6 +184,15 @@ export default function EmployerInterviewsPage() {
           <div className="flex flex-col gap-2 md:w-48">
             {interview.status === 'completed' && (
               <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                >
+                  <Link href={`/employer/interviews/${interview.id}/results`}>
+                    View Details
+                  </Link>
+                </Button>
                 <Button
                   size="sm"
                   className="gap-2 bg-secondary hover:bg-secondary/90"

@@ -297,6 +297,8 @@ export default function InterviewPage() {
     setDraftAnswer(nextResponse.response);
 
     if (currentQuestionIndex >= questions.length - 1) {
+      stopAudioPlayback();
+      stopRecordingSession();
       setPhase('submitting');
       setStatusMessage('Submitting interview');
       try {

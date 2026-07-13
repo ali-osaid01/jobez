@@ -203,11 +203,10 @@ export default function InterviewResultsPage() {
     );
   }
 
-  const overallScore = results.aiScore ?? 0;
-  const evaluation = results.evaluation;
-  const strengths = evaluation?.strengths ?? [];
-  const improvements = evaluation?.improvements ?? [];
-  const summaryText = results.summary ?? results.aiSummary;
+  const overallScore = results.overallScore ?? 0;
+  const strengths = results.strengths ?? [];
+  const improvements = results.improvements ?? [];
+  const summaryText = results.summary || 'Interview evaluation is being processed. Please check back later.';
   const responseCount = results.responses?.length ?? 0;
 
   return (
@@ -278,38 +277,15 @@ export default function InterviewResultsPage() {
       </Card>
 
       {/* Score Breakdown */}
-      {evaluation && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-heading font-semibold">Performance Breakdown</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {evaluation.technicalScore !== undefined && (
-              <ScoreCard title="Technical Skills" score={evaluation.technicalScore} icon={Brain} description="Problem-solving and technical knowledge" />
-            )}
-            {evaluation.communicationScore !== undefined && (
-              <ScoreCard title="Communication" score={evaluation.communicationScore} icon={MessageSquare} description="Clarity and articulation of ideas" />
-            )}
-            {evaluation.problemSolvingScore !== undefined && (
-              <ScoreCard title="Problem Solving" score={evaluation.problemSolvingScore} icon={Lightbulb} description="Analytical thinking and approach" />
-            )}
-            {evaluation.cultureFitScore !== undefined && (
-              <ScoreCard title="Cultural Fit" score={evaluation.cultureFitScore} icon={Users} description="Alignment with company values" />
-            )}
-          </div>
+      <div className="space-y-4">
+        <h2 className="text-xl font-heading font-semibold">Performance Breakdown</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <ScoreCard title="Technical Skills" score={results.technicalScore ?? 0} icon={Brain} description="Problem-solving and technical knowledge" />
+          <ScoreCard title="Communication" score={results.communicationScore ?? 0} icon={MessageSquare} description="Clarity and articulation of ideas" />
+          <ScoreCard title="Problem Solving" score={results.problemSolvingScore ?? 0} icon={Lightbulb} description="Analytical thinking and approach" />
+          <ScoreCard title="Cultural Fit" score={results.cultureFitScore ?? 0} icon={Users} description="Alignment with company values" />
         </div>
-      )}
-
-      {/* AI Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground leading-relaxed">{results.aiSummary}</p>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Strengths */}
       {strengths.length > 0 && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -285,9 +286,25 @@ export default function ApplicantsPage() {
           </div>
 
           <div className="flex flex-col gap-2 md:w-48">
-            <Badge className={`${statusColor(application.status)} justify-center py-1`}>
-              {statusLabel(application.status)}
+            <Badge
+              className={`${
+                application.latestInterviewStatus === 'completed'
+                  ? 'bg-green-100 text-green-800 border-green-300'
+                  : statusColor(application.status)
+              } justify-center py-1`}
+            >
+              {application.latestInterviewStatus === 'completed'
+                ? 'Interview Completed'
+                : statusLabel(application.status)}
             </Badge>
+
+            {application.latestInterviewStatus === 'completed' && application.latestInterviewId && (
+              <Button size="sm" variant="outline" className="gap-2" asChild>
+                <Link href={`/employer/interviews/${application.latestInterviewId}/results`}>
+                  View Details
+                </Link>
+              </Button>
+            )}
 
             {application.resume && (
               <Button

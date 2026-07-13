@@ -171,14 +171,10 @@ export default function OnboardingPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
+    const validTypes = ['application/pdf'];
 
     if (!validTypes.includes(file.type)) {
-      setResumeError('Please upload a PDF, DOC, or DOCX file');
+      setResumeError('Please upload a PDF file');
       e.target.value = '';
       return;
     }
@@ -397,12 +393,12 @@ export default function OnboardingPage() {
                         <div>
                           <h3 className="font-heading font-semibold mb-2">Upload Resume</h3>
                           <p className="text-sm text-muted-foreground mb-4">
-                            PDF, DOC, or DOCX (Max 5MB)
+                            PDF only (Max 5MB)
                           </p>
                           <Input
                             ref={resumeInputRef}
                             type="file"
-                            accept=".pdf,.doc,.docx"
+                            accept=".pdf,application/pdf"
                             onChange={handleResumeUpload}
                             className="cursor-pointer"
                             disabled={extracting}

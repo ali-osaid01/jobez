@@ -609,12 +609,12 @@ export default function InterviewPage() {
                   <p className="text-2xl font-bold">OpenAI</p>
                 </CardContent>
               </Card>
-              <Card className="bg-muted/40">
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Summary</p>
-                  <p className="text-2xl font-bold">Gemini</p>
-                </CardContent>
-              </Card>
+                <Card className="bg-muted/40">
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Summary</p>
+                    <p className="text-2xl font-bold">OpenAI</p>
+                  </CardContent>
+                </Card>
             </div>
 
             <div className="space-y-3">
@@ -634,7 +634,7 @@ export default function InterviewPage() {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <span>Gemini evaluates the final transcript and generates the summary.</span>
+                  <span>OpenAI evaluates the final transcript and generates your score and summary.</span>
                 </div>
               </div>
             </div>

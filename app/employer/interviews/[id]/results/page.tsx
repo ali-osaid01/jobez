@@ -187,12 +187,19 @@ export default function EmployerInterviewResultsPage() {
         <CardContent className="space-y-4">
           {responses.length > 0 ? (
             responses.map((response, index) => (
-              <div key={`${response.questionId}-${index}`} className="rounded-lg border p-4">
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-medium">Response {index + 1}</p>
-                  <Badge variant="secondary">{response.duration}s</Badge>
+              <div key={`${response.questionId}-${index}`} className="space-y-3 rounded-lg border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Badge variant="secondary">Question {index + 1}</Badge>
+                  <span className="text-xs text-muted-foreground">{response.duration}s answer</span>
                 </div>
-                <p className="whitespace-pre-wrap text-sm text-muted-foreground">{response.response}</p>
+                <div>
+                  <p className="text-sm font-medium">Question</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{response.question}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Candidate answer</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{response.response}</p>
+                </div>
               </div>
             ))
           ) : (

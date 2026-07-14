@@ -119,9 +119,9 @@ function InterviewCard({ interview }: { interview: InterviewResponseData }) {
               </Link>
             )}
             {interview.status === 'completed' && (
-              <Link href={interview.type === 'ai' ? `/job-seeker/interviews/${interview.id}/results` : `/job-seeker/interviews/${interview.id}`}>
+              <Link href={`/job-seeker/interviews/${interview.id}/results`}>
                 <Button variant="outline" className="w-full">
-                  {interview.type === 'ai' ? 'View Results' : 'View Details'}
+                  View Results
                 </Button>
               </Link>
             )}

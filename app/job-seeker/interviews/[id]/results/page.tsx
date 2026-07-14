@@ -88,17 +88,71 @@ export default function InterviewResultsPage() {
 
   if (interview.type !== 'ai') {
     return (
-      <div className="max-w-5xl mx-auto text-center py-20">
-        <Sparkles className="h-12 w-12 mx-auto mb-4 text-primary opacity-50" />
-        <p className="font-medium">This interview uses the human interview flow.</p>
-        <p className="text-sm text-muted-foreground mt-2">
-          Open the interview details page to view the meeting link and instructions.
-        </p>
-        <Link href={`/job-seeker/interviews/${interview.id}`}>
-          <Button className="mt-4" variant="outline">
-            View Details
+      <div className="max-w-5xl mx-auto space-y-6">
+        <Link href="/job-seeker/interviews">
+          <Button variant="ghost" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to interviews
           </Button>
         </Link>
+
+        <Card className="bg-gradient-to-br from-secondary/10 via-background to-primary/10 border-2">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+              <div className="space-y-3">
+                <CardTitle className="text-3xl flex items-center gap-3">
+                  <div className="p-2 bg-secondary/20 rounded-lg">
+                    <Users className="h-7 w-7 text-secondary" />
+                  </div>
+                  Human Interview Results
+                </CardTitle>
+                <div className="space-y-1">
+                  <p className="text-lg font-medium">{interview.jobTitle} at {interview.company}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {interview.status === 'completed'
+                      ? `Completed on ${interview.scheduledDate}`
+                      : `Scheduled on ${interview.scheduledDate} at ${interview.scheduledTime}`}
+                  </p>
+                </div>
+              </div>
+              {interview.status === 'completed' && interview.aiScore !== null && (
+                <div className="text-center p-8 bg-background rounded-xl border-2 border-secondary shadow-lg">
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Interview Score</p>
+                  <p className="text-6xl font-bold text-secondary mb-2">{interview.aiScore}</p>
+                  <p className="text-sm text-muted-foreground">out of 100</p>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+        </Card>
+
+        {interview.status === 'completed' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-secondary" />
+                Employer Evaluation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {interview.aiSummary || 'The employer has marked this interview completed. Feedback is not available yet.'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Interview Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">This human interview has not been completed yet.</p>
+              <Link href={`/job-seeker/interviews/${interview.id}`}>
+                <Button variant="outline">View Meeting Details</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }

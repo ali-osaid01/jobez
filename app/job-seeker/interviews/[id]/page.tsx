@@ -540,19 +540,8 @@ export default function InterviewPage() {
     }
   };
 
-  const saveTypedAnswer = async () => {
-    if (!currentQuestion || !draftAnswer.trim()) return;
 
-    const duration = Math.max(1, recordingSeconds || 30);
-    await persistResponseAndAdvance({
-      questionId: currentQuestion.id,
-      response: draftAnswer.trim(),
-      duration,
-      timestamp: new Date().toISOString(),
-    });
-    toast.success('Answer saved');
-  };
-
+  
   const handleStartInterview = async () => {
     if (!interview) return;
     if (interview.type !== 'ai') return;

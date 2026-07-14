@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAppSelector, selectToken } from '@/lib/store';
 import {
   useGetInterviewByIdQuery,
+  useFailInterviewSecurityMutation,
   useStartInterviewMutation,
   useSubmitInterviewResponsesMutation,
 } from '@/lib/store/api/interviewsApi';
@@ -23,6 +24,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Calendar,
+  Camera,
   ExternalLink,
   Loader2,
   Mic,
@@ -44,6 +46,8 @@ type RecordedAnswer = {
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8002/api/v1';
+const ANSWER_SECONDS = 35;
+const AUTO_RECORD_DELAY_MS = 5000;
 
 function formatTime(seconds: number) {
   const mins = Math.floor(seconds / 60);
@@ -74,6 +78,7 @@ export default function InterviewPage() {
   const { data: interview, isLoading: interviewLoading } = useGetInterviewByIdQuery(interviewId);
   const [startInterview, { isLoading: isStarting }] = useStartInterviewMutation();
   const [submitInterviewResponses] = useSubmitInterviewResponsesMutation();
+  const [failInterviewSecurity] = useFailInterviewSecurityMutation();
 
   const [phase, setPhase] = useState<InterviewPhase>('intro');
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
@@ -87,14 +92,19 @@ export default function InterviewPage() {
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('Ready to begin');
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [answerSecondsRemaining, setAnswerSecondsRemaining] = useState(ANSWER_SECONDS);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordingStartRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
+  const autoRecordTimerRef = useRef<number | null>(null);
   const questionAudioUrlRef = useRef<string | null>(null);
+  const securityFailureRef = useRef(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((responses.length / questions.length) * 100) : 0;
@@ -109,6 +119,10 @@ export default function InterviewPage() {
   );
 
   const stopAudioPlayback = () => {
+    if (autoRecordTimerRef.current) {
+      window.clearTimeout(autoRecordTimerRef.current);
+      autoRecordTimerRef.current = null;
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = '';
@@ -131,6 +145,45 @@ export default function InterviewPage() {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
+
+  const ensureInterviewMedia = async () => {
+    if (mediaStreamRef.current) return mediaStreamRef.current;
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    mediaStreamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play().catch(() => undefined);
+    }
+    return stream;
+  };
+
+  const enterFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    }
+  };
+
+  const markSecurityFailure = async (reason: string) => {
+    if (securityFailureRef.current || phase !== 'active') return;
+    securityFailureRef.current = true;
+    stopAudioPlayback();
+    stopRecordingSession();
+    setPhase('submitting');
+    setStatusMessage('Interview failed');
+    try {
+      await failInterviewSecurity({ id: interviewId, reason }).unwrap();
+      toast.error('Interview closed due to security violation. Score marked 0.');
+    } catch (error) {
+      console.error('[Interview] Failed to record security failure:', error);
+      toast.error('Interview closed due to security violation.');
+    } finally {
+      router.push(`/job-seeker/interviews/${interviewId}/results`);
+    }
   };
 
   const handleLeaveInterview = () => {
@@ -147,6 +200,9 @@ export default function InterviewPage() {
       stopRecordingSession();
       if (timerRef.current) {
         window.clearInterval(timerRef.current);
+      }
+      if (autoRecordTimerRef.current) {
+        window.clearTimeout(autoRecordTimerRef.current);
       }
     };
   }, []);
@@ -184,6 +240,36 @@ export default function InterviewPage() {
 
     return undefined;
   }, [phase, router]);
+
+  useEffect(() => {
+    if (phase !== 'active' || interview?.type !== 'ai') return undefined;
+
+    const failForVisibility = () => {
+      if (document.hidden) {
+        void markSecurityFailure('Candidate left the interview tab.');
+      }
+    };
+    const failForBlur = () => {
+      void markSecurityFailure('Candidate switched away from the interview window.');
+    };
+    const failForFullscreenExit = () => {
+      if (!document.fullscreenElement) {
+        void markSecurityFailure('Candidate exited fullscreen mode.');
+      }
+    };
+
+    document.addEventListener('visibilitychange', failForVisibility);
+    document.addEventListener('fullscreenchange', failForFullscreenExit);
+    window.addEventListener('blur', failForBlur);
+    window.addEventListener('pagehide', failForBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', failForVisibility);
+      document.removeEventListener('fullscreenchange', failForFullscreenExit);
+      window.removeEventListener('blur', failForBlur);
+      window.removeEventListener('pagehide', failForBlur);
+    };
+  }, [phase, interview?.type]);
 
   useEffect(() => {
     if (phase !== 'active' || !currentQuestion) return;
@@ -225,11 +311,16 @@ export default function InterviewPage() {
         audio.onended = () => {
           if (cancelled) return;
           setIsPlayingQuestion(false);
-          setStatusMessage('Answer when ready');
+          setStatusMessage('Recording starts in 5 seconds');
           if (questionAudioUrlRef.current) {
             URL.revokeObjectURL(questionAudioUrlRef.current);
             questionAudioUrlRef.current = null;
           }
+          autoRecordTimerRef.current = window.setTimeout(() => {
+            if (!cancelled) {
+              void startRecording();
+            }
+          }, AUTO_RECORD_DELAY_MS);
         };
 
         audio.onerror = () => {
@@ -251,6 +342,15 @@ export default function InterviewPage() {
         utterance.rate = 1;
         utterance.pitch = 1;
         utterance.volume = 1;
+        utterance.onend = () => {
+          if (cancelled) return;
+          setStatusMessage('Recording starts in 5 seconds');
+          autoRecordTimerRef.current = window.setTimeout(() => {
+            if (!cancelled) {
+              void startRecording();
+            }
+          }, AUTO_RECORD_DELAY_MS);
+        };
         window.speechSynthesis.speak(utterance);
       }
     };
@@ -266,6 +366,7 @@ export default function InterviewPage() {
   useEffect(() => {
     if (phase !== 'active') {
       setRecordingSeconds(0);
+      setAnswerSecondsRemaining(ANSWER_SECONDS);
       if (timerRef.current) {
         window.clearInterval(timerRef.current);
         timerRef.current = null;
@@ -275,12 +376,18 @@ export default function InterviewPage() {
 
     if (!isRecording || !recordingStartRef.current) {
       setRecordingSeconds(0);
+      setAnswerSecondsRemaining(ANSWER_SECONDS);
       return;
     }
 
     timerRef.current = window.setInterval(() => {
       if (!recordingStartRef.current) return;
-      setRecordingSeconds(Math.max(0, Math.floor((Date.now() - recordingStartRef.current) / 1000)));
+      const elapsed = Math.max(0, Math.floor((Date.now() - recordingStartRef.current) / 1000));
+      setRecordingSeconds(elapsed);
+      setAnswerSecondsRemaining(Math.max(0, ANSWER_SECONDS - elapsed));
+      if (elapsed >= ANSWER_SECONDS) {
+        stopRecording();
+      }
     }, 500);
 
     return () => {
@@ -356,27 +463,22 @@ export default function InterviewPage() {
     };
   };
 
-  const ensureMicrophone = async () => {
-    if (mediaStreamRef.current) return mediaStreamRef.current;
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaStreamRef.current = stream;
-    return stream;
-  };
-
   const startRecording = async () => {
     if (!currentQuestion) return;
+    if (isRecording || isTranscribing) return;
 
     try {
       setRecordingError(null);
       setDraftAnswer('');
-      const stream = await ensureMicrophone();
+      const stream = await ensureInterviewMedia();
+      const audioStream = new MediaStream(stream.getAudioTracks());
       chunksRef.current = [];
       recordingStartRef.current = Date.now();
+      setAnswerSecondsRemaining(ANSWER_SECONDS);
       setIsRecording(true);
       setStatusMessage('Recording answer');
 
-      const recorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(audioStream);
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {

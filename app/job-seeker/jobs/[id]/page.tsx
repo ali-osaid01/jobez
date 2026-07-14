@@ -22,6 +22,8 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+const MIN_APPLY_MATCH_SCORE = 65;
+
 export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -70,8 +72,15 @@ export default function JobDetailPage() {
     applicationsData?.data?.some((application) => application.jobId === jobId),
   );
   const isCheckingApplication = applicationsLoading && !applicationsData;
+  const matchScore = typeof job?.matchScore === 'number' ? job.matchScore : null;
+  const canApplyByMatch = matchScore === null || matchScore >= MIN_APPLY_MATCH_SCORE;
 
   const handleApply = async () => {
+    if (!canApplyByMatch) {
+      toast.error(`Your match score is ${matchScore}%; minimum required is ${MIN_APPLY_MATCH_SCORE}%.`);
+      return;
+    }
+
     try {
       const result = await applyForJob(jobId).unwrap();
       setApplied(true);
@@ -194,9 +203,14 @@ export default function JobDetailPage() {
                 </div>
               ) : (
                 <>
-                  <Button size="lg" onClick={handleApply} className="w-full" disabled={applying}>
-                    {applying ? 'Applying...' : 'Apply Now'}
+                  <Button size="lg" onClick={handleApply} className="w-full" disabled={applying || !canApplyByMatch}>
+                    {applying ? 'Applying...' : canApplyByMatch ? 'Apply Now' : 'Match too low'}
                   </Button>
+                  {!canApplyByMatch && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Minimum required match is {MIN_APPLY_MATCH_SCORE}%.
+                    </p>
+                  )}
                   <Button variant="outline" size="lg" className="w-full gap-2" onClick={handleSaveJob}>
                     <Bookmark className={`h-4 w-4 ${job.isBooked ? 'fill-primary text-primary' : ''}`} />
                     {job.isBooked ? 'Saved' : 'Save Job'}
@@ -312,23 +326,27 @@ export default function JobDetailPage() {
           </Card>
 
           {/* AI Match Insights */}
-          {job.matchScore && job.matchScore > 80 && (
+          {typeof job.matchScore === 'number' && (
             <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <Sparkles className="h-5 w-5" />
-                  AI Match Insights
+                  Match Insights
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p className="text-muted-foreground">
-                  This role is a great match for your profile!
+                  Your profile is a {job.matchScore}% match for this role.
                 </p>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>• Strong skills alignment</li>
-                  <li>• Experience level match</li>
-                  <li>• Location preference fit</li>
-                </ul>
+                {job.matchReasons?.length ? (
+                  <ul className="space-y-1 text-muted-foreground">
+                    {job.matchReasons.map((reason) => (
+                      <li key={reason}>• {reason}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">Match is calculated from your profile and the job description.</p>
+                )}
               </CardContent>
             </Card>
           )}

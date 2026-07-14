@@ -177,6 +177,11 @@ export default function RecommendedJobsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                      {typeof job.matchScore === 'number' && (
+                        <Badge className="bg-green-100 text-green-800 border-green-300">
+                          {job.matchScore}% match
+                        </Badge>
+                      )}
                       {job.experienceLevel && (
                         <Badge variant="secondary">{job.experienceLevel}</Badge>
                       )}
@@ -192,6 +197,17 @@ export default function RecommendedJobsPage() {
                       <p className="text-sm text-muted-foreground line-clamp-2">
                         {job.description}
                       </p>
+                    )}
+
+                    {job.matchReasons?.length > 0 && (
+                      <div className="rounded-lg border bg-muted/30 p-3">
+                        <p className="mb-1 text-xs font-medium">Why recommended</p>
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          {job.matchReasons.slice(0, 3).map((reason) => (
+                            <li key={reason}>• {reason}</li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
 
                     <div className="pt-2 border-t flex gap-2">

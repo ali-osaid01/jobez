@@ -216,6 +216,7 @@ export interface JobResponseData {
   applicationDeadline: string | null;
   employerId: string;
   matchScore: number | null;
+  matchReasons: string[];
   applicantsCount: number;
   status: JobStatus;
   isBooked: boolean;
@@ -239,6 +240,9 @@ export interface ApplicationResponseData {
   rejectionReason: string | null;
   latestInterviewId: string | null;
   latestInterviewStatus: InterviewStatus | null;
+  latestInterviewType: InterviewType | null;
+  latestInterviewScore: number | null;
+  latestInterviewSummary: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -329,6 +333,8 @@ export interface InterviewResponseData {
   company: string;
   applicantId: string;
   applicantName: string | null;
+  applicantEmail: string | null;
+  applicationStatus: ApplicationStatus | null;
   scheduledDate: string;
   scheduledTime: string;
   duration: number;
@@ -350,6 +356,8 @@ export interface InterviewResponseData {
   } | null;
   aiScore: number | null;
   aiSummary: string | null;
+  score: number | null;
+  summary: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -381,6 +389,16 @@ export interface InterviewSubmitResponsesRequest {
   responses: Array<{ questionId: string; response: string; duration: number; timestamp: string }>;
 }
 
+export interface InterviewTranscriptItem {
+  questionId: string;
+  question: string;
+  type: string | null;
+  category: string | null;
+  response: string;
+  duration: number;
+  timestamp: string;
+}
+
 export interface InterviewResultsData {
   interviewId: string;
   overallScore: number;
@@ -391,7 +409,7 @@ export interface InterviewResultsData {
   strengths: string[];
   improvements: string[];
   summary: string;
-  responses?: Array<{ questionId: string; response: string; duration: number; timestamp: string }>;
+  responses?: InterviewTranscriptItem[];
 }
 
 // export interface ScheduleInterviewRequest {
@@ -416,6 +434,11 @@ export interface ScheduleInterviewRequest {
 }
 
 export type UpdateInterviewRequest = Partial<Omit<ScheduleInterviewRequest, "applicationId">>;
+
+export interface CompleteHumanInterviewRequest {
+  score: number;
+  comments: string;
+}
 
 export interface ApplicationStatusUpdateRequest {
   status: "shortlisted" | "interview-scheduled" | "rejected" | "hired";

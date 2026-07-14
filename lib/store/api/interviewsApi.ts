@@ -9,6 +9,7 @@ import type {
   InterviewSubmitResponsesRequest,
   ScheduleInterviewRequest,
   UpdateInterviewRequest,
+  CompleteHumanInterviewRequest,
 } from "../types";
 
 // ─── Interviews API ──────────────────────────────────────────
@@ -110,6 +111,36 @@ export const interviewsApi = baseApi.injectEndpoints({
         { type: "Interviews", id: "LIST" },
       ],
     }),
+
+    completeHumanInterview: builder.mutation<
+      InterviewResponseData,
+      { id: string; body: CompleteHumanInterviewRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/interviews/${id}/complete-human`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: ApiResponse<InterviewResponseData>) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Interview", id },
+        { type: "Interviews", id: "LIST" },
+        { type: "Applications", id: "LIST" },
+      ],
+    }),
+
+    failInterviewSecurity: builder.mutation<void, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({
+        url: `/interviews/${id}/security-fail`,
+        method: "POST",
+        body: { reason },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Interview", id },
+        { type: "Interviews", id: "LIST" },
+        { type: "Applications", id: "LIST" },
+      ],
+    }),
   }),
 });
 
@@ -123,4 +154,6 @@ export const {
   useGetInterviewResultsQuery,
   useScheduleInterviewMutation,
   useUpdateInterviewMutation,
+  useCompleteHumanInterviewMutation,
+  useFailInterviewSecurityMutation,
 } = interviewsApi;

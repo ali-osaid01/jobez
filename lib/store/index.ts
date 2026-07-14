@@ -78,6 +78,8 @@ export {
   useGetInterviewResultsQuery,
   useScheduleInterviewMutation,
   useUpdateInterviewMutation,
+  useCompleteHumanInterviewMutation,
+  useFailInterviewSecurityMutation,
 } from "./api/interviewsApi";
 export { dashboardApi, useGetDashboardStatsQuery } from "./api/dashboardApi";
 
@@ -129,6 +131,7 @@ export type {
   InterviewResultsData,
   ScheduleInterviewRequest,
   UpdateInterviewRequest,
+  CompleteHumanInterviewRequest,
   JobSeekerDashboardStats,
   EmployerDashboardStats,
   DashboardStats,

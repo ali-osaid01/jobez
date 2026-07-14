@@ -44,6 +44,25 @@ function statusLabel(status: string): string {
   return status.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function applicationDisplayStatus(app: ApplicationResponseData) {
+  if (app.latestInterviewStatus === 'completed' && app.latestInterviewScore === 0) {
+    return {
+      label: 'Interview Failed - Score 0',
+      className: 'bg-red-100 text-red-800 border-red-300',
+    };
+  }
+  if (app.latestInterviewStatus === 'completed') {
+    return {
+      label: 'Interview Completed - Under Review',
+      className: 'bg-green-100 text-green-800 border-green-300',
+    };
+  }
+  return {
+    label: statusLabel(app.status),
+    className: statusColor(app.status),
+  };
+}
+
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
     case 'shortlisted':         return <TrendingUp className="h-4 w-4" />;
@@ -55,6 +74,8 @@ function StatusIcon({ status }: { status: string }) {
 // ─── Application Card ─────────────────────────────────────────
 
 function ApplicationCard({ app }: { app: ApplicationResponseData }) {
+  const displayStatus = applicationDisplayStatus(app);
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -94,9 +115,16 @@ function ApplicationCard({ app }: { app: ApplicationResponseData }) {
           </div>
 
           <div className="flex flex-col gap-2 md:w-36 shrink-0">
-            <Badge className={`${statusColor(app.status)} justify-center py-1`}>
-              {statusLabel(app.status)}
+            <Badge className={`${displayStatus.className} justify-center py-1`}>
+              {displayStatus.label}
             </Badge>
+            {app.latestInterviewStatus === 'completed' && app.latestInterviewId && (
+              <Link href={`/job-seeker/interviews/${app.latestInterviewId}/results`}>
+                <Button variant="outline" size="sm" className="w-full">
+                  View Results
+                </Button>
+              </Link>
+            )}
             <Link href={`/job-seeker/jobs/${app.jobId}`}>
               <Button variant="outline" size="sm" className="w-full">
                 View Job

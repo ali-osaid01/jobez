@@ -360,6 +360,17 @@ export default function AllJobsPage() {
                       </Badge>
                     )}
                   </div>
+
+                  {job.matchReasons?.length > 0 && (
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="mb-1 text-xs font-medium">Why this matches</p>
+                      <ul className="space-y-1 text-xs text-muted-foreground">
+                        {job.matchReasons.slice(0, 2).map((reason) => (
+                          <li key={reason}>• {reason}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

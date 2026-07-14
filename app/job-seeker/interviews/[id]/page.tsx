@@ -272,6 +272,13 @@ export default function InterviewPage() {
   }, [phase, interview?.type]);
 
   useEffect(() => {
+    if (phase === 'active' && videoRef.current && mediaStreamRef.current) {
+      videoRef.current.srcObject = mediaStreamRef.current;
+      void videoRef.current.play().catch(() => undefined);
+    }
+  }, [phase, currentQuestionIndex]);
+
+  useEffect(() => {
     if (phase !== 'active' || !currentQuestion) return;
 
     let cancelled = false;
@@ -551,6 +558,10 @@ export default function InterviewPage() {
     if (interview.type !== 'ai') return;
 
     try {
+      setCameraError(null);
+      await ensureInterviewMedia();
+      await enterFullscreen();
+      securityFailureRef.current = false;
       setPhase('loading');
       setStatusMessage('Generating questions');
       const response = await startInterview(interviewId).unwrap();
@@ -563,7 +574,8 @@ export default function InterviewPage() {
       toast.success('Interview prepared');
     } catch (error) {
       console.error('[Interview] Failed to start interview:', error);
-      toast.error('Could not prepare interview');
+      setCameraError('Camera, microphone, and fullscreen access are required to start the AI interview.');
+      toast.error('Camera, microphone, and fullscreen are required');
       setPhase('intro');
     }
   };
@@ -749,6 +761,12 @@ export default function InterviewPage() {
               </p>
             )}
 
+            {cameraError && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {cameraError}
+              </div>
+            )}
+
             <Button onClick={handleStartInterview} size="lg" className="w-full gap-2" disabled={isStarting || !interviewIsAvailable}>
               {isStarting ? (
                 <>
@@ -882,9 +900,9 @@ export default function InterviewPage() {
                 Replay question
               </Button>
               {!isRecording ? (
-                <Button onClick={startRecording} className="gap-2">
+                <Button onClick={startRecording} className="gap-2" disabled={isPlayingQuestion || isTranscribing}>
                   <Mic className="h-4 w-4" />
-                  Start recording
+                  Start recording now
                 </Button>
               ) : (
                 <Button variant="destructive" onClick={stopRecording} className="gap-2">
@@ -911,25 +929,38 @@ export default function InterviewPage() {
                 </div>
               </div>
 
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Answer timer</span>
+                  <Badge variant={answerSecondsRemaining <= 10 ? 'destructive' : 'secondary'}>
+                    {answerSecondsRemaining}s
+                  </Badge>
+                </div>
+                <Progress value={(answerSecondsRemaining / ANSWER_SECONDS) * 100} className="mt-2 h-2" />
+              </div>
+
               <Textarea
                 rows={9}
                 value={draftAnswer}
+                readOnly
                 onChange={(event) => setDraftAnswer(event.target.value)}
-                placeholder="Your transcript will appear here. You can also type a backup answer if needed."
+                placeholder="Your transcript will appear here after the recorded answer is transcribed."
               />
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{isPlayingQuestion ? 'Playing question audio' : 'Question audio ready'}</span>
-                <span>{currentQuestion.expectedDuration}s target</span>
+                <span>Auto records for {ANSWER_SECONDS}s</span>
               </div>
 
               <div className="flex gap-3">
                 <Button
-                  onClick={saveTypedAnswer}
-                  disabled={!draftAnswer.trim() || isRecording || isTranscribing}
+                  variant="outline"
+                  onClick={() => stopRecording()}
+                  disabled={!isRecording}
                   className="gap-2"
                 >
-                  Save typed answer
+                  <Square className="h-4 w-4" />
+                  Stop early
                 </Button>
                 <Button
                   variant="outline"
@@ -943,36 +974,61 @@ export default function InterviewPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Recorded answers</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {responses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No answers recorded yet.</p>
-            ) : (
-              responses.map((item) => {
-                const question = questions.find((entry) => entry.id === item.questionId);
-                return (
-                  <div key={item.questionId} className="rounded-lg border p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{question?.category ?? item.questionId}</p>
-                      <Badge variant="secondary">{formatTime(item.duration)}</Badge>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Camera
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="overflow-hidden rounded-xl border bg-black">
+                <video
+                  ref={videoRef}
+                  className="aspect-video w-full object-cover"
+                  muted
+                  playsInline
+                  autoPlay
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Camera and fullscreen must stay active until the interview is submitted.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recorded answers</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {responses.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No answers recorded yet.</p>
+              ) : (
+                responses.map((item) => {
+                  const question = questions.find((entry) => entry.id === item.questionId);
+                  return (
+                    <div key={item.questionId} className="rounded-lg border p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{question?.category ?? item.questionId}</p>
+                        <Badge variant="secondary">{formatTime(item.duration)}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-4">{item.response}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-4">{item.response}</p>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
 
-            <Separator />
+              <Separator />
 
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Resume and job context are used to generate the questions.</p>
-              <p>Final scoring and summary are handled after submission.</p>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>Resume and job context are used to generate the questions.</p>
+                <p>Final scoring and summary are handled after submission.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {recordingError && (

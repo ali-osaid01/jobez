@@ -7,11 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PaginationControls } from '@/components/pagination-controls';
-import { useGetInterviewsQuery, useUpdateApplicationStatusMutation } from '@/lib/store';
+import { useCompleteHumanInterviewMutation, useGetInterviewsQuery, useUpdateApplicationStatusMutation } from '@/lib/store';
 import type { InterviewResponseData, InterviewStatus } from '@/lib/store/types';
-import { AlertCircle, Clock, MessageSquare, RefreshCw, Sparkles, Trophy, UserCheck, UserX } from 'lucide-react';
+import { AlertCircle, Clock, ExternalLink, MessageSquare, RefreshCw, Sparkles, Trophy, UserCheck, UserX, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 10;
@@ -56,12 +65,16 @@ export default function EmployerInterviewsPage() {
   const [page, setPage] = useState(1);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectComment, setRejectComment] = useState('');
+  const [completingInterview, setCompletingInterview] = useState<InterviewResponseData | null>(null);
+  const [humanScore, setHumanScore] = useState('75');
+  const [humanComments, setHumanComments] = useState('');
   const { data, isLoading, isFetching, isError, refetch } = useGetInterviewsQuery({
     page,
     limit: PAGE_SIZE,
     status: activeTab,
   });
   const [updateApplicationStatus, { isLoading: isUpdatingApplication }] = useUpdateApplicationStatusMutation();
+  const [completeHumanInterview, { isLoading: isCompletingHuman }] = useCompleteHumanInterviewMutation();
 
   const interviews = data?.data ?? [];
   const counts = data?.counts;
@@ -96,128 +109,219 @@ export default function EmployerInterviewsPage() {
     }
   };
 
-  const InterviewCard = ({ interview }: { interview: InterviewResponseData }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="flex-1 space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-xl">{interview.applicantName || 'Candidate'}</CardTitle>
-                <p className="text-muted-foreground mt-1">{interview.jobTitle}</p>
-              </div>
-            </div>
+  const handleCompleteHuman = async () => {
+    if (!completingInterview) return;
+    const score = Number(humanScore);
+    if (Number.isNaN(score) || score < 0 || score > 100) {
+      toast.error('Score must be between 0 and 100');
+      return;
+    }
+    if (!humanComments.trim()) {
+      toast.error('Evaluation comments are required');
+      return;
+    }
 
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {interview.scheduledDate} at {interview.scheduledTime}
-              </span>
-            </div>
+    try {
+      await completeHumanInterview({
+        id: completingInterview.id,
+        body: { score, comments: humanComments.trim() },
+      }).unwrap();
+      toast.success('Human interview marked completed');
+      setCompletingInterview(null);
+      setHumanScore('75');
+      setHumanComments('');
+    } catch {
+      toast.error('Failed to mark human interview completed');
+    }
+  };
 
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">
-                {interview.type === 'ai' ? 'AI Interview' : 'Human Interview'}
-              </Badge>
-              {interview.aiScore !== null && interview.aiScore > 0 && (
-                <Badge className="bg-green-100 text-green-800 border-green-300">
-                  Score: {interview.aiScore}/100
-                </Badge>
-              )}
-              {interview.status === 'scheduled' && (
-                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                  AWAITING RESPONSE
-                </Badge>
-              )}
-              {interview.status === 'completed' && (
-                <Badge className="bg-green-100 text-green-800 border-green-300">
-                  COMPLETED
-                </Badge>
-              )}
-            </div>
+  const InterviewCard = ({ interview }: { interview: InterviewResponseData }) => {
+    const isHuman = interview.type === 'human';
+    const isHired = interview.applicationStatus === 'hired';
 
-            {interview.aiSummary && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm font-medium mb-1 flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  Evaluation Summary
-                </p>
-                <p className="text-sm text-muted-foreground italic">
-                  {interview.aiSummary}
-                </p>
-              </div>
-            )}
-
-            {rejectingId === interview.id && (
-              <div className="space-y-2 p-3 bg-muted rounded-lg">
-                <p className="text-sm font-medium">Rejection reason (required):</p>
-                <Textarea
-                  placeholder="Please provide a reason for rejection..."
-                  value={rejectComment}
-                  onChange={(event) => setRejectComment(event.target.value)}
-                  rows={3}
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={!rejectComment.trim() || isUpdatingApplication}
-                    onClick={() => handleReject(interview)}
-                  >
-                    Confirm Rejection
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => { setRejectingId(null); setRejectComment(''); }}
-                  >
-                    Cancel
-                  </Button>
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${isHuman ? 'bg-secondary/10' : 'bg-primary/10'}`}>
+                  {isHuman ? (
+                    <Video className="h-5 w-5 text-secondary" />
+                  ) : (
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-xl">{interview.applicantName || 'Candidate'}</CardTitle>
+                  <p className="text-muted-foreground mt-1">{interview.jobTitle}</p>
+                  {interview.applicantEmail && (
+                    <p className="text-sm text-muted-foreground">{interview.applicantEmail}</p>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
 
-          <div className="flex flex-col gap-2 md:w-48">
-            {interview.status === 'completed' && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  asChild
-                >
-                  <Link href={`/employer/interviews/${interview.id}/results`}>
-                    View Details
-                  </Link>
-                </Button>
-                <Button
-                  size="sm"
-                  className="gap-2 bg-secondary hover:bg-secondary/90"
-                  disabled={isUpdatingApplication}
-                  onClick={() => handleHire(interview)}
-                >
-                  <Trophy className="h-4 w-4" />
-                  Mark Hired
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2" onClick={() => setRejectingId(interview.id)}>
-                  <UserX className="h-4 w-4" />
-                  Reject
-                </Button>
-              </>
-            )}
-            {interview.status === 'scheduled' && (
-              <p className="text-xs text-muted-foreground text-center">
-                Waiting for candidate to complete interview
-              </p>
-            )}
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {interview.scheduledDate} at {interview.scheduledTime} ({interview.duration} min)
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">
+                  {isHuman ? 'Human Interview' : 'AI Interview'}
+                </Badge>
+                {interview.aiScore !== null && interview.aiScore > 0 && (
+                  <Badge className="bg-green-100 text-green-800 border-green-300">
+                    Score: {interview.aiScore}/100
+                  </Badge>
+                )}
+                {interview.status === 'scheduled' && !isHuman && (
+                  <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                    AWAITING CANDIDATE
+                  </Badge>
+                )}
+                {interview.status === 'scheduled' && isHuman && (
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+                    HUMAN INTERVIEW SCHEDULED
+                  </Badge>
+                )}
+                {interview.status === 'completed' && (
+                  <Badge className="bg-green-100 text-green-800 border-green-300">
+                    COMPLETED
+                  </Badge>
+                )}
+                {isHired && (
+                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
+                    HIRED
+                  </Badge>
+                )}
+              </div>
+
+              {isHuman && interview.status === 'scheduled' && (
+                <div className="space-y-2 rounded-lg bg-muted p-3 text-sm">
+                  {interview.meetingLink ? (
+                    <a
+                      href={interview.meetingLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {interview.meetingLink}
+                    </a>
+                  ) : (
+                    <p className="text-muted-foreground">No meeting link was added.</p>
+                  )}
+                  {interview.notes && <p className="text-muted-foreground">{interview.notes}</p>}
+                </div>
+              )}
+
+              {interview.aiSummary && (
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-1 flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    Evaluation Summary
+                  </p>
+                  <p className="text-sm text-muted-foreground italic">
+                    {interview.aiSummary}
+                  </p>
+                </div>
+              )}
+
+              {rejectingId === interview.id && (
+                <div className="space-y-2 p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium">Rejection reason (required):</p>
+                  <Textarea
+                    placeholder="Please provide a reason for rejection..."
+                    value={rejectComment}
+                    onChange={(event) => setRejectComment(event.target.value)}
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={!rejectComment.trim() || isUpdatingApplication}
+                      onClick={() => handleReject(interview)}
+                    >
+                      Confirm Rejection
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setRejectingId(null); setRejectComment(''); }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 md:w-52">
+              {interview.status === 'completed' && (
+                <>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={`/employer/interviews/${interview.id}/results`}>
+                      View Details
+                    </Link>
+                  </Button>
+                  {!isHired && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="gap-2 bg-secondary hover:bg-secondary/90"
+                        disabled={isUpdatingApplication}
+                        onClick={() => handleHire(interview)}
+                      >
+                        <Trophy className="h-4 w-4" />
+                        Mark Hired
+                      </Button>
+                      <Button size="sm" variant="outline" className="gap-2" onClick={() => setRejectingId(interview.id)}>
+                        <UserX className="h-4 w-4" />
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+              {interview.status === 'scheduled' && isHuman && (
+                <>
+                  {interview.meetingLink && (
+                    <Button size="sm" variant="outline" className="gap-2" asChild>
+                      <a href={interview.meetingLink} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                        Go to Interview
+                      </a>
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      setCompletingInterview(interview);
+                      setHumanScore('75');
+                      setHumanComments('');
+                    }}
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    Mark Completed
+                  </Button>
+                </>
+              )}
+              {interview.status === 'scheduled' && !isHuman && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Waiting for candidate to complete AI interview
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      </CardHeader>
-    </Card>
-  );
+        </CardHeader>
+      </Card>
+    );
+  };
 
   const renderInterviews = (emptyIcon: React.ElementType, title: string, message: string) => {
     if (isLoading || isFetching) return <LoadingSkeleton />;
@@ -264,7 +368,7 @@ export default function EmployerInterviewsPage() {
           <CardHeader className="pb-2">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Awaiting Response
+              Scheduled
             </p>
           </CardHeader>
           <CardContent>
@@ -298,7 +402,7 @@ export default function EmployerInterviewsPage() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList>
           <TabsTrigger value="completed">Completed ({counts?.completed ?? 0})</TabsTrigger>
-          <TabsTrigger value="scheduled">Awaiting Response ({counts?.scheduled ?? 0})</TabsTrigger>
+          <TabsTrigger value="scheduled">Scheduled ({counts?.scheduled ?? 0})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="completed" className="space-y-4">
@@ -306,7 +410,7 @@ export default function EmployerInterviewsPage() {
         </TabsContent>
 
         <TabsContent value="scheduled" className="space-y-4">
-          {renderInterviews(Clock, 'No pending interviews', 'All candidates have completed their AI interviews')}
+          {renderInterviews(Clock, 'No scheduled interviews', 'Scheduled AI and human interviews will appear here')}
         </TabsContent>
       </Tabs>
 
@@ -321,6 +425,45 @@ export default function EmployerInterviewsPage() {
           onPageChange={setPage}
         />
       )}
+
+      <Dialog open={!!completingInterview} onOpenChange={(open) => !open && setCompletingInterview(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete Human Interview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="human-score">Score</Label>
+              <Input
+                id="human-score"
+                type="number"
+                min={0}
+                max={100}
+                value={humanScore}
+                onChange={(event) => setHumanScore(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="human-comments">Evaluation comments</Label>
+              <Textarea
+                id="human-comments"
+                value={humanComments}
+                onChange={(event) => setHumanComments(event.target.value)}
+                placeholder="Add clear feedback for the candidate and hiring team..."
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompletingInterview(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCompleteHuman} disabled={isCompletingHuman}>
+              Mark Completed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

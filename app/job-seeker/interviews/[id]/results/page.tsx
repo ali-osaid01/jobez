@@ -208,6 +208,7 @@ export default function InterviewResultsPage() {
   const improvements = results.improvements ?? [];
   const summaryText = results.summary || 'Interview evaluation is being processed. Please check back later.';
   const responseCount = results.responses?.length ?? 0;
+  const transcript = results.responses ?? [];
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -334,6 +335,37 @@ export default function InterviewResultsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            Interview Transcript
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {transcript.length > 0 ? (
+            transcript.map((item, index) => (
+              <div key={`${item.questionId}-${index}`} className="rounded-lg border p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Badge variant="secondary">Question {index + 1}</Badge>
+                  <span className="text-xs text-muted-foreground">{item.duration}s answer</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Question</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.question}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Your answer</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.response}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No transcript responses were captured.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Next Steps */}
       <Card className="bg-primary/5 border-primary/20">

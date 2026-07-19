@@ -141,6 +141,8 @@ export const jobsApi = baseApi.injectEndpoints({
         { type: "Application", id },
         { type: "Applications", id: "LIST" },
         { type: "Interviews", id: "LIST" },
+        { type: "Notifications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
       ],
     }),
 
@@ -233,6 +235,7 @@ export const jobsApi = baseApi.injectEndpoints({
         { type: "Jobs", id: "LIST" },
         { type: "Applications", id: "LIST" },
         { type: "Interviews", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
       ],
     }),
 

@@ -71,6 +71,8 @@ export const interviewsApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { interviewId }) => [
         { type: "Interview", id: interviewId },
         { type: "Interviews", id: "LIST" },
+        { type: "Notifications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
       ],
     }),
 
@@ -92,6 +94,8 @@ export const interviewsApi = baseApi.injectEndpoints({
       invalidatesTags: [
         { type: "Interviews", id: "LIST" },
         { type: "Applications", id: "LIST" },
+        { type: "Notifications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
       ],
     }),
 
@@ -126,6 +130,8 @@ export const interviewsApi = baseApi.injectEndpoints({
         { type: "Interview", id },
         { type: "Interviews", id: "LIST" },
         { type: "Applications", id: "LIST" },
+        { type: "Notifications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
       ],
     }),
 
@@ -139,6 +145,8 @@ export const interviewsApi = baseApi.injectEndpoints({
         { type: "Interview", id },
         { type: "Interviews", id: "LIST" },
         { type: "Applications", id: "LIST" },
+        { type: "Notifications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
       ],
     }),
   }),

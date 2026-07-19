@@ -13,6 +13,9 @@ export const TAG_TYPES = [
   'User',
   'AIInterview',
   'SavedJobs',
+  'Notification',
+  'Notifications',
+  'Dashboard',
 ] as const;
 
 export type ApiTagType = (typeof TAG_TYPES)[number];

@@ -32,7 +32,14 @@ export const profileApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<ProfileResponseData>) =>
         response.data,
-      invalidatesTags: ["Profile", "User"],
+      invalidatesTags: [
+        "Profile",
+        "User",
+        { type: "Jobs", id: "RECOMMENDED" },
+        { type: "Jobs", id: "LIST" },
+        { type: "Applications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
+      ],
       async onQueryStarted(_args, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
@@ -62,6 +69,13 @@ export const profileApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<ResumeExtractResponseData>) =>
         response.data,
+      invalidatesTags: [
+        "Profile",
+        { type: "Jobs", id: "RECOMMENDED" },
+        { type: "Jobs", id: "LIST" },
+        { type: "Applications", id: "LIST" },
+        { type: "Dashboard", id: "STATS" },
+      ],
     }),
   }),
 });

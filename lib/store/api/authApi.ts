@@ -2,6 +2,8 @@ import { baseApi } from './baseApi';
 import { setCredentials, logout } from '../features/authSlice';
 import type {
   LoginRequest,
+  ForgotPasswordRequest,
+  ChangePasswordRequest,
   GoogleLoginRequest,
   SignupRequest,
   AuthResponseData,
@@ -114,6 +116,22 @@ export const authApi = baseApi.injectEndpoints({
       transformResponse: (response: ApiResponse<RefreshTokenResponseData>) =>
         response.data,
     }),
+
+    forgotPassword: builder.mutation<void, ForgotPasswordRequest>({
+      query: (body) => ({
+        url: '/auth/forgot-password',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    changePassword: builder.mutation<void, ChangePasswordRequest>({
+      query: (body) => ({
+        url: '/auth/change-password',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -125,4 +143,6 @@ export const {
   useSignupMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
+  useForgotPasswordMutation,
+  useChangePasswordMutation,
 } = authApi;

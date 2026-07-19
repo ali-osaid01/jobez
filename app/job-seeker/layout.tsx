@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { NotificationsMenu } from '@/components/notifications-menu';
 
 const navigation = [
   { name: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
@@ -35,6 +36,7 @@ export default function JobSeekerLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [logoutApi] = useLogoutMutation();
+  const isInterviewRoom = /^\/job-seeker\/interviews\/[^/]+$/.test(pathname);
 
   const handleLogout = async () => {
     try {
@@ -47,6 +49,11 @@ export default function JobSeekerLayout({
 
   return (
     <AuthWrapper requiredRole="job-seeker">
+      {isInterviewRoom ? (
+        <div className="min-h-screen bg-background">
+          {children}
+        </div>
+      ) : (
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -54,9 +61,12 @@ export default function JobSeekerLayout({
             <div>
               <Logo size="sm" showText={true} />
             </div>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <NotificationsMenu />
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -89,6 +99,7 @@ export default function JobSeekerLayout({
           </div>
         </div>
       </div>
+      )}
     </AuthWrapper>
   );
 }

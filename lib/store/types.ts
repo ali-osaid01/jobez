@@ -54,6 +54,16 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface GoogleLoginRequest {
   credential: string;
   role?: UserRole | null;
@@ -82,6 +92,20 @@ export interface RefreshTokenRequest {
 export interface RefreshTokenResponseData {
   token: string;
   user: AuthUser;
+}
+
+export interface NotificationResponseData {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  data: Record<string, unknown> | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationsListResponse extends PaginatedListResponse<NotificationResponseData> {
+  unreadCount: number;
 }
 
 // ─── Profile Types ───────────────────────────────────────────

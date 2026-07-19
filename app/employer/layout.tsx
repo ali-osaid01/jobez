@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { NotificationsMenu } from '@/components/notifications-menu';
 
 const navigation = [
   { name: 'Dashboard', href: '/employer/dashboard', icon: LayoutDashboard },
@@ -59,6 +60,7 @@ export default function EmployerLayout({
                   Post Job
                 </Button>
               </Link> */}
+              <NotificationsMenu />
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>

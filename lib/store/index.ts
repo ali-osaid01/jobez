@@ -45,6 +45,8 @@ export {
   useSignupMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
+  useForgotPasswordMutation,
+  useChangePasswordMutation,
 } from "./api/authApi";
 export {
   profileApi,
@@ -82,6 +84,12 @@ export {
   useFailInterviewSecurityMutation,
 } from "./api/interviewsApi";
 export { dashboardApi, useGetDashboardStatsQuery } from "./api/dashboardApi";
+export {
+  notificationsApi,
+  useGetNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+} from "./api/notificationsApi";
 
 // ─── Types ────────────────────────────────────────────────────
 export type {
@@ -92,10 +100,14 @@ export type {
   AuthUser,
   AuthState,
   LoginRequest,
+  ForgotPasswordRequest,
+  ChangePasswordRequest,
   SignupRequest,
   AuthResponseData,
   RefreshTokenRequest,
   RefreshTokenResponseData,
+  NotificationResponseData,
+  NotificationsListResponse,
   Education,
   WorkExperience,
   JobSeekerProfile,

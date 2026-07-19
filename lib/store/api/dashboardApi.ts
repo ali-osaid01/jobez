@@ -9,6 +9,7 @@ export const dashboardApi = baseApi.injectEndpoints({
     getDashboardStats: builder.query<DashboardStats, void>({
       query: () => "/dashboard/stats",
       transformResponse: (response: ApiResponse<DashboardStats>) => response.data,
+      providesTags: [{ type: "Dashboard", id: "STATS" }],
     }),
   }),
 });

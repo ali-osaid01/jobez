@@ -91,17 +91,17 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link href="/">
               <Logo size="md" />
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link href="/login">
-                <Button variant="ghost" className="text-base font-medium">Log In</Button>
+                <Button variant="ghost" className="px-3 text-sm font-medium sm:text-base">Log In</Button>
               </Link>
               <Link href="/signup">
-                <Button className="text-base font-semibold px-6 rounded-full bg-primary hover:bg-primary/90">Sign Up</Button>
+                <Button className="rounded-full bg-primary px-4 text-sm font-semibold hover:bg-primary/90 sm:px-6 sm:text-base">Sign Up</Button>
               </Link>
             </div>
           </div>
@@ -131,10 +131,10 @@ export default function LandingPage() {
           <FileText className="h-8 w-8 text-secondary" />
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 lg:px-8 pt-20 pb-32 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-20 sm:pt-20 sm:pb-32 relative z-10">
           <div ref={heroRef.ref} className={`text-center space-y-8 transition-all duration-1000 ${heroRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <div className="space-y-5">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold tracking-tight leading-[1.15]">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading font-bold tracking-tight leading-[1.15]">
                 Your entire job search.
                 <br />
                 <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient-text">
@@ -147,8 +147,8 @@ export default function LandingPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-              <Link href="/signup">
-                <Button size="lg" className="text-base font-semibold px-10 h-14 rounded-full hover-scale btn-press shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all duration-300">
+              <Link href="/signup" className="w-full sm:w-auto">
+                <Button size="lg" className="h-14 w-full rounded-full bg-primary px-6 text-base font-semibold shadow-lg shadow-primary/20 transition-all duration-300 hover-scale btn-press hover:bg-primary/90 sm:w-auto sm:px-10">
                   Sign Up - It&apos;s Free!
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -161,7 +161,7 @@ export default function LandingPage() {
           </div>
 
           {/* Feature Icons */}
-          <div ref={statsRef.ref} className={`grid grid-cols-2 lg:grid-cols-4 gap-8 mt-20 transition-all duration-700 ${statsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div ref={statsRef.ref} className={`grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8 mt-14 sm:mt-20 transition-all duration-700 ${statsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             {[
               { icon: Search, label: 'Job Matches' },
               { icon: FileText, label: 'AI Applications' },
@@ -184,10 +184,10 @@ export default function LandingPage() {
       </section>
 
       {/* We're here for every step */}
-      <section className="py-32 bg-gradient-to-br from-slate-50 to-white relative">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div ref={featuresRef.ref} className={`text-center space-y-6 mb-20 transition-all duration-1000 ${featuresRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            <h2 className="text-4xl sm:text-5xl font-heading font-bold leading-tight">
+      <section className="py-16 sm:py-32 bg-gradient-to-br from-slate-50 to-white relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div ref={featuresRef.ref} className={`text-center space-y-6 mb-12 sm:mb-20 transition-all duration-1000 ${featuresRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <h2 className="text-3xl sm:text-5xl font-heading font-bold leading-tight">
               We&apos;re here for <span className="text-primary">every step</span> of your search.
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -195,7 +195,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="space-y-24">
+          <div className="space-y-16 sm:space-y-24">
             {features.map((feature, index) => {
               const isEven = index % 2 === 0;
               return (
@@ -209,7 +209,7 @@ export default function LandingPage() {
                       <feature.icon className="h-6 w-6 text-white" />
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-3xl font-heading font-bold text-foreground">{feature.title}</h3>
+                      <h3 className="text-2xl font-heading font-bold text-foreground sm:text-3xl">{feature.title}</h3>
                       <p className="text-lg text-muted-foreground leading-relaxed">{feature.description}</p>
                     </div>
                   </div>
@@ -226,11 +226,11 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-32 bg-white relative overflow-hidden">
+      <section className="py-16 sm:py-32 bg-white relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div ref={testimonialsRef.ref} className={`text-center space-y-6 mb-20 transition-all duration-1000 ${testimonialsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            <h2 className="text-4xl sm:text-5xl font-heading font-bold">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div ref={testimonialsRef.ref} className={`text-center space-y-6 mb-12 sm:mb-20 transition-all duration-1000 ${testimonialsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <h2 className="text-3xl sm:text-5xl font-heading font-bold">
               Join over <span className="text-primary">1,000,000</span> candidates that hear back <span className="text-secondary">25% more</span> with JobEZ
             </h2>
           </div>
@@ -239,7 +239,7 @@ export default function LandingPage() {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className={`group p-8 bg-slate-50 rounded-2xl hover-lift border border-transparent hover:border-primary/20 transition-all duration-500 flex flex-col justify-between h-full ${testimonialsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                className={`group p-5 sm:p-8 bg-slate-50 rounded-2xl hover-lift border border-transparent hover:border-primary/20 transition-all duration-500 flex flex-col justify-between h-full ${testimonialsRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 style={{ transitionDelay: testimonialsRef.isVisible ? `${200 + index * 150}ms` : '0ms' }}
               >
                 <div>
@@ -263,21 +263,21 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-32 bg-gradient-to-br from-primary via-primary to-secondary text-white relative overflow-hidden">
+      <section className="py-16 sm:py-32 bg-gradient-to-br from-primary via-primary to-secondary text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/10 to-transparent" />
         {/* Floating shapes in CTA */}
         <div className="absolute top-10 left-[10%] w-32 h-32 border border-white/10 rounded-full animate-float" />
         <div className="absolute bottom-10 right-[15%] w-24 h-24 border border-white/10 rounded-full animate-float-delayed" />
         <div className="absolute top-1/2 left-[5%] w-16 h-16 bg-white/5 rounded-lg rotate-45 animate-float-slow" />
-        <div ref={ctaRef.ref} className={`max-w-4xl mx-auto px-6 lg:px-8 text-center space-y-10 relative z-10 transition-all duration-1000 ${ctaRef.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-          <h2 className="text-4xl sm:text-5xl font-heading font-bold leading-tight">
+        <div ref={ctaRef.ref} className={`max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 sm:space-y-10 relative z-10 transition-all duration-1000 ${ctaRef.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+          <h2 className="text-3xl sm:text-5xl font-heading font-bold leading-tight">
             Ready to supercharge your job search?
           </h2>
           <p className="text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
             Join thousands of job seekers who have already landed their dream roles with JobEZ.
           </p>
-          <Link href="/signup">
-            <Button size="lg" className="text-lg font-semibold px-12 h-16 rounded-full hover-scale btn-press shadow-2xl bg-white text-primary hover:bg-slate-50 mt-4">
+          <Link href="/signup" className="block w-full sm:inline-block sm:w-auto">
+            <Button size="lg" className="h-14 w-full rounded-full bg-white px-6 text-base font-semibold text-primary shadow-2xl hover-scale btn-press hover:bg-slate-50 sm:h-16 sm:w-auto sm:px-12 sm:text-lg">
               Sign Up - It&apos;s Free!
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -287,10 +287,10 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t bg-slate-50 py-16">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <Logo size="md" />
-            <div className="flex gap-8 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
               <Link href="#" className="hover:text-foreground transition-colors">About</Link>
               <Link href="#" className="hover:text-foreground transition-colors">Support</Link>
               <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>

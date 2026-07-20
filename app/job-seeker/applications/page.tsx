@@ -87,10 +87,10 @@ function ApplicationCard({ app }: { app: ApplicationResponseData }) {
                 <StatusIcon status={app.status} />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg leading-snug">{app.jobTitle}</CardTitle>
+                <CardTitle className="text-lg leading-snug break-words">{app.jobTitle}</CardTitle>
                 <p className="text-muted-foreground flex items-center gap-1.5 mt-1 text-sm">
                   <Building2 className="h-4 w-4 shrink-0" />
-                  {app.company}
+                  <span className="min-w-0 break-words">{app.company}</span>
                 </p>
               </div>
             </div>
@@ -114,7 +114,7 @@ function ApplicationCard({ app }: { app: ApplicationResponseData }) {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 md:w-36 shrink-0">
+          <div className="flex flex-col gap-2 md:w-44 shrink-0">
             <Badge className={`${displayStatus.className} justify-center py-1`}>
               {displayStatus.label}
             </Badge>

@@ -149,18 +149,18 @@ export default function EmployerInterviewsPage() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1 space-y-3">
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${isHuman ? 'bg-secondary/10' : 'bg-primary/10'}`}>
+                <div className={`p-2 rounded-lg shrink-0 ${isHuman ? 'bg-secondary/10' : 'bg-primary/10'}`}>
                   {isHuman ? (
                     <Video className="h-5 w-5 text-secondary" />
                   ) : (
                     <Sparkles className="h-5 w-5 text-primary" />
                   )}
                 </div>
-                <div className="flex-1">
-                  <CardTitle className="text-xl">{interview.applicantName || 'Candidate'}</CardTitle>
-                  <p className="text-muted-foreground mt-1">{interview.jobTitle}</p>
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-xl break-words">{interview.applicantName || 'Candidate'}</CardTitle>
+                  <p className="text-muted-foreground mt-1 break-words">{interview.jobTitle}</p>
                   {interview.applicantEmail && (
-                    <p className="text-sm text-muted-foreground">{interview.applicantEmail}</p>
+                    <p className="text-sm text-muted-foreground break-all">{interview.applicantEmail}</p>
                   )}
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function EmployerInterviewsPage() {
                     onChange={(event) => setRejectComment(event.target.value)}
                     rows={3}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <Button
                       size="sm"
                       variant="destructive"
@@ -264,7 +264,7 @@ export default function EmployerInterviewsPage() {
               )}
             </div>
 
-            <div className="flex flex-col gap-2 md:w-52">
+            <div className="flex flex-col gap-2 md:w-52 shrink-0">
               {interview.status === 'completed' && (
                 <>
                   <Button size="sm" variant="outline" asChild>

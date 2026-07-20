@@ -152,7 +152,7 @@ export default function SignupPage() {
       {/* Header */}
       <nav className="border-b bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex h-16 items-center justify-between gap-3">
             <Link href="/">
               <Logo size="md" />
             </Link>
@@ -164,7 +164,7 @@ export default function SignupPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
@@ -177,15 +177,15 @@ export default function SignupPage() {
         {step === 'role' && (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h1 className="text-4xl font-heading font-bold">Choose your path</h1>
-              <p className="text-muted-foreground text-lg">
+              <h1 className="text-3xl font-heading font-bold sm:text-4xl">Choose your path</h1>
+              <p className="text-base text-muted-foreground sm:text-lg">
                 Select how you want to use JobEZ
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all hover:border-primary group"
+                className="p-5 cursor-pointer hover:shadow-lg transition-all hover:border-primary group sm:p-8"
                 onClick={() => handleRoleSelect('job-seeker')}
               >
                 <div className="text-center space-y-4">
@@ -193,7 +193,7 @@ export default function SignupPage() {
                     <Users className="h-8 w-8 text-primary group-hover:text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-heading font-bold mb-2">Job Seeker</h3>
+                    <h3 className="text-xl font-heading font-bold mb-2 sm:text-2xl">Job Seeker</h3>
                     <p className="text-muted-foreground">
                       Find your dream job with AI-powered matching and instant applications
                     </p>
@@ -206,7 +206,7 @@ export default function SignupPage() {
               </Card>
 
               <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all hover:border-primary group"
+                className="p-5 cursor-pointer hover:shadow-lg transition-all hover:border-primary group sm:p-8"
                 onClick={() => handleRoleSelect('employer')}
               >
                 <div className="text-center space-y-4">
@@ -214,7 +214,7 @@ export default function SignupPage() {
                     <Building2 className="h-8 w-8 text-secondary group-hover:text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-heading font-bold mb-2">Employer</h3>
+                    <h3 className="text-xl font-heading font-bold mb-2 sm:text-2xl">Employer</h3>
                     <p className="text-muted-foreground">
                       Post jobs, manage applications, and find top talent with AI screening
                     </p>

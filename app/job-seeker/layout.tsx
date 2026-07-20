@@ -92,7 +92,7 @@ export default function JobSeekerLayout({
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="max-w-screen-2xl mx-auto w-full flex h-16 items-center justify-between px-4 lg:px-8">
+          <div className="max-w-screen-2xl mx-auto w-full flex h-16 items-center justify-between gap-2 px-3 sm:px-4 lg:px-8">
             <div className="flex items-center gap-2">
               <Sheet>
                 <SheetTrigger asChild>
@@ -121,7 +121,7 @@ export default function JobSeekerLayout({
           </div>
         </header>
 
-        <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 py-6">
+        <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar Navigation */}
             <aside className="hidden md:block md:w-64 flex-shrink-0">

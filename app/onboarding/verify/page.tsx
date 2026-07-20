@@ -118,17 +118,17 @@ export default function OnboardingVerifyPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
       <nav className="border-b bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex h-16 items-center justify-between gap-3">
             <div />
-            <Badge variant="secondary" className="px-4 py-2">Verify your information</Badge>
+            <Badge variant="secondary" className="px-3 py-2 text-center sm:px-4">Verify your information</Badge>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-heading">Verify Your Profile</CardTitle>
+            <CardTitle className="text-xl font-heading sm:text-2xl">Verify Your Profile</CardTitle>
             <CardDescription>Review the parsed information before we save it to your profile</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -178,8 +178,8 @@ export default function OnboardingVerifyPage() {
               <div>{data?.location || 'Not specified'}</div>
             </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleEdit}>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button variant="outline" onClick={handleEdit} className="sm:w-auto">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Edit
               </Button>

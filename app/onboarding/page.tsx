@@ -342,9 +342,9 @@ export default function OnboardingPage() {
       {/* Header */}
       <nav className="border-b bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex h-16 items-center justify-between gap-3">
             <Logo size="md" />
-            <Badge variant="secondary" className="px-4 py-2">
+            <Badge variant="secondary" className="shrink-0 px-3 py-2 sm:px-4">
               Step {step} of {totalSteps}
             </Badge>
           </div>
@@ -352,7 +352,7 @@ export default function OnboardingPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
@@ -373,7 +373,7 @@ export default function OnboardingPage() {
             {step === 1 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-2xl font-heading flex items-center gap-2">
+                  <CardTitle className="text-xl font-heading flex items-start gap-2 sm:text-2xl">
                     <GraduationCap className="h-6 w-6 text-primary" />
                     Complete Your Technical Profile
                   </CardTitle>
@@ -383,7 +383,7 @@ export default function OnboardingPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
-                    <Card className="p-6 cursor-pointer hover:shadow-lg transition-all hover:border-primary group">
+                    <Card className="p-4 cursor-pointer hover:shadow-lg transition-all hover:border-primary group sm:p-6">
                       <div className="text-center space-y-4">
                         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors">
                           <svg className="h-8 w-8 text-primary group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -447,7 +447,7 @@ export default function OnboardingPage() {
                       </div>
                     </Card>
 
-                    <Card className="p-6 cursor-pointer hover:shadow-lg transition-all hover:border-secondary group">
+                    <Card className="p-4 cursor-pointer hover:shadow-lg transition-all hover:border-secondary group sm:p-6">
                       <div className="text-center space-y-4">
                         <div className="mx-auto w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary transition-colors">
                           <svg className="h-8 w-8 text-secondary group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">

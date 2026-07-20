@@ -169,7 +169,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex items-center justify-center p-6 bg-background">
+      <div className="flex items-center justify-center bg-background px-4 py-8 sm:p-6">
         <Card className="w-full max-w-md border-none shadow-none slide-in-right">
           <CardHeader className="space-y-1 pb-8">
             <div className="lg:hidden mb-6 text-center">
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 <Logo size="md" />
               </Link>
             </div>
-            <CardTitle className="text-3xl font-heading font-bold">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-heading font-bold sm:text-3xl">Welcome back</CardTitle>
             <CardDescription className="text-base">
               Enter your credentials to access your account
             </CardDescription>
@@ -199,7 +199,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <Label htmlFor="password" className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-muted-foreground" />Password</Label>
                   <Link href="#" className="text-sm text-primary hover:underline">
                     Forgot password?

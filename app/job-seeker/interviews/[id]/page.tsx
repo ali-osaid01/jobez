@@ -829,24 +829,24 @@ export default function InterviewPage() {
   const answeredCount = responses.length;
 
   return (
-    <div className="min-h-screen space-y-4 p-4 lg:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background px-4 py-3">
-        <div>
-          <p className="text-sm font-medium">{interview.jobTitle}</p>
-          <p className="text-xs text-muted-foreground">{interview.company}</p>
+    <div className="min-h-screen space-y-4 p-3 sm:p-4 lg:p-6">
+      <div className="flex flex-col gap-3 rounded-lg border bg-background px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium break-words">{interview.jobTitle}</p>
+          <p className="text-xs text-muted-foreground break-words">{interview.company}</p>
         </div>
-        <div className="min-w-52 flex-1 lg:max-w-md">
+        <div className="w-full min-w-0 flex-1 sm:min-w-52 lg:max-w-md">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
             <span>{answeredCount} recorded</span>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
-        <Badge variant="outline">{statusMessage}</Badge>
+        <Badge variant="outline" className="w-fit">{statusMessage}</Badge>
       </div>
 
-      <div className="grid min-h-[calc(100vh-132px)] gap-4 lg:grid-cols-2">
-        <section className="flex min-h-[420px] flex-col overflow-hidden rounded-lg border bg-black">
+      <div className="grid min-h-[calc(100dvh-132px)] gap-4 lg:grid-cols-2">
+        <section className="flex min-h-[320px] flex-col overflow-hidden rounded-lg border bg-black sm:min-h-[420px]">
           <div className="flex items-center justify-between border-b border-white/10 bg-black/80 px-4 py-3 text-white">
             <div className="flex items-center gap-2">
               <Camera className="h-5 w-5" />
@@ -867,12 +867,12 @@ export default function InterviewPage() {
           </div>
         </section>
 
-        <section className="flex min-h-[420px] flex-col rounded-lg border bg-background p-5">
-          <div className="flex items-start justify-between gap-4">
+        <section className="flex min-h-[320px] flex-col rounded-lg border bg-background p-4 sm:min-h-[420px] sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <AIInterviewerAvatar active={isPlayingQuestion || isRecording || isTranscribing} />
               <div>
-                <p className="text-xl font-heading font-semibold">AI Interviewer</p>
+                <p className="text-lg font-heading font-semibold sm:text-xl">AI Interviewer</p>
                 <p className="text-sm text-muted-foreground">
                   {isPlayingQuestion ? 'Speaking question' : isRecording ? 'Listening to answer' : isTranscribing ? 'Preparing transcript' : 'Ready'}
                 </p>
@@ -891,7 +891,7 @@ export default function InterviewPage() {
               <Volume2 className="h-4 w-4" />
               Question
             </div>
-            <p className="text-xl leading-relaxed">{currentQuestion.question}</p>
+            <p className="text-lg leading-relaxed sm:text-xl">{currentQuestion.question}</p>
           </div>
 
           {questionError && (
@@ -931,7 +931,7 @@ export default function InterviewPage() {
             className="mt-4 resize-none"
           />
 
-          <div className="mt-auto flex flex-wrap gap-3 pt-4">
+          <div className="mt-auto flex flex-col gap-3 pt-4 sm:flex-row sm:flex-wrap">
             <Button
               variant="outline"
               onClick={() => {

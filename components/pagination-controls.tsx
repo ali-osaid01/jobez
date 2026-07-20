@@ -70,15 +70,15 @@ export function PaginationControls({
   };
 
   return (
-    <div className={cn('flex flex-col items-center gap-3 sm:flex-row sm:justify-between', className)}>
-      <p className="text-sm text-muted-foreground">
+    <div className={cn('flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between', className)}>
+      <p className="text-center text-sm text-muted-foreground sm:text-left">
         Showing <span className="font-medium text-foreground">{startItem}-{endItem}</span> of{' '}
         <span className="font-medium text-foreground">{totalItems}</span> {itemLabel}
         {totalItems === 1 ? '' : 's'}
       </p>
 
-      <Pagination className="mx-0 w-auto">
-        <PaginationContent>
+      <Pagination className="mx-0 w-full overflow-x-auto sm:w-auto">
+        <PaginationContent className="min-w-max justify-center">
           <PaginationItem>
             <Button
               type="button"

@@ -92,7 +92,7 @@ export default function EmployerDashboard() {
     <div className="space-y-6">
 
       {/* Welcome */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-heading font-bold">
             Welcome back{user?.company ? `, ${user.company}` : ''}
@@ -101,8 +101,8 @@ export default function EmployerDashboard() {
             Here&apos;s an overview of your recruitment activity
           </p>
         </div>
-        <Link href="/employer/jobs/new">
-          <Button size="lg" className="gap-2 bg-secondary hover:bg-secondary/90">
+        <Link href="/employer/jobs/new" className="w-full sm:w-auto">
+          <Button size="lg" className="w-full gap-2 bg-secondary hover:bg-secondary/90 sm:w-auto">
             <PlusCircle className="h-5 w-5" />
             Post New Job
           </Button>
@@ -136,7 +136,7 @@ export default function EmployerDashboard() {
         {/* Active Job Postings */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-secondary" />
@@ -145,7 +145,7 @@ export default function EmployerDashboard() {
                 <CardDescription>Your currently listed positions</CardDescription>
               </div>
               <Link href="/employer/jobs">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                   View all
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -190,7 +190,7 @@ export default function EmployerDashboard() {
             {!jobsLoading && !jobsError && dashboardJobs.map((job) => (
               <div
                 key={job.id}
-                className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                className="flex flex-col gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors sm:flex-row sm:items-start"
               >
                 <div className="p-2 bg-secondary/10 rounded-lg shrink-0">
                   <Briefcase className="h-5 w-5 text-secondary" />
@@ -206,8 +206,8 @@ export default function EmployerDashboard() {
                     <Badge variant="secondary" className="text-xs">{job.locationType}</Badge>
                   </div>
                 </div>
-                <Link href={`/employer/jobs/${job.id}`}>
-                  <Button size="sm" variant="outline" className="shrink-0">
+                <Link href={`/employer/jobs/${job.id}`} className="w-full sm:w-auto">
+                  <Button size="sm" variant="outline" className="w-full shrink-0 sm:w-auto">
                     Manage
                   </Button>
                 </Link>
@@ -219,7 +219,7 @@ export default function EmployerDashboard() {
         {/* Recent Applicants */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-secondary" />
@@ -228,7 +228,7 @@ export default function EmployerDashboard() {
                 <CardDescription>New candidates to review</CardDescription>
               </div>
               <Link href="/employer/applicants">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                   View all
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -252,14 +252,14 @@ export default function EmployerDashboard() {
               recentApplicants.map((applicant) => (
                 <div
                   key={applicant.id}
-                  className="flex items-start justify-between p-4 rounded-lg border bg-card"
+                  className="flex flex-col gap-3 p-4 rounded-lg border bg-card sm:flex-row sm:items-start sm:justify-between"
                 >
-                  <div className="space-y-1.5">
+                  <div className="min-w-0 space-y-1.5">
                     <div>
-                      <h4 className="font-semibold">{applicant.applicantName}</h4>
-                      <p className="text-sm text-muted-foreground">{applicant.jobTitle}</p>
+                      <h4 className="font-semibold break-words">{applicant.applicantName}</h4>
+                      <p className="text-sm text-muted-foreground break-words">{applicant.jobTitle}</p>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                       <span>Applied {applicant.appliedDate}</span>
                       {applicant.matchScore && (
                         <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
@@ -268,7 +268,7 @@ export default function EmployerDashboard() {
                       )}
                     </div>
                   </div>
-                  <Badge className={getStatusColor(applicant.status)}>
+                  <Badge className={`${getStatusColor(applicant.status)} w-fit`}>
                     {applicant.status.replace('-', ' ')}
                   </Badge>
                 </div>

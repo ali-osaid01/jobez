@@ -240,13 +240,13 @@ export default function ApplicantsPage() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1 space-y-3">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-secondary/10 rounded-lg">
+              <div className="p-2 bg-secondary/10 rounded-lg shrink-0">
                 <Users className="h-5 w-5 text-secondary" />
               </div>
-              <div className="flex-1">
-                <CardTitle className="text-xl">{application.applicantName}</CardTitle>
-                <p className="text-muted-foreground mt-1">{application.applicantEmail}</p>
-                <p className="text-sm text-muted-foreground">Applied for: {application.jobTitle}</p>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-xl break-words">{application.applicantName}</CardTitle>
+                <p className="text-muted-foreground mt-1 break-all">{application.applicantEmail}</p>
+                <p className="text-sm text-muted-foreground break-words">Applied for: {application.jobTitle}</p>
               </div>
             </div>
 
@@ -275,7 +275,7 @@ export default function ApplicantsPage() {
                   onChange={(event) => setRejectComment(event.target.value)}
                   rows={3}
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Button
                     size="sm"
                     variant="destructive"
@@ -296,7 +296,7 @@ export default function ApplicantsPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 md:w-48">
+          <div className="flex flex-col gap-2 md:w-48 shrink-0">
             <Badge
               className={`${
                 showInterviewCompleted
@@ -430,15 +430,17 @@ export default function ApplicantsPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <form className="relative" onSubmit={handleSearch}>
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or job title..."
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              className="pl-10 pr-24"
-            />
-            <Button type="submit" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2">
+          <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleSearch}>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or job title..."
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button type="submit" size="sm" className="sm:w-28">
               Search
             </Button>
           </form>
@@ -521,7 +523,7 @@ export default function ApplicantsPage() {
                 Scheduling for <strong>{schedulingApp.applicantName}</strong> — {schedulingApp.jobTitle}
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="date">Date</Label>
                   <Input
@@ -542,7 +544,7 @@ export default function ApplicantsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="duration">Duration (min)</Label>
                   <Input

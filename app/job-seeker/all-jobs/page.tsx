@@ -231,12 +231,12 @@ export default function AllJobsPage() {
       </Card>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground">
           Showing <span className="font-semibold text-foreground">{jobs.length}</span> of{' '}
           <span className="font-semibold text-foreground">{totalJobs}</span> jobs
         </p>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="w-full gap-2 sm:w-auto">
           <Filter className="h-4 w-4" />
           Sort by: Relevance
         </Button>
@@ -373,7 +373,7 @@ export default function AllJobsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex lg:flex-col gap-2 lg:items-end justify-between lg:justify-start">
+                <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:items-end lg:justify-start">
                   <Link href={`/job-seeker/jobs/${job.id}`} className="flex-1 lg:flex-initial">
                     <Button className="w-full btn-press gap-2">
                       View Job
@@ -383,7 +383,7 @@ export default function AllJobsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover-lift"
+                    className="h-10 w-full hover-lift sm:w-10"
                     onClick={() => handleBookmark(job.id)}
                   >
                     <BookmarkPlus className="h-4 w-4" />

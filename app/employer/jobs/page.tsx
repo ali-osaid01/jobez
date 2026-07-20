@@ -57,7 +57,7 @@ export default function EmployerJobsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
             <Briefcase className="h-8 w-8 text-secondary" />
@@ -67,8 +67,8 @@ export default function EmployerJobsPage() {
             Manage your active and closed job listings
           </p>
         </div>
-        <Link href="/employer/jobs/new">
-          <Button className="gap-2 bg-secondary hover:bg-secondary/90">
+        <Link href="/employer/jobs/new" className="w-full sm:w-auto">
+          <Button className="w-full gap-2 bg-secondary hover:bg-secondary/90 sm:w-auto">
             <PlusCircle className="h-5 w-5" />
             Post New Job
           </Button>
@@ -126,11 +126,11 @@ export default function EmployerJobsPage() {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-secondary/10 rounded-lg">
+                      <div className="p-2 bg-secondary/10 rounded-lg shrink-0">
                         <Briefcase className="h-5 w-5 text-secondary" />
                       </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-xl">{job.title}</CardTitle>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl break-words">{job.title}</CardTitle>
                         <p className="text-muted-foreground mt-1">Posted on {job.postedDate}</p>
                       </div>
                     </div>
@@ -156,7 +156,7 @@ export default function EmployerJobsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 md:w-48">
+                  <div className="flex flex-col gap-2 md:w-48 shrink-0">
                     <Link href={`/employer/jobs/${job.id}`}>
                       <Button className="w-full" variant="outline">
                         View Details

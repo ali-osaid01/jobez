@@ -54,24 +54,25 @@ export default function EmployerLayout({
   const renderNavLinks = (mobile = false) => (
     navigation.map((item) => {
       const isActive = pathname === item.href;
-      const button = (
+      const navLink = (
         <Button
+          asChild
           variant={isActive ? 'default' : 'ghost'}
           className={`w-full justify-start gap-3 ${isActive ? 'bg-secondary hover:bg-secondary/90' : ''}`}
         >
-          <item.icon className="h-5 w-5" />
-          {item.name}
+          <Link href={item.href}>
+            <item.icon className="h-5 w-5" />
+            {item.name}
+          </Link>
         </Button>
       );
 
       return mobile ? (
         <SheetClose asChild key={item.name}>
-          <Link href={item.href}>{button}</Link>
+          {navLink}
         </SheetClose>
       ) : (
-        <Link key={item.name} href={item.href}>
-          {button}
-        </Link>
+        <div key={item.name}>{navLink}</div>
       );
     })
   );

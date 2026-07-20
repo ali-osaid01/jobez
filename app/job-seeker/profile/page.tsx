@@ -279,7 +279,7 @@ export default function ProfilePage() {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
             <User className="h-8 w-8 text-primary" />
@@ -290,9 +290,9 @@ export default function ProfilePage() {
           </p>
         </div>
         {!isEditing ? (
-          <Button onClick={handleStartEdit}>Edit Profile</Button>
+          <Button onClick={handleStartEdit} className="w-full sm:w-auto">Edit Profile</Button>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button variant="outline" onClick={handleCancel}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Saving...' : 'Save Changes'}

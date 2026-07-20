@@ -67,12 +67,12 @@ export default function RecommendedJobsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div ref={headerRef.ref} className="mb-8 animate-fade-in-up">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-start gap-3 mb-4">
           <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
             <Zap className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold">AI-Recommended Jobs</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">AI-Recommended Jobs</h1>
             <p className="text-muted-foreground">Jobs matched to your profile using AI embeddings</p>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function RecommendedJobsPage() {
                   <CardContent className="pt-6 space-y-4">
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <Link href={`/job-seeker/jobs/${job.id}`}>
+                        <Link href={`/job-seeker/jobs/${job.id}`} className="min-w-0">
                           <h3 className="font-bold text-lg group-hover:text-primary transition-colors line-clamp-2">
                             {job.title}
                           </h3>
@@ -151,7 +151,7 @@ export default function RecommendedJobsPage() {
                       </div>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Building2 className="h-4 w-4" />
-                        {job.company}
+                        <span className="min-w-0 break-words">{job.company}</span>
                       </p>
                     </div>
 

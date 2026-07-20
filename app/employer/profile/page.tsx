@@ -91,7 +91,7 @@ export default function EmployerProfilePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
             <Building2 className="h-8 w-8 text-secondary" />
@@ -102,11 +102,11 @@ export default function EmployerProfilePage() {
           </p>
         </div>
         {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} className="bg-secondary hover:bg-secondary/90">
+          <Button onClick={() => setIsEditing(true)} className="w-full bg-secondary hover:bg-secondary/90 sm:w-auto">
             Edit Profile
           </Button>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button variant="outline" onClick={() => setIsEditing(false)}>
               Cancel
             </Button>

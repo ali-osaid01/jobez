@@ -229,7 +229,7 @@ export default function EmployerJobDetailPage() {
             <p className="text-sm text-muted-foreground">
               The job may have been removed or you may not have permission to view it.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button onClick={() => refetch()} variant="outline" className="gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Retry
@@ -250,13 +250,13 @@ export default function EmployerJobDetailPage() {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Edit header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
             <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+                <h1 className="text-2xl font-heading font-bold flex items-center gap-2 break-words">
                 <Edit className="h-6 w-6 text-secondary" />
                 Edit Job
               </h1>
@@ -607,10 +607,10 @@ export default function EmployerJobDetailPage() {
                 <Badge variant="secondary">{job.experienceLevel}</Badge>
               </div>
               <div>
-                <h1 className="text-2xl font-heading font-bold">{job.title}</h1>
+                <h1 className="text-2xl font-heading font-bold break-words">{job.title}</h1>
                 <div className="flex items-center gap-2 text-muted-foreground mt-1">
                   <Building2 className="h-4 w-4 shrink-0" />
-                  <span className="text-sm">{job.company}</span>
+                  <span className="text-sm break-words">{job.company}</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">

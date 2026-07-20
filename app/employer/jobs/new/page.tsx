@@ -272,7 +272,7 @@ export default function PostJobPage() {
                 onChange={(e) => { setDescription(e.target.value); clearError('description'); }}
                 className={errors.description ? 'border-destructive focus-visible:ring-destructive' : ''}
               />
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 {errors.description
                   ? <p className="text-sm text-destructive">{errors.description}</p>
                   : <span />
@@ -300,7 +300,7 @@ export default function PostJobPage() {
                   placeholder="e.g. 5+ years of experience with React"
                 />
                 {requirements.length > 1 && (
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeItem(index, requirements, setRequirements)}>
+                  <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => removeItem(index, requirements, setRequirements)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
@@ -327,7 +327,7 @@ export default function PostJobPage() {
                   placeholder="e.g. Build and maintain web applications"
                 />
                 {responsibilities.length > 1 && (
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeItem(index, responsibilities, setResponsibilities)}>
+                  <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => removeItem(index, responsibilities, setResponsibilities)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
@@ -354,7 +354,7 @@ export default function PostJobPage() {
                   placeholder="e.g. Health insurance"
                 />
                 {benefits.length > 1 && (
-                  <Button type="button" variant="outline" size="icon" onClick={() => removeItem(index, benefits, setBenefits)}>
+                  <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => removeItem(index, benefits, setBenefits)}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}

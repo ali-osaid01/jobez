@@ -579,7 +579,7 @@ export default function OnboardingPage() {
                     <p className="text-sm text-destructive">* Please fill all required fields</p>
                   ) : null}
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
                     <Button variant="outline" onClick={handleBack}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
@@ -611,7 +611,7 @@ export default function OnboardingPage() {
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="skills" className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-muted-foreground" />Add Skills</Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         id="skills"
                         placeholder="e.g. JavaScript, Project Management"
@@ -619,7 +619,7 @@ export default function OnboardingPage() {
                         onChange={(e) => setSkillInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
                       />
-                      <Button type="button" onClick={handleAddSkill}>Add</Button>
+                      <Button type="button" onClick={handleAddSkill} className="sm:w-24">Add</Button>
                     </div>
                   </div>
 
@@ -649,7 +649,7 @@ export default function OnboardingPage() {
                     />
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
                     <Button variant="outline" onClick={handleBack}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
@@ -750,7 +750,7 @@ export default function OnboardingPage() {
                   {/* Certifications Section */}
                   <div className="space-y-4">
                     <Label className="text-base font-semibold flex items-center gap-1.5"><Award className="h-4 w-4 text-muted-foreground" />Certifications (Optional)</Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         placeholder="e.g. AWS Certified Solutions Architect"
                         value={certInput}
@@ -779,7 +779,7 @@ export default function OnboardingPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
                     <Button variant="outline" onClick={handleBack}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
@@ -873,7 +873,7 @@ export default function OnboardingPage() {
                     </ul>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
                     <Button variant="outline" onClick={handleBack}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
@@ -1031,7 +1031,7 @@ export default function OnboardingPage() {
                     </ul>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row">
                     <Button variant="outline" onClick={handleBack}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back

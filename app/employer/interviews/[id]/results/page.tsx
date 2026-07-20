@@ -25,7 +25,7 @@ function ScoreCard({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-secondary/10 p-2">
               <Icon className="h-5 w-5 text-secondary" />
@@ -96,7 +96,7 @@ export default function EmployerInterviewResultsPage() {
         <CardHeader>
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="space-y-3">
-              <CardTitle className="flex items-center gap-3 text-3xl">
+              <CardTitle className="flex items-start gap-3 text-2xl sm:text-3xl">
                 <div className="rounded-lg bg-secondary/20 p-2">
                   <Sparkles className="h-7 w-7 text-secondary" />
                 </div>
@@ -108,9 +108,9 @@ export default function EmployerInterviewResultsPage() {
                 <p className="text-sm text-muted-foreground">{responses.length} transcript responses captured</p>
               </div>
             </div>
-            <div className="rounded-xl border-2 border-secondary bg-background p-8 text-center shadow-lg">
+            <div className="rounded-xl border-2 border-secondary bg-background p-5 text-center shadow-lg sm:p-8">
               <p className="mb-3 text-sm font-medium text-muted-foreground">Overall Score</p>
-              <p className="mb-2 text-6xl font-bold text-secondary">{overallScore}</p>
+              <p className="mb-2 text-5xl font-bold text-secondary sm:text-6xl">{overallScore}</p>
               <p className="text-sm text-muted-foreground">out of 100</p>
             </div>
           </div>

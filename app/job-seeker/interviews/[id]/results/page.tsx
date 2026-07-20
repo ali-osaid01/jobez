@@ -37,7 +37,7 @@ export default function InterviewResultsPage() {
   }) => (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-primary/10">
               <Icon className="h-5 w-5 text-primary" />
@@ -116,9 +116,9 @@ export default function InterviewResultsPage() {
                 </div>
               </div>
               {interview.status === 'completed' && interview.aiScore !== null && (
-                <div className="text-center p-8 bg-background rounded-xl border-2 border-secondary shadow-lg">
+                <div className="text-center p-5 bg-background rounded-xl border-2 border-secondary shadow-lg sm:p-8">
                   <p className="text-sm font-medium text-muted-foreground mb-3">Interview Score</p>
-                  <p className="text-6xl font-bold text-secondary mb-2">{interview.aiScore}</p>
+                  <p className="text-5xl font-bold text-secondary mb-2 sm:text-6xl">{interview.aiScore}</p>
                   <p className="text-sm text-muted-foreground">out of 100</p>
                 </div>
               )}
@@ -165,7 +165,7 @@ export default function InterviewResultsPage() {
 
     return (
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/job-seeker/interviews">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
@@ -178,7 +178,7 @@ export default function InterviewResultsPage() {
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
               <div className="space-y-3">
-                <CardTitle className="text-3xl flex items-center gap-3">
+                <CardTitle className="text-2xl flex items-start gap-3 sm:text-3xl">
                   <div className="p-2 bg-primary/20 rounded-lg">
                     <Sparkles className="h-7 w-7 text-primary" />
                   </div>
@@ -195,9 +195,9 @@ export default function InterviewResultsPage() {
                   </div>
                 </div>
               </div>
-              <div className="text-center p-8 bg-background rounded-xl border-2 border-primary shadow-lg">
+              <div className="text-center p-5 bg-background rounded-xl border-2 border-primary shadow-lg sm:p-8">
                 <p className="text-sm font-medium text-muted-foreground mb-3">Overall Score</p>
-                <p className="text-6xl font-bold text-primary mb-2">{fallbackScore}</p>
+                <p className="text-5xl font-bold text-primary mb-2 sm:text-6xl">{fallbackScore}</p>
                 <p className="text-sm text-muted-foreground">out of 100</p>
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function InterviewResultsPage() {
               <div className="flex items-center gap-2"><div className="h-2 w-2 bg-primary rounded-full"></div><span>High-scoring candidates will be contacted for next round</span></div>
             </div>
             <Separator />
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/job-seeker/dashboard" className="flex-1">
                 <Button variant="outline" className="w-full hover:bg-primary hover:text-white hover:border-primary">Return to Dashboard</Button>
               </Link>
@@ -267,7 +267,7 @@ export default function InterviewResultsPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/job-seeker/interviews">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -281,7 +281,7 @@ export default function InterviewResultsPage() {
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="space-y-3">
-              <CardTitle className="text-3xl flex items-center gap-3">
+              <CardTitle className="text-2xl flex items-start gap-3 sm:text-3xl">
                 <div className="p-2 bg-primary/20 rounded-lg">
                   <Sparkles className="h-7 w-7 text-primary" />
                 </div>
@@ -305,9 +305,9 @@ export default function InterviewResultsPage() {
                 </div>
               </div>
             </div>
-            <div className="text-center p-8 bg-background rounded-xl border-2 border-primary shadow-lg">
+            <div className="text-center p-5 bg-background rounded-xl border-2 border-primary shadow-lg sm:p-8">
               <p className="text-sm font-medium text-muted-foreground mb-3">Overall Score</p>
-              <p className="text-6xl font-bold text-primary mb-2">{overallScore}</p>
+              <p className="text-5xl font-bold text-primary mb-2 sm:text-6xl">{overallScore}</p>
               <p className="text-sm text-muted-foreground">out of 100</p>
               <div className="mt-4 pt-4 border-t">
                 <p className="text-xs text-muted-foreground">

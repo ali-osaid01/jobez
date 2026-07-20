@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -95,8 +95,10 @@ export default function InterviewPage() {
   const [responses, setResponses] = useState<RecordedAnswer[]>([]);
   const [draftAnswer, setDraftAnswer] = useState('');
   const [isPlayingQuestion, setIsPlayingQuestion] = useState(false);
+  const [isWaitingToRecord, setIsWaitingToRecord] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [canEditTranscript, setCanEditTranscript] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('Ready to begin');
@@ -110,10 +112,14 @@ export default function InterviewPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordingStartRef = useRef<number | null>(null);
+  const activeRecordingQuestionRef = useRef<InterviewQuestion | null>(null);
   const timerRef = useRef<number | null>(null);
   const autoRecordTimerRef = useRef<number | null>(null);
   const questionAudioUrlRef = useRef<string | null>(null);
   const securityFailureRef = useRef(false);
+  const responsesRef = useRef<RecordedAnswer[]>([]);
+  const questionsRef = useRef<InterviewQuestion[]>([]);
+  const currentQuestionIndexRef = useRef(0);
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((responses.length / questions.length) * 100) : 0;
@@ -127,11 +133,24 @@ export default function InterviewPage() {
     [responses, currentQuestion?.id],
   );
 
-  const stopAudioPlayback = () => {
+  useEffect(() => {
+    responsesRef.current = responses;
+  }, [responses]);
+
+  useEffect(() => {
+    questionsRef.current = questions;
+  }, [questions]);
+
+  useEffect(() => {
+    currentQuestionIndexRef.current = currentQuestionIndex;
+  }, [currentQuestionIndex]);
+
+  const stopAudioPlayback = useCallback(() => {
     if (autoRecordTimerRef.current) {
       window.clearTimeout(autoRecordTimerRef.current);
       autoRecordTimerRef.current = null;
     }
+    setIsWaitingToRecord(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = '';
@@ -144,9 +163,9 @@ export default function InterviewPage() {
     if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
       window.speechSynthesis.cancel();
     }
-  };
+  }, []);
 
-  const stopRecordingSession = () => {
+  const stopRecordingSession = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
@@ -157,7 +176,7 @@ export default function InterviewPage() {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  };
+  }, []);
 
   const ensureInterviewMedia = async () => {
     if (mediaStreamRef.current) return mediaStreamRef.current;
@@ -294,8 +313,21 @@ export default function InterviewPage() {
 
     const playQuestion = async () => {
       setQuestionError(null);
+      setCanEditTranscript(false);
+      setIsWaitingToRecord(false);
       setStatusMessage('Playing question');
       stopAudioPlayback();
+
+      const queueRecording = () => {
+        setIsPlayingQuestion(false);
+        setIsWaitingToRecord(true);
+        setStatusMessage('Ready to record');
+        autoRecordTimerRef.current = window.setTimeout(() => {
+          if (!cancelled) {
+            void startRecording();
+          }
+        }, AUTO_RECORD_DELAY_MS);
+      };
 
       try {
         const response = await fetch(
@@ -326,24 +358,19 @@ export default function InterviewPage() {
 
         audio.onended = () => {
           if (cancelled) return;
-          setIsPlayingQuestion(false);
-          setStatusMessage('Recording starts in 5 seconds');
           if (questionAudioUrlRef.current) {
             URL.revokeObjectURL(questionAudioUrlRef.current);
             questionAudioUrlRef.current = null;
           }
-          autoRecordTimerRef.current = window.setTimeout(() => {
-            if (!cancelled) {
-              void startRecording();
-            }
-          }, AUTO_RECORD_DELAY_MS);
+          queueRecording();
         };
 
         audio.onerror = () => {
           if (cancelled) return;
           setIsPlayingQuestion(false);
+          setIsWaitingToRecord(true);
           setQuestionError('Question audio could not be played. You can still answer manually.');
-          setStatusMessage('Answer when ready');
+          setStatusMessage('Ready to record');
         };
 
         await audio.play();
@@ -360,13 +387,14 @@ export default function InterviewPage() {
         utterance.volume = 1;
         utterance.onend = () => {
           if (cancelled) return;
-          setStatusMessage('Recording starts in 5 seconds');
-          autoRecordTimerRef.current = window.setTimeout(() => {
-            if (!cancelled) {
-              void startRecording();
-            }
-          }, AUTO_RECORD_DELAY_MS);
+          queueRecording();
         };
+        utterance.onerror = () => {
+          if (cancelled) return;
+          queueRecording();
+        };
+        setIsPlayingQuestion(true);
+        setStatusMessage('Listening to the question');
         window.speechSynthesis.speak(utterance);
       }
     };
@@ -415,11 +443,16 @@ export default function InterviewPage() {
   }, [isRecording, phase]);
 
   const persistResponseAndAdvance = async (nextResponse: RecordedAnswer) => {
-    const nextResponses = upsertResponse(responses, nextResponse);
+    const latestResponses = responsesRef.current;
+    const latestQuestions = questionsRef.current;
+    const latestQuestionIndex = currentQuestionIndexRef.current;
+    const nextResponses = upsertResponse(latestResponses, nextResponse);
     setResponses(nextResponses);
+    responsesRef.current = nextResponses;
     setDraftAnswer(nextResponse.response);
+    setCanEditTranscript(false);
 
-    if (currentQuestionIndex >= questions.length - 1) {
+    if (latestQuestionIndex >= latestQuestions.length - 1) {
       stopAudioPlayback();
       stopRecordingSession();
       setPhase('submitting');
@@ -447,17 +480,22 @@ export default function InterviewPage() {
     }
 
     setDraftAnswer('');
-    setCurrentQuestionIndex((value) => value + 1);
+    setCurrentQuestionIndex(latestQuestionIndex + 1);
   };
 
-  const transcribeAnswer = async (audioBlob: Blob) => {
+  const transcribeAnswer = async (
+    audioBlob: Blob,
+    questionId: string,
+    duration: number,
+    timestamp: string,
+  ) => {
     const formData = new FormData();
-    formData.append('audio', audioBlob, `answer-${currentQuestion?.id ?? 'question'}.webm`);
-    formData.append('duration', String(Math.max(1, recordingSeconds)));
-    formData.append('timestamp', new Date().toISOString());
+    formData.append('audio', audioBlob, `answer-${questionId}.webm`);
+    formData.append('duration', String(Math.max(1, duration)));
+    formData.append('timestamp', timestamp);
 
     const response = await fetch(
-      `${API_BASE}/interviews/${interviewId}/questions/${currentQuestion?.id}/transcribe`,
+      `${API_BASE}/interviews/${interviewId}/questions/${questionId}/transcribe`,
       {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -470,7 +508,8 @@ export default function InterviewPage() {
     }
 
     const payload = await response.json();
-    return payload.data as {
+    const data = payload.data ?? payload;
+    return data as {
       interviewId: string;
       questionId: string;
       transcript: string;
@@ -484,12 +523,19 @@ export default function InterviewPage() {
     if (isRecording || isTranscribing) return;
 
     try {
+      if (autoRecordTimerRef.current) {
+        window.clearTimeout(autoRecordTimerRef.current);
+        autoRecordTimerRef.current = null;
+      }
       setRecordingError(null);
       setDraftAnswer('');
+      setCanEditTranscript(false);
+      setIsWaitingToRecord(false);
       const stream = await ensureInterviewMedia();
       const audioStream = new MediaStream(stream.getAudioTracks());
       chunksRef.current = [];
       recordingStartRef.current = Date.now();
+      activeRecordingQuestionRef.current = currentQuestion;
       setAnswerSecondsRemaining(ANSWER_SECONDS);
       setIsRecording(true);
       setStatusMessage('Recording answer');
@@ -511,25 +557,47 @@ export default function InterviewPage() {
         const audioBlob = new Blob(chunksRef.current, {
           type: chunksRef.current[0] instanceof Blob ? chunksRef.current[0].type : 'audio/webm',
         });
+        const questionForRecording = activeRecordingQuestionRef.current ?? currentQuestion;
+        const recordedDuration = recordingStartRef.current
+          ? Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000))
+          : Math.max(1, recordingSeconds);
+        const recordedAt = new Date().toISOString();
 
         try {
-          const transcriptData = await transcribeAnswer(audioBlob);
-          const recordedAt = transcriptData.timestamp ?? new Date().toISOString();
+          if (!questionForRecording) {
+            throw new Error('Missing question for recorded answer');
+          }
+          if (audioBlob.size === 0) {
+            throw new Error('No audio was captured');
+          }
+          const transcriptData = await transcribeAnswer(
+            audioBlob,
+            questionForRecording.id,
+            recordedDuration,
+            recordedAt,
+          );
+          const transcript = transcriptData.transcript.trim();
+          if (!transcript) {
+            throw new Error('No transcript text was returned');
+          }
           await persistResponseAndAdvance({
-            questionId: transcriptData.questionId,
-            response: transcriptData.transcript.trim(),
-            duration: transcriptData.duration,
-            timestamp: recordedAt,
+            questionId: transcriptData.questionId || questionForRecording.id,
+            response: transcript,
+            duration: transcriptData.duration || recordedDuration,
+            timestamp: transcriptData.timestamp || recordedAt,
           });
           toast.success('Answer recorded');
         } catch (error) {
           console.error('[Interview] Transcription failed:', error);
-          setRecordingError('Transcription failed. You can type the answer and continue.');
+          setRecordingError('Transcription failed. Type the answer below, then continue.');
           setDraftAnswer('');
+          setCanEditTranscript(true);
+          setStatusMessage('Type answer and continue');
         } finally {
           setIsTranscribing(false);
           setRecordingSeconds(0);
           recordingStartRef.current = null;
+          activeRecordingQuestionRef.current = null;
           chunksRef.current = [];
         }
       };
@@ -540,12 +608,36 @@ export default function InterviewPage() {
       setRecordingError('Microphone access is required to record your answer.');
       toast.error('Microphone access failed');
       setIsRecording(false);
+      setIsWaitingToRecord(true);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
+    }
+  };
+
+  const handleContinueWithDraft = async () => {
+    if (!currentQuestion || !draftAnswer.trim() || isRecording || isTranscribing) return;
+
+    setIsTranscribing(true);
+    setRecordingError(null);
+    setStatusMessage('Saving answer');
+    try {
+      await persistResponseAndAdvance({
+        questionId: currentQuestion.id,
+        response: draftAnswer.trim(),
+        duration: Math.max(1, recordingSeconds || ANSWER_SECONDS),
+        timestamp: new Date().toISOString(),
+      });
+      toast.success('Answer saved');
+    } catch (error) {
+      console.error('[Interview] Failed to save typed answer:', error);
+      setRecordingError('Could not save this answer. Please try again.');
+      setStatusMessage('Type answer and continue');
+    } finally {
+      setIsTranscribing(false);
     }
   };
 
@@ -925,9 +1017,9 @@ export default function InterviewPage() {
           <Textarea
             rows={7}
             value={draftAnswer}
-            readOnly
+            readOnly={!canEditTranscript || isRecording || isTranscribing}
             onChange={(event) => setDraftAnswer(event.target.value)}
-            placeholder="Your transcript will appear here after the recorded answer is transcribed."
+            placeholder={canEditTranscript ? 'Type your answer here to continue.' : 'Your transcript will appear here after the recorded answer is transcribed.'}
             className="mt-4 resize-none"
           />
 
@@ -935,14 +1027,36 @@ export default function InterviewPage() {
             <Button
               variant="outline"
               onClick={() => {
+                if (isRecording || isTranscribing) return;
+                if (autoRecordTimerRef.current) {
+                  window.clearTimeout(autoRecordTimerRef.current);
+                  autoRecordTimerRef.current = null;
+                }
+                setIsWaitingToRecord(false);
                 if (audioRef.current) {
                   audioRef.current.pause();
                 }
                 const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
                 window.speechSynthesis.cancel();
+                setCanEditTranscript(false);
+                setQuestionError(null);
+                setIsPlayingQuestion(true);
+                setIsWaitingToRecord(false);
+                setStatusMessage('Replaying question');
+                utterance.onend = () => {
+                  setIsPlayingQuestion(false);
+                  setIsWaitingToRecord(true);
+                  setStatusMessage('Ready to record');
+                };
+                utterance.onerror = () => {
+                  setIsPlayingQuestion(false);
+                  setIsWaitingToRecord(true);
+                  setStatusMessage('Ready to record');
+                };
                 window.speechSynthesis.speak(utterance);
               }}
               className="gap-2"
+              disabled={isRecording || isTranscribing}
             >
               <Play className="h-4 w-4" />
               Replay
@@ -950,7 +1064,7 @@ export default function InterviewPage() {
             {!isRecording ? (
               <Button onClick={startRecording} className="gap-2" disabled={isPlayingQuestion || isTranscribing}>
                 <Mic className="h-4 w-4" />
-                Start recording
+                {isPlayingQuestion ? 'Question playing' : isWaitingToRecord ? 'Start recording now' : 'Start recording'}
               </Button>
             ) : (
               <Button variant="destructive" onClick={stopRecording} className="gap-2">
@@ -961,10 +1075,20 @@ export default function InterviewPage() {
             <Button
               variant="outline"
               onClick={() => setDraftAnswer('')}
-              disabled={isRecording || isTranscribing}
+              disabled={isRecording || isTranscribing || !draftAnswer}
             >
               Clear
             </Button>
+            {canEditTranscript && (
+              <Button
+                onClick={handleContinueWithDraft}
+                disabled={!draftAnswer.trim() || isTranscribing}
+                className="gap-2"
+              >
+                Continue
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </section>
       </div>

@@ -4,6 +4,14 @@ import { AuthWrapper } from '@/components/auth-wrapper';
 import { useRouter, usePathname } from 'next/navigation';
 import { useLogoutMutation } from '@/lib/store/api/authApi';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -11,7 +19,7 @@ import {
   Calendar, 
   Building2, 
   LogOut,
-  PlusCircle
+  Menu
 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
@@ -43,6 +51,31 @@ export default function EmployerLayout({
     router.push('/login');
   };
 
+  const renderNavLinks = (mobile = false) => (
+    navigation.map((item) => {
+      const isActive = pathname === item.href;
+      const button = (
+        <Button
+          variant={isActive ? 'default' : 'ghost'}
+          className={`w-full justify-start gap-3 ${isActive ? 'bg-secondary hover:bg-secondary/90' : ''}`}
+        >
+          <item.icon className="h-5 w-5" />
+          {item.name}
+        </Button>
+      );
+
+      return mobile ? (
+        <SheetClose asChild key={item.name}>
+          <Link href={item.href}>{button}</Link>
+        </SheetClose>
+      ) : (
+        <Link key={item.name} href={item.href}>
+          {button}
+        </Link>
+      );
+    })
+  );
+
   return (
     <AuthWrapper requiredRole="employer">
       <div className="min-h-screen bg-background">
@@ -50,6 +83,22 @@ export default function EmployerLayout({
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="max-w-screen-2xl mx-auto w-full flex h-16 items-center justify-between px-4 lg:px-8">
             <div className="flex items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetHeader className="mb-6 text-left">
+                    <SheetTitle className="sr-only">Employer navigation</SheetTitle>
+                    <Logo size="sm" showText={true} />
+                  </SheetHeader>
+                  <nav className="space-y-1">
+                    {renderNavLinks(true)}
+                  </nav>
+                </SheetContent>
+              </Sheet>
               <Logo size="sm" showText={true} />
               <span className="text-sm text-muted-foreground">Employer</span>
             </div>
@@ -71,22 +120,9 @@ export default function EmployerLayout({
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar Navigation */}
-            <aside className="md:w-64 flex-shrink-0">
+            <aside className="hidden md:block md:w-64 flex-shrink-0">
               <nav className="space-y-1 sticky top-24">
-                {navigation.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link key={item.name} href={item.href}>
-                      <Button
-                        variant={isActive ? 'default' : 'ghost'}
-                        className={`w-full justify-start gap-3 ${isActive ? 'bg-secondary hover:bg-secondary/90' : ''}`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        {item.name}
-                      </Button>
-                    </Link>
-                  );
-                })}
+                {renderNavLinks()}
               </nav>
             </aside>
 

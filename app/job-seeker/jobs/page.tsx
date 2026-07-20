@@ -11,6 +11,7 @@ import { Search, MapPin, Banknote, Briefcase, Sparkles, Filter, Bookmark } from 
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { PaginationControls } from '@/components/pagination-controls';
+import { formatApplicantCount } from '@/lib/utils';
 
 const PAGE_SIZE = 20;
 
@@ -162,9 +163,9 @@ export default function JobsPage() {
               </p>
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                 <span>Posted {job.postedDate}</span>
-                {job.applicantsCount > 0 && (
-                  <span>{job.applicantsCount} applicants</span>
-                )}
+                <Badge variant="outline" className="font-normal">
+                  {formatApplicantCount(job.applicantsCount)}
+                </Badge>
               </div>
             </CardContent>
           </Card>

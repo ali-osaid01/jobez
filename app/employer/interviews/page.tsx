@@ -19,12 +19,23 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PaginationControls } from '@/components/pagination-controls';
 import { useCompleteHumanInterviewMutation, useGetInterviewsQuery, useUpdateApplicationStatusMutation } from '@/lib/store';
-import type { InterviewResponseData, InterviewStatus } from '@/lib/store/types';
-import { AlertCircle, Clock, ExternalLink, MessageSquare, RefreshCw, Sparkles, Trophy, UserCheck, UserX, Video } from 'lucide-react';
+import type { ApplicationStatus, InterviewResponseData, InterviewStatus } from '@/lib/store/types';
+import { AlertCircle, Clock, ExternalLink, MessageSquare, RefreshCw, Sparkles, UserCheck, UserX, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 10;
 type EmployerInterviewTab = Extract<InterviewStatus, 'completed' | 'scheduled'>;
+
+function applicationStatusBadge(status: ApplicationStatus | null) {
+  switch (status) {
+    case 'rejected':
+      return { label: 'REJECTED', className: 'bg-red-100 text-red-800 border-red-300' };
+    case 'hired':
+      return { label: 'HIRED', className: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+    default:
+      return null;
+  }
+}
 
 function LoadingSkeleton() {
   return (
@@ -86,15 +97,6 @@ export default function EmployerInterviewsPage() {
     setPage(1);
   };
 
-  const handleHire = async (interview: InterviewResponseData) => {
-    try {
-      await updateApplicationStatus({ id: interview.applicationId, body: { status: 'hired' } }).unwrap();
-      toast.success(`${interview.applicantName || 'Candidate'} has been marked as hired`);
-    } catch {
-      toast.error('Failed to update candidate status');
-    }
-  };
-
   const handleReject = async (interview: InterviewResponseData) => {
     try {
       await updateApplicationStatus({
@@ -103,6 +105,7 @@ export default function EmployerInterviewsPage() {
       }).unwrap();
       setRejectingId(null);
       setRejectComment('');
+      await refetch();
       toast.success(`${interview.applicantName || 'Candidate'} has been rejected`);
     } catch {
       toast.error('Failed to reject candidate');
@@ -137,7 +140,8 @@ export default function EmployerInterviewsPage() {
 
   const InterviewCard = ({ interview }: { interview: InterviewResponseData }) => {
     const isHuman = interview.type === 'human';
-    const isHired = interview.applicationStatus === 'hired';
+    const terminalStatus = applicationStatusBadge(interview.applicationStatus);
+    const isTerminalApplication = interview.applicationStatus === 'hired' || interview.applicationStatus === 'rejected';
 
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -192,9 +196,9 @@ export default function EmployerInterviewsPage() {
                     COMPLETED
                   </Badge>
                 )}
-                {isHired && (
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                    HIRED
+                {terminalStatus && (
+                  <Badge className={terminalStatus.className}>
+                    {terminalStatus.label}
                   </Badge>
                 )}
               </div>
@@ -268,22 +272,11 @@ export default function EmployerInterviewsPage() {
                       View Details
                     </Link>
                   </Button>
-                  {!isHired && (
-                    <>
-                      <Button
-                        size="sm"
-                        className="gap-2 bg-secondary hover:bg-secondary/90"
-                        disabled={isUpdatingApplication}
-                        onClick={() => handleHire(interview)}
-                      >
-                        <Trophy className="h-4 w-4" />
-                        Mark Hired
-                      </Button>
-                      <Button size="sm" variant="outline" className="gap-2" onClick={() => setRejectingId(interview.id)}>
-                        <UserX className="h-4 w-4" />
-                        Reject
-                      </Button>
-                    </>
+                  {!isTerminalApplication && (
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => setRejectingId(interview.id)}>
+                      <UserX className="h-4 w-4" />
+                      Reject
+                    </Button>
                   )}
                 </>
               )}

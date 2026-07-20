@@ -68,6 +68,10 @@ function statusLabel(status: ApplicationStatus) {
   return status.replace(/-/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function isTerminalStatus(status: ApplicationStatus) {
+  return status === 'rejected' || status === 'hired';
+}
+
 function LoadingSkeleton() {
   return (
     <div className="space-y-4">
@@ -157,6 +161,7 @@ export default function ApplicantsPage() {
   const handleShortlist = async (application: ApplicationResponseData) => {
     try {
       await updateStatus({ id: application.id, body: { status: 'shortlisted' } }).unwrap();
+      await refetch();
       toast.success(`${application.applicantName} has been shortlisted`);
     } catch {
       toast.error('Failed to shortlist applicant');
@@ -172,6 +177,7 @@ export default function ApplicantsPage() {
       }).unwrap();
       setRejectingId(null);
       setRejectComment('');
+      await refetch();
       toast.success(`${application.applicantName} has been rejected`);
     } catch {
       toast.error('Failed to reject applicant');
@@ -219,13 +225,17 @@ export default function ApplicantsPage() {
         meetingLink: '',
         notes: '',
       });
+      await refetch();
     } catch {
       toast.error('Failed to schedule interview');
     }
   };
 
-  const ApplicantCard = ({ application }: { application: ApplicationResponseData }) => (
-    <Card className="hover:shadow-md transition-shadow">
+  const ApplicantCard = ({ application }: { application: ApplicationResponseData }) => {
+    const showInterviewCompleted = application.latestInterviewStatus === 'completed' && !isTerminalStatus(application.status);
+
+    return (
+      <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1 space-y-3">
@@ -289,12 +299,12 @@ export default function ApplicantsPage() {
           <div className="flex flex-col gap-2 md:w-48">
             <Badge
               className={`${
-                application.latestInterviewStatus === 'completed'
+                showInterviewCompleted
                   ? 'bg-green-100 text-green-800 border-green-300'
                   : statusColor(application.status)
               } justify-center py-1`}
             >
-              {application.latestInterviewStatus === 'completed'
+              {showInterviewCompleted
                 ? 'Interview Completed'
                 : statusLabel(application.status)}
             </Badge>
@@ -375,7 +385,8 @@ export default function ApplicantsPage() {
         </div>
       </CardHeader>
     </Card>
-  );
+    );
+  };
 
   const renderApplicants = (emptyMessage: string) => {
     if (isLoading || isFetching) return <LoadingSkeleton />;

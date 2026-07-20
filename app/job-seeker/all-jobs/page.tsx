@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 import { toast } from 'sonner';
 import { PaginationControls } from '@/components/pagination-controls';
+import { formatApplicantCount } from '@/lib/utils';
 
 export default function AllJobsPage() {
   const [searchInput, setSearchInput] = useState('');
@@ -354,11 +355,9 @@ export default function AllJobsPage() {
                         {job.matchScore}% match
                       </Badge>
                     )}
-                    {job.applicantsCount && (
-                      <Badge variant="outline" className="font-normal">
-                        {job.applicantsCount} applicants
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className="font-normal">
+                      {formatApplicantCount(job.applicantsCount)}
+                    </Badge>
                   </div>
 
                   {job.matchReasons?.length > 0 && (

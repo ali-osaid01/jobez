@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { formatApplicantCount } from '@/lib/utils';
 
 const MIN_APPLY_MATCH_SCORE = 65;
 
@@ -313,7 +314,7 @@ export default function JobDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Applicants</span>
-                  <span className="font-medium">{job.applicantsCount || 0}</span>
+                  <span className="font-medium">{formatApplicantCount(job.applicantsCount)}</span>
                 </div>
                 {job.applicationDeadline && (
                   <div className="flex justify-between">

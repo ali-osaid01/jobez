@@ -8,7 +8,7 @@ export const notificationsApi = baseApi.injectEndpoints({
         const searchParams = new URLSearchParams();
         if (params) {
           Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
+            if (value !== undefined && value !== null) {
               searchParams.set(key, String(value));
             }
           });

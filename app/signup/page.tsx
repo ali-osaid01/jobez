@@ -1,19 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Users, Building2, User, Mail, Phone, Lock } from 'lucide-react';
+import { ArrowRight, Users, Building2, User, Mail, Phone, Lock, Chrome } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { toast } from 'sonner';
-import { useSignupMutation } from '@/lib/store/api/authApi';
+import { useGoogleLoginMutation, useSignupMutation } from '@/lib/store/api/authApi';
 import type { ApiError } from '@/lib/store/types';
 import type { UserRole } from '@/lib/auth';
 import { validateSignupForm } from '@/lib/validations/signup.validation';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -27,6 +44,9 @@ export default function SignupPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [signup, { isLoading: loading }] = useSignupMutation();
+  const [googleLogin, { isLoading: googleLoading }] = useGoogleLoginMutation();
+  const [googleReady, setGoogleReady] = useState(false);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
   const clearError = (field: string) => {
     if (errors[field]) setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
@@ -35,6 +55,53 @@ export default function SignupPage() {
   const handleRoleSelect = (selectedRole: UserRole) => {
     setRole(selectedRole);
     setStep('details');
+  };
+
+  useEffect(() => {
+    if (!googleReady || !googleClientId || !window.google || !role) return;
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: async (response) => {
+        if (!response.credential) {
+          toast.error('Google signup failed. Please try again.');
+          return;
+        }
+
+        try {
+          const { user } = await googleLogin({ credential: response.credential, role }).unwrap();
+          toast.success('Signed in with Google');
+
+          if (!user.onboardingComplete) {
+            router.push('/onboarding');
+          } else if (user.role === 'job-seeker') {
+            router.push('/job-seeker/dashboard');
+          } else {
+            router.push('/employer/dashboard');
+          }
+        } catch (err) {
+          const apiError = err as { data?: ApiError };
+          toast.error(apiError.data?.error?.message ?? 'Google signup failed. Please try again.');
+        }
+      },
+    });
+  }, [googleReady, googleClientId, googleLogin, role, router]);
+
+  const handleGoogleSignup = () => {
+    if (!role) {
+      toast.error('Please select a role first');
+      return;
+    }
+    if (!googleClientId) {
+      toast.error('Google login is not configured.');
+      return;
+    }
+    if (!window.google) {
+      toast.error('Google login is still loading. Please try again.');
+      return;
+    }
+
+    window.google.accounts.id.prompt();
   };
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
@@ -77,6 +144,11 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={() => setGoogleReady(true)}
+      />
       {/* Header */}
       <nav className="border-b bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -176,6 +248,26 @@ export default function SignupPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <Button
+                type="button"
+                variant="outline"
+                className="mb-4 w-full"
+                onClick={handleGoogleSignup}
+                disabled={loading || googleLoading || !googleClientId}
+              >
+                <Chrome className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
+
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">or create with password</span>
+                </div>
+              </div>
+
               <form onSubmit={handleDetailsSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-muted-foreground" />Full Name *</Label>

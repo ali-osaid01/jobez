@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppSelector, selectToken } from '@/lib/store';
@@ -24,6 +23,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Calendar,
+  Bot,
   Camera,
   ExternalLink,
   Loader2,
@@ -67,6 +67,15 @@ function upsertResponse(
 function getScheduledDateTime(date: string, time: string) {
   const parsed = new Date(`${date}T${time}`);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function AIInterviewerAvatar({ active }: { active: boolean }) {
+  return (
+    <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl border bg-primary/10 shadow-sm">
+      <Bot className="h-12 w-12 text-primary" />
+      <span className={`absolute bottom-3 h-2 w-10 rounded-full bg-primary/50 ${active ? 'animate-pulse' : ''}`} />
+    </div>
+  );
 }
 
 export default function InterviewPage() {
@@ -820,204 +829,144 @@ export default function InterviewPage() {
   const answeredCount = responses.length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <Card>
-        <CardContent className="pt-6 space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              Question {currentQuestionIndex + 1} of {questions.length}
-            </span>
-            <Badge variant="outline">{statusMessage}</Badge>
+    <div className="min-h-screen space-y-4 p-4 lg:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background px-4 py-3">
+        <div>
+          <p className="text-sm font-medium">{interview.jobTitle}</p>
+          <p className="text-xs text-muted-foreground">{interview.company}</p>
+        </div>
+        <div className="min-w-52 flex-1 lg:max-w-md">
+          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
+            <span>{answeredCount} recorded</span>
           </div>
           <Progress value={progress} className="h-2" />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{answeredCount} answers recorded</span>
-            <span>{questions.length - answeredCount} remaining</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="border-2 border-primary/10">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  {interview.jobTitle}
-                </CardTitle>
-                <p className="text-muted-foreground mt-1">{interview.company}</p>
-                {hasRecordedCurrentQuestion && (
-                  <Badge variant="secondary" className="mt-2">Answer saved for this question</Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{currentQuestion.type}</Badge>
-                <Badge variant="outline">{currentQuestion.category}</Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="rounded-xl border bg-muted/30 p-5">
-              <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
-                <Volume2 className="h-4 w-4" />
-                Question
-              </div>
-              <p className="text-lg leading-relaxed">{currentQuestion.question}</p>
-            </div>
-
-            {questionError && (
-              <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                {questionError}
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (audioRef.current) {
-                    audioRef.current.pause();
-                  }
-                  const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
-                  window.speechSynthesis.cancel();
-                  window.speechSynthesis.speak(utterance);
-                }}
-                className="gap-2"
-              >
-                <Play className="h-4 w-4" />
-                Replay question
-              </Button>
-              {!isRecording ? (
-                <Button onClick={startRecording} className="gap-2" disabled={isPlayingQuestion || isTranscribing}>
-                  <Mic className="h-4 w-4" />
-                  Start recording now
-                </Button>
-              ) : (
-                <Button variant="destructive" onClick={stopRecording} className="gap-2">
-                  <Square className="h-4 w-4" />
-                  Stop recording
-                </Button>
-              )}
-            </div>
-
-            <div className="rounded-xl border p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Transcript</p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {isRecording ? (
-                    <Mic className="h-3 w-3 text-red-500" />
-                  ) : (
-                    <MicOff className="h-3 w-3" />
-                  )}
-                  {isRecording
-                    ? `${formatTime(recordingSeconds)} recording`
-                    : isTranscribing
-                      ? 'Transcribing'
-                      : 'Ready'}
-                </div>
-              </div>
-
-              <div className="rounded-lg border bg-muted/30 p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Answer timer</span>
-                  <Badge variant={answerSecondsRemaining <= 10 ? 'destructive' : 'secondary'}>
-                    {answerSecondsRemaining}s
-                  </Badge>
-                </div>
-                <Progress value={(answerSecondsRemaining / ANSWER_SECONDS) * 100} className="mt-2 h-2" />
-              </div>
-
-              <Textarea
-                rows={9}
-                value={draftAnswer}
-                readOnly
-                onChange={(event) => setDraftAnswer(event.target.value)}
-                placeholder="Your transcript will appear here after the recorded answer is transcribed."
-              />
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{isPlayingQuestion ? 'Playing question audio' : 'Question audio ready'}</span>
-                <span>Auto records for {ANSWER_SECONDS}s</span>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => stopRecording()}
-                  disabled={!isRecording}
-                  className="gap-2"
-                >
-                  <Square className="h-4 w-4" />
-                  Stop early
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setDraftAnswer('')}
-                  disabled={isRecording || isTranscribing}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                Camera
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="overflow-hidden rounded-xl border bg-black">
-                <video
-                  ref={videoRef}
-                  className="aspect-video w-full object-cover"
-                  muted
-                  playsInline
-                  autoPlay
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Camera and fullscreen must stay active until the interview is submitted.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recorded answers</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {responses.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No answers recorded yet.</p>
-              ) : (
-                responses.map((item) => {
-                  const question = questions.find((entry) => entry.id === item.questionId);
-                  return (
-                    <div key={item.questionId} className="rounded-lg border p-3 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{question?.category ?? item.questionId}</p>
-                        <Badge variant="secondary">{formatTime(item.duration)}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-4">{item.response}</p>
-                    </div>
-                  );
-                })
-              )}
-
-              <Separator />
-
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>Resume and job context are used to generate the questions.</p>
-                <p>Final scoring and summary are handled after submission.</p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
+        <Badge variant="outline">{statusMessage}</Badge>
+      </div>
+
+      <div className="grid min-h-[calc(100vh-132px)] gap-4 lg:grid-cols-2">
+        <section className="flex min-h-[420px] flex-col overflow-hidden rounded-lg border bg-black">
+          <div className="flex items-center justify-between border-b border-white/10 bg-black/80 px-4 py-3 text-white">
+            <div className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              <span className="text-sm font-medium">Candidate Camera</span>
+            </div>
+            <Badge variant={isRecording ? 'destructive' : 'secondary'}>
+              {isRecording ? `${formatTime(recordingSeconds)} recording` : 'Camera active'}
+            </Badge>
+          </div>
+          <div className="relative flex-1">
+            <video
+              ref={videoRef}
+              className="absolute inset-0 h-full w-full object-cover"
+              muted
+              playsInline
+              autoPlay
+            />
+          </div>
+        </section>
+
+        <section className="flex min-h-[420px] flex-col rounded-lg border bg-background p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <AIInterviewerAvatar active={isPlayingQuestion || isRecording || isTranscribing} />
+              <div>
+                <p className="text-xl font-heading font-semibold">AI Interviewer</p>
+                <p className="text-sm text-muted-foreground">
+                  {isPlayingQuestion ? 'Speaking question' : isRecording ? 'Listening to answer' : isTranscribing ? 'Preparing transcript' : 'Ready'}
+                </p>
+              </div>
+            </div>
+            {hasRecordedCurrentQuestion && <Badge variant="secondary">Answer saved</Badge>}
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Badge variant="secondary">{currentQuestion.type}</Badge>
+            <Badge variant="outline">{currentQuestion.category}</Badge>
+          </div>
+
+          <div className="mt-4 rounded-lg border bg-muted/30 p-5">
+            <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <Volume2 className="h-4 w-4" />
+              Question
+            </div>
+            <p className="text-xl leading-relaxed">{currentQuestion.question}</p>
+          </div>
+
+          {questionError && (
+            <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {questionError}
+            </div>
+          )}
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Answer timer</span>
+                <Badge variant={answerSecondsRemaining <= 10 ? 'destructive' : 'secondary'}>
+                  {answerSecondsRemaining}s
+                </Badge>
+              </div>
+              <Progress value={(answerSecondsRemaining / ANSWER_SECONDS) * 100} className="mt-2 h-2" />
+            </div>
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Transcript</span>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  {isRecording ? <Mic className="h-3 w-3 text-red-500" /> : <MicOff className="h-3 w-3" />}
+                  {isTranscribing ? 'Transcribing' : 'Ready'}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Auto records for {ANSWER_SECONDS}s</p>
+            </div>
+          </div>
+
+          <Textarea
+            rows={7}
+            value={draftAnswer}
+            readOnly
+            onChange={(event) => setDraftAnswer(event.target.value)}
+            placeholder="Your transcript will appear here after the recorded answer is transcribed."
+            className="mt-4 resize-none"
+          />
+
+          <div className="mt-auto flex flex-wrap gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                }
+                const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+              }}
+              className="gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Replay
+            </Button>
+            {!isRecording ? (
+              <Button onClick={startRecording} className="gap-2" disabled={isPlayingQuestion || isTranscribing}>
+                <Mic className="h-4 w-4" />
+                Start recording
+              </Button>
+            ) : (
+              <Button variant="destructive" onClick={stopRecording} className="gap-2">
+                <Square className="h-4 w-4" />
+                Stop recording
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => setDraftAnswer('')}
+              disabled={isRecording || isTranscribing}
+            >
+              Clear
+            </Button>
+          </div>
+        </section>
       </div>
 
       {recordingError && (

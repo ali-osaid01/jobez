@@ -110,9 +110,7 @@ export default function ProfilePage() {
         preferredRole: editForm.preferredRole || null,
         bio: editForm.bio || null,
       }).unwrap();
-      // Discard local edit state — view mode will render from the
-      // freshly-refetched profileData (RTK Query invalidates the
-      // 'Profile' tag automatically after a successful mutation).
+      await refetch();
       setEditForm(null);
       setNewSkill('');
       toast.success('Profile updated successfully');
